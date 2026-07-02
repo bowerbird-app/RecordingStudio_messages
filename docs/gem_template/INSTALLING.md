@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -8,7 +8,7 @@
 
 # Installing in a Host Application
 
-This guide explains how to install the GemTemplate engine in your Rails application.
+This guide explains how to install the RecordingStudioMessages engine in your Rails application.
 
 ---
 
@@ -28,13 +28,13 @@ Add to your `Gemfile`:
 
 ```ruby
 # From GitHub
-gem "gem_template", github: "bowerbird-app/gem_template"
+gem "recording_studio_messages", github: "bowerbird-app/recording_studio_messages"
 
 # Or from a local path (for development)
-gem "gem_template", path: "../gem_template"
+gem "recording_studio_messages", path: "../recording_studio_messages"
 
 # Or from RubyGems (after publishing)
-gem "gem_template"
+gem "recording_studio_messages"
 ```
 
 ### 2. Install Dependencies
@@ -46,13 +46,13 @@ bundle install
 ### 3. Run the Install Generator
 
 ```bash
-rails generate gem_template:install
+rails generate recording_studio_messages:install
 ```
 
 This will:
-1. **Mount the engine** at `/gem_template` in your `config/routes.rb`
-2. **Create a configuration initializer** at `config/initializers/gem_template.rb`
-3. **Optionally create `config/gem_template.yml`** for environment-specific settings
+1. **Mount the engine** at `/recording_studio_messages` in your `config/routes.rb`
+2. **Create a configuration initializer** at `config/initializers/recording_studio_messages.rb`
+3. **Optionally create `config/recording_studio_messages.yml`** for environment-specific settings
 4. **Configure Tailwind** to include engine and FlatPack sources (if Tailwind is detected)
 5. **Display post-installation instructions**
 
@@ -65,16 +65,16 @@ This will:
 Adds this line to `config/routes.rb`:
 
 ```ruby
-mount GemTemplate::Engine, at: "/gem_template"
+mount RecordingStudioMessages::Engine, at: "/recording_studio_messages"
 ```
 
 ### Configuration
 
-Creates `config/initializers/gem_template.rb`:
+Creates `config/initializers/recording_studio_messages.rb`:
 
 ```ruby
-GemTemplate.configure do |config|
-  # config.api_key = ENV["GEM_TEMPLATE_API_KEY"]
+RecordingStudioMessages.configure do |config|
+  # config.api_key = ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]
   # config.enable_feature_x = false
   # config.timeout = 5
 end
@@ -87,7 +87,7 @@ See [CONFIGURATION.md](CONFIGURATION.md) for all options.
 If your app uses Tailwind, the generator adds `@source` directives to include engine views and FlatPack components:
 
 ```css
-@source "../../vendor/bundle/**/gem_template/app/views/**/*.erb";
+@source "../../vendor/bundle/**/recording_studio_messages/app/views/**/*.erb";
 @source "../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
 ```
 
@@ -105,18 +105,18 @@ Add to `config/routes.rb`:
 
 ```ruby
 Rails.application.routes.draw do
-  mount GemTemplate::Engine, at: "/gem_template"
+  mount RecordingStudioMessages::Engine, at: "/recording_studio_messages"
   # ... your other routes
 end
 ```
 
 ### Add Configuration (Optional)
 
-Create `config/initializers/gem_template.rb`:
+Create `config/initializers/recording_studio_messages.rb`:
 
 ```ruby
-GemTemplate.configure do |config|
-  config.api_key = ENV["GEM_TEMPLATE_API_KEY"]
+RecordingStudioMessages.configure do |config|
+  config.api_key = ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]
   config.enable_feature_x = true
   config.timeout = 10
 end
@@ -127,7 +127,7 @@ end
 Add to your `app/assets/tailwind/application.css`:
 
 ```css
-@source "../../vendor/bundle/**/gem_template/app/views/**/*.erb";
+@source "../../vendor/bundle/**/recording_studio_messages/app/views/**/*.erb";
 @source "../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
 ```
 
@@ -148,14 +148,14 @@ bin/rails tailwindcss:build
 
 2. Visit the mounted engine root:
    ```
-   http://localhost:3000/gem_template
+   http://localhost:3000/recording_studio_messages
    ```
 
 You should reach the mounted engine root route. In this template repository that route renders the engine home page; downstream addons may wire the mount path differently.
 
 3. If the engine ships migrations, install and run them from the host app:
   ```bash
-  rails generate gem_template:migrations
+  rails generate recording_studio_messages:migrations
   bin/rails db:migrate
   ```
 
@@ -167,13 +167,13 @@ Change the mount path in `config/routes.rb`:
 
 ```ruby
 # Mount at root
-mount GemTemplate::Engine, at: "/"
+mount RecordingStudioMessages::Engine, at: "/"
 
 # Mount at a custom path
-mount GemTemplate::Engine, at: "/my-engine"
+mount RecordingStudioMessages::Engine, at: "/my-engine"
 
 # Mount with constraints
-mount GemTemplate::Engine, at: "/gem_template", constraints: { subdomain: "api" }
+mount RecordingStudioMessages::Engine, at: "/recording_studio_messages", constraints: { subdomain: "api" }
 ```
 
 ---
@@ -183,16 +183,16 @@ mount GemTemplate::Engine, at: "/gem_template", constraints: { subdomain: "api" 
 From your host app views:
 
 ```erb
-<%= link_to "Visit Engine", gem_template.root_path %>
+<%= link_to "Visit Engine", recording_studio_messages.root_path %>
 ```
 
 From controllers:
 
 ```ruby
-redirect_to gem_template.root_path
+redirect_to recording_studio_messages.root_path
 ```
 
-The `gem_template` helper provides access to all engine routes.
+The `recording_studio_messages` helper provides access to all engine routes.
 
 ## RecordingStudio v3 Host-App Check
 
@@ -217,7 +217,7 @@ If you want a branded landing page in a host app, create one in your application
 |-------|----------|
 | Route not found | Ensure engine is mounted in `config/routes.rb`. |
 | Styles missing | Run `bin/rails tailwindcss:build` after adding `@source`. |
-| Generator fails | Check that the gem is installed: `bundle show gem_template`. |
+| Generator fails | Check that the gem is installed: `bundle show recording_studio_messages`. |
 | Configuration not applied | Ensure initializer runs after engine loads. |
 
 ---
@@ -225,7 +225,7 @@ If you want a branded landing page in a host app, create one in your application
 ## Uninstalling
 
 1. Remove the mount line from `config/routes.rb`
-2. Delete `config/initializers/gem_template.rb`
+2. Delete `config/initializers/recording_studio_messages.rb`
 3. Remove the gem from `Gemfile`
 4. Run `bundle install`
 5. Remove the `@source` line from your Tailwind config

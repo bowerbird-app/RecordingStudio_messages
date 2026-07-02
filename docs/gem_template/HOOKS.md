@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** December 11, 2025
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -8,7 +8,7 @@
 
 # Engine Hooks
 
-GemTemplate provides a powerful hook system that allows host applications to customize engine behavior without modifying the engine's source code.
+RecordingStudioMessages provides a powerful hook system that allows host applications to customize engine behavior without modifying the engine's source code.
 
 ---
 
@@ -37,10 +37,10 @@ GemTemplate provides a powerful hook system that allows host applications to cus
 ### Block Syntax
 
 ```ruby
-# config/initializers/gem_template.rb
-GemTemplate.configure do |config|
+# config/initializers/recording_studio_messages.rb
+RecordingStudioMessages.configure do |config|
   config.hooks.after_initialize do
-    Rails.logger.info "GemTemplate initialized!"
+    Rails.logger.info "RecordingStudioMessages initialized!"
   end
   
   config.hooks.before_service do |service_class, args|
@@ -52,8 +52,8 @@ end
 ### Class Syntax
 
 ```ruby
-# app/hooks/gem_template_audit_hook.rb
-class GemTemplateAuditHook
+# app/hooks/recording_studio_messages_audit_hook.rb
+class RecordingStudioMessagesAuditHook
   def call(service_class, result)
     AuditLog.create!(
       service: service_class.name,
@@ -63,9 +63,9 @@ class GemTemplateAuditHook
   end
 end
 
-# config/initializers/gem_template.rb
-GemTemplate.configure do |config|
-  config.hooks.after_service GemTemplateAuditHook.new
+# config/initializers/recording_studio_messages.rb
+RecordingStudioMessages.configure do |config|
+  config.hooks.after_service RecordingStudioMessagesAuditHook.new
 end
 ```
 
@@ -76,7 +76,7 @@ end
 Add associations, validations, or methods to engine models:
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.extend_model :Example do
     include Auditable
     
@@ -97,7 +97,7 @@ end
 Add before_actions, concerns, or methods to engine controllers:
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.extend_controller :HomeController do
     before_action :authenticate_user!
     
@@ -113,7 +113,7 @@ end
 ### Wrap Services in Transactions
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.around_service do |service, block|
     ActiveRecord::Base.transaction do
       block.call
@@ -125,14 +125,14 @@ end
 ### Log All Service Calls
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.before_service do |service_class, args|
-    Rails.logger.info "[GemTemplate] #{service_class.name} called"
+    Rails.logger.info "[RecordingStudioMessages] #{service_class.name} called"
   end
   
   config.hooks.after_service do |service_class, result|
     status = result.success? ? "succeeded" : "failed"
-    Rails.logger.info "[GemTemplate] #{service_class.name} #{status}"
+    Rails.logger.info "[RecordingStudioMessages] #{service_class.name} #{status}"
   end
 end
 ```
@@ -140,13 +140,13 @@ end
 ### Add Metrics/Instrumentation
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.around_service do |service, block|
     start_time = Time.current
     result = block.call
     duration = Time.current - start_time
     
-    StatsD.measure("gem_template.#{service.class.name.demodulize.underscore}", duration)
+    StatsD.measure("recording_studio_messages.#{service.class.name.demodulize.underscore}", duration)
     result
   end
 end
@@ -159,7 +159,7 @@ end
 The engine triggers custom hooks at specific points. You can listen for these:
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.on :example_created do |example|
     Notifier.notify_admin(example)
   end
@@ -180,11 +180,11 @@ Engine views include content injection points:
 
 ```erb
 <%# In your host app layouts or views %>
-<% content_for :gem_template_header do %>
+<% content_for :recording_studio_messages_header do %>
   <div class="custom-header">Your custom header</div>
 <% end %>
 
-<% content_for :gem_template_footer do %>
+<% content_for :recording_studio_messages_footer do %>
   <div class="custom-footer">Your custom footer</div>
 <% end %>
 ```
@@ -194,7 +194,7 @@ Engine views include content injection points:
 Override engine partials by creating matching files in your host app:
 
 ```
-app/views/gem_template/home/_sidebar.html.erb  # Overrides engine partial
+app/views/recording_studio_messages/home/_sidebar.html.erb  # Overrides engine partial
 ```
 
 ---
@@ -204,7 +204,7 @@ app/views/gem_template/home/_sidebar.html.erb  # Overrides engine partial
 Hooks run in the order they're registered. To control order:
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.after_initialize priority: 10 do
     # Runs first (lower = earlier)
   end
@@ -222,7 +222,7 @@ end
 By default, hook errors are logged but don't stop execution. To change this:
 
 ```ruby
-GemTemplate.configure do |config|
+RecordingStudioMessages.configure do |config|
   config.hooks.raise_on_error = true  # Raise exceptions from hooks
 end
 ```
@@ -236,11 +236,11 @@ end
 class HooksTest < ActiveSupport::TestCase
   setup do
     @called = false
-    GemTemplate.configuration.hooks.after_initialize { @called = true }
+    RecordingStudioMessages.configuration.hooks.after_initialize { @called = true }
   end
   
   test "after_initialize hook is called" do
-    GemTemplate::Hooks.run(:after_initialize)
+    RecordingStudioMessages::Hooks.run(:after_initialize)
     assert @called
   end
 end

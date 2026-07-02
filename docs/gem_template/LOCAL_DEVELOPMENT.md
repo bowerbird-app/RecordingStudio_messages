@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -28,8 +28,8 @@ This guide covers setting up the gem for local development outside of GitHub Cod
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/bowerbird-app/RecordingStudio_gem_template.git
-cd RecordingStudio_gem_template
+git clone https://github.com/bowerbird-app/RecordingStudio_recording_studio_messages.git
+cd RecordingStudio_recording_studio_messages
 ```
 
 ### 2. Install Gem Dependencies
@@ -184,15 +184,15 @@ bin/rails db:migrate
 ## Project Structure
 
 ```
-gem_template/
+recording_studio_messages/
 ├── app/                      # Engine application code
-│   ├── controllers/gem_template/
-│   └── views/gem_template/
+│   ├── controllers/recording_studio_messages/
+│   └── views/recording_studio_messages/
 ├── config/
 │   └── routes.rb             # Engine routes
 ├── lib/
-│   ├── gem_template.rb       # Main entry point
-│   ├── gem_template/
+│   ├── recording_studio_messages.rb       # Main entry point
+│   ├── recording_studio_messages/
 │   │   ├── configuration.rb  # Configuration API
 │   │   ├── engine.rb         # Engine definition
 │   │   └── version.rb
@@ -203,7 +203,7 @@ gem_template/
 ├── docs/                     # Documentation
 ├── Gemfile
 ├── Rakefile
-└── gem_template.gemspec
+└── recording_studio_messages.gemspec
 ```
 
 ---

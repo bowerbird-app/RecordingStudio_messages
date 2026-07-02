@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -8,18 +8,18 @@
 
 # Migrations
 
-This guide explains how to work with database migrations in GemTemplate.
+This guide explains how to work with database migrations in RecordingStudioMessages.
 
 ---
 
 ## Installing Migrations in a Host App
 
-GemTemplate includes a migrations generator that copies engine migrations to your host application with proper timestamps.
+RecordingStudioMessages includes a migrations generator that copies engine migrations to your host application with proper timestamps.
 
 ### Run the Generator
 
 ```bash
-rails generate gem_template:migrations
+rails generate recording_studio_messages:migrations
 ```
 
 This will:
@@ -48,7 +48,7 @@ bin/rails db:migrate
 To see what migrations would be installed without making changes:
 
 ```bash
-rails generate gem_template:migrations --pretend
+rails generate recording_studio_messages:migrations --pretend
 ```
 
 ### Force Reinstall
@@ -56,7 +56,7 @@ rails generate gem_template:migrations --pretend
 To overwrite existing migrations (useful for updates):
 
 ```bash
-rails generate gem_template:migrations --no-skip-existing --force
+rails generate recording_studio_messages:migrations --no-skip-existing --force
 ```
 
 ---
@@ -67,7 +67,7 @@ When developing the engine, add migrations to `db/migrate/`:
 
 ```bash
 # From the gem root
-touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
+touch db/migrate/$(date +%Y%m%d%H%M%S)_create_recording_studio_messages_pages.rb
 ```
 
 ### Migration Conventions
@@ -75,9 +75,9 @@ touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
 1. **Use UUID primary keys** for PostgreSQL compatibility:
 
    ```ruby
-    class CreateGemTemplatePages < ActiveRecord::Migration[8.1]
+    class CreateRecordingStudioMessagesPages < ActiveRecord::Migration[8.1]
      def change
-          create_table :gem_template_pages, id: :uuid do |t|
+          create_table :recording_studio_messages_pages, id: :uuid do |t|
              t.uuid :workspace_id, null: false
              t.string :title, null: false
              t.string :slug, null: false
@@ -85,7 +85,7 @@ touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
          t.timestamps
        end
 
-          add_index :gem_template_pages, [:workspace_id, :slug], unique: true
+          add_index :recording_studio_messages_pages, [:workspace_id, :slug], unique: true
      end
    end
    ```
@@ -93,7 +93,7 @@ touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
 2. **Prefix table names** with the gem name to avoid conflicts:
 
    ```ruby
-   # Good: gem_template_pages
+   # Good: recording_studio_messages_pages
    # Bad: pages
    ```
 
@@ -106,8 +106,8 @@ touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
 4. **Add indexes** for frequently queried columns:
 
    ```ruby
-   add_index :gem_template_pages, :workspace_id
-   add_index :gem_template_pages, :published
+   add_index :recording_studio_messages_pages, :workspace_id
+   add_index :recording_studio_messages_pages, :published
    ```
 
 ---
@@ -117,7 +117,7 @@ touch db/migrate/$(date +%Y%m%d%H%M%S)_create_gem_template_pages.rb
 ```
 db/
 └── migrate/
-   └── 20250101000001_create_gem_template_pages.rb
+   └── 20250101000001_create_recording_studio_messages_pages.rb
 ```
 
 Migrations are included in the gem via the gemspec:
@@ -134,7 +134,7 @@ When you release a new version with additional migrations:
 
 1. Host app developers run the generator again:
    ```bash
-   rails generate gem_template:migrations
+   rails generate recording_studio_messages:migrations
    ```
 
 2. Only new migrations are copied (existing ones are skipped)
@@ -176,8 +176,8 @@ bin/rails db:rollback
 
 When you rename the gem using `bin/rename_gem`, the migration files are automatically updated:
 
-- Class names change (e.g., `CreateGemTemplatePages` → `CreateMyEnginePages`)
-- Table names change (e.g., `gem_template_pages` → `my_engine_pages`)
+- Class names change (e.g., `CreateRecordingStudioMessagesPages` → `CreateMyEnginePages`)
+- Table names change (e.g., `recording_studio_messages_pages` → `my_engine_pages`)
 
 ---
 

@@ -1,6 +1,6 @@
 # Security Summary
 
-This document outlines the security considerations for the gem_template Rails engine.
+This document outlines the security considerations for the recording_studio_messages Rails engine.
 
 ## Security Features
 

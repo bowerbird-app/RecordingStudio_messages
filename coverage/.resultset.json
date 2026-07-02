@@ -1,7 +1,7 @@
 {
   "Unit Tests": {
     "coverage": {
-      "/workspace/lib/gem_template.rb": {
+      "/workspace/lib/recording_studio_messages.rb": {
         "lines": [
           null,
           null,
@@ -30,7 +30,7 @@
           }
         }
       },
-      "/workspace/lib/gem_template/engine.rb": {
+      "/workspace/lib/recording_studio_messages/engine.rb": {
         "lines": [
           null,
           null,
@@ -201,7 +201,7 @@
           }
         }
       },
-      "/workspace/lib/gem_template/configuration.rb": {
+      "/workspace/lib/recording_studio_messages/configuration.rb": {
         "lines": [
           null,
           null,
@@ -251,7 +251,7 @@
           }
         }
       },
-      "/workspace/lib/gem_template/hooks.rb": {
+      "/workspace/lib/recording_studio_messages/hooks.rb": {
         "lines": [
           null,
           null,
@@ -571,7 +571,7 @@
           }
         }
       },
-      "/workspace/lib/gem_template/services/base_service.rb": {
+      "/workspace/lib/recording_studio_messages/services/base_service.rb": {
         "lines": [
           null,
           null,
@@ -777,7 +777,7 @@
           }
         }
       },
-      "/workspace/lib/gem_template/services/example_service.rb": {
+      "/workspace/lib/recording_studio_messages/services/example_service.rb": {
         "lines": [
           null,
           null,
@@ -815,7 +815,7 @@
           }
         }
       },
-      "/workspace/lib/generators/gem_template/install/install_generator.rb": {
+      "/workspace/lib/generators/recording_studio_messages/install/install_generator.rb": {
         "lines": [
           null,
           null,

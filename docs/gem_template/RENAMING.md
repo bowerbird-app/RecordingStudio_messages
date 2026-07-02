@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -56,8 +56,8 @@ The script updates all gem-related files and references:
 
 ### Content Updated
 The script performs two types of replacements in all relevant files:
-- **snake_case**: `gem_template` → `new_gem_name`
-- **PascalCase**: `GemTemplate` → `NewGemName`
+- **snake_case**: `recording_studio_messages` → `new_gem_name`
+- **PascalCase**: `RecordingStudioMessages` → `NewGemName`
 
 Files updated include:
 - `.gemspec`, `.rb`, `.erb`, `.md` files
@@ -71,14 +71,14 @@ Files updated include:
 The following directories and files are intentionally **excluded** from renaming:
 
 ### Excluded Documentation
-- `docs/gem_template/` - **Preserved as architectural reference**
-  - These files document the original gem_template structure
+- `docs/recording_studio_messages/` - **Preserved as architectural reference**
+  - These files document the original recording_studio_messages structure
   - They serve as reference documentation for understanding the template's architecture
   - Keep them unchanged even after renaming your gem
 
 This ensures you maintain documentation showing:
 - How the template was originally structured
-- What patterns and conventions come from the gem_template
+- What patterns and conventions come from the recording_studio_messages
 - Reference material for future gems built from this template
 
 ## Verification

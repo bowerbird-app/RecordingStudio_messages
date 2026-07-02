@@ -1,14 +1,14 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
 
 ---
 
-# GemTemplate Configuration
+# RecordingStudioMessages Configuration
 
-This document explains how to configure **GemTemplate** in your host Rails application.
+This document explains how to configure **RecordingStudioMessages** in your host Rails application.
 
 ---
 
@@ -17,14 +17,14 @@ This document explains how to configure **GemTemplate** in your host Rails appli
 After installing the gem, run the install generator:
 
 ```bash
-rails generate gem_template:install
+rails generate recording_studio_messages:install
 ```
 
 This will:
 
-1. Mount the engine in your routes (`/gem_template` by default).
-2. Create `config/initializers/gem_template.rb` with example settings.
-3. Optionally create `config/gem_template.yml` for environment-specific configuration.
+1. Mount the engine in your routes (`/recording_studio_messages` by default).
+2. Create `config/initializers/recording_studio_messages.rb` with example settings.
+3. Optionally create `config/recording_studio_messages.yml` for environment-specific configuration.
 
 ---
 
@@ -32,7 +32,7 @@ This will:
 
 | Option              | Type    | Default                          | Description                                 |
 |---------------------|---------|----------------------------------|---------------------------------------------|
-| `api_key`           | String  | `ENV["GEM_TEMPLATE_API_KEY"]`    | API key for external service integration.  |
+| `api_key`           | String  | `ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]`    | API key for external service integration.  |
 | `enable_feature_x`  | Boolean | `false`                          | Toggle optional feature X.                 |
 | `timeout`           | Integer | `5`                              | Timeout (seconds) for external calls.      |
 
@@ -64,11 +64,11 @@ Use `RecordingStudio.validate_recordable_declarations!`, `RecordingStudio.root_r
 
 ### 1. Ruby Initializer (Recommended)
 
-Edit `config/initializers/gem_template.rb`:
+Edit `config/initializers/recording_studio_messages.rb`:
 
 ```ruby
-GemTemplate.configure do |config|
-  config.api_key          = ENV["GEM_TEMPLATE_API_KEY"]
+RecordingStudioMessages.configure do |config|
+  config.api_key          = ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]
   config.enable_feature_x = true
   config.timeout          = 10
 end
@@ -78,7 +78,7 @@ This approach is flexible and allows dynamic values, environment variables, and 
 
 ### 2. YAML Configuration
 
-If you prefer environment-specific static settings, create `config/gem_template.yml`:
+If you prefer environment-specific static settings, create `config/recording_studio_messages.yml`:
 
 ```yaml
 development:
@@ -87,12 +87,12 @@ development:
   timeout: 5
 
 production:
-  api_key: <%= ENV["GEM_TEMPLATE_API_KEY"] %>
+  api_key: <%= ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] %>
   enable_feature_x: false
   timeout: 5
 ```
 
-The engine loads this file automatically via `Rails.application.config_for(:gem_template)`.
+The engine loads this file automatically via `Rails.application.config_for(:recording_studio_messages)`.
 
 ### 3. `config.x` Namespace
 
@@ -100,8 +100,8 @@ You can also set values in `config/application.rb` or environment files:
 
 ```ruby
 # config/environments/production.rb
-config.x.gem_template.api_key = ENV["GEM_TEMPLATE_API_KEY"]
-config.x.gem_template.timeout = 10
+config.x.recording_studio_messages.api_key = ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]
+config.x.recording_studio_messages.timeout = 10
 ```
 
 ---
@@ -110,10 +110,10 @@ config.x.gem_template.timeout = 10
 
 Configuration is merged in the following order (later sources override earlier ones):
 
-1. **Defaults** – defined in `GemTemplate::Configuration#initialize`.
-2. **YAML** – `config/gem_template.yml` loaded via `config_for`.
-3. **`config.x.gem_template`** – values set in Rails config files.
-4. **Initializer** – `GemTemplate.configure` block in `config/initializers/gem_template.rb`.
+1. **Defaults** – defined in `RecordingStudioMessages::Configuration#initialize`.
+2. **YAML** – `config/recording_studio_messages.yml` loaded via `config_for`.
+3. **`config.x.recording_studio_messages`** – values set in Rails config files.
+4. **Initializer** – `RecordingStudioMessages.configure` block in `config/initializers/recording_studio_messages.rb`.
 
 > **Tip:** For most use cases, stick with the Ruby initializer and use environment variables for secrets.
 
@@ -122,13 +122,13 @@ Configuration is merged in the following order (later sources override earlier o
 ## Accessing Configuration at Runtime
 
 ```ruby
-GemTemplate.configuration.api_key
+RecordingStudioMessages.configuration.api_key
 # => "your-api-key"
 
-GemTemplate.configuration.enable_feature_x
+RecordingStudioMessages.configuration.enable_feature_x
 # => true
 
-GemTemplate.configuration.to_h
+RecordingStudioMessages.configuration.to_h
 # => { api_key: "...", enable_feature_x: true, timeout: 5 }
 ```
 
@@ -140,8 +140,8 @@ You can access these values from anywhere in your application or from within the
 
 For sensitive values like `api_key`, we recommend:
 
-- **Environment variables** – `ENV["GEM_TEMPLATE_API_KEY"]`
-- **Rails credentials** – `Rails.application.credentials.gem_template[:api_key]`
+- **Environment variables** – `ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]`
+- **Rails credentials** – `Rails.application.credentials.recording_studio_messages[:api_key]`
 
 Avoid committing secrets to version control. The generator templates use `ENV` by default to encourage this practice.
 
@@ -151,7 +151,7 @@ Avoid committing secrets to version control. The generator templates use `ENV` b
 
 To add new options:
 
-1. Add `attr_accessor` in `lib/gem_template/configuration.rb`.
+1. Add `attr_accessor` in `lib/recording_studio_messages/configuration.rb`.
 2. Set a sensible default in `#initialize`.
 3. Update `#to_h` if you want the option included in hash export.
 4. Document the new option in this file and in the initializer template.
@@ -162,7 +162,7 @@ To add new options:
 
 | Issue                                  | Solution                                                                 |
 |----------------------------------------|--------------------------------------------------------------------------|
-| YAML not loading                       | Ensure `config/gem_template.yml` exists and has valid YAML syntax.       |
+| YAML not loading                       | Ensure `config/recording_studio_messages.yml` exists and has valid YAML syntax.       |
 | Initializer values not applied         | Make sure the initializer runs after the engine initializer (default).   |
 | `config.x` values ignored              | Verify you're setting them in the correct environment file.             |
 
@@ -172,10 +172,10 @@ To add new options:
 
 | File                                                        | Purpose                                      |
 |-------------------------------------------------------------|----------------------------------------------|
-| `lib/gem_template/configuration.rb`                         | Configuration class with defaults.           |
-| `lib/gem_template/engine.rb`                                | Engine initializer that loads host config.   |
-| `lib/generators/gem_template/install/install_generator.rb`  | Install generator that creates config files. |
-| `lib/generators/gem_template/install/templates/`            | Templates for initializer and YAML files.    |
+| `lib/recording_studio_messages/configuration.rb`                         | Configuration class with defaults.           |
+| `lib/recording_studio_messages/engine.rb`                                | Engine initializer that loads host config.   |
+| `lib/generators/recording_studio_messages/install/install_generator.rb`  | Install generator that creates config files. |
+| `lib/generators/recording_studio_messages/install/templates/`            | Templates for initializer and YAML files.    |
 
 ---
 

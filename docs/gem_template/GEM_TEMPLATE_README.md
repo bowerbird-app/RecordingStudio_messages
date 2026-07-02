@@ -1,16 +1,16 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** May 5, 2026
 >
 > *Maintainers: Please update the date above when modifying this file.*
 
 ---
 
-> **📌 Note:** This documentation directory (`docs/gem_template/`) is preserved during gem renaming and serves as architectural reference material. When you rename your gem, these files intentionally remain under `gem_template` to document the original template structure.
+> **📌 Note:** This documentation directory (`docs/recording_studio_messages/`) is preserved during gem renaming and serves as architectural reference material. When you rename your gem, these files intentionally remain under `recording_studio_messages` to document the original template structure.
 
 ---
 
-# GemTemplate
+# RecordingStudioMessages
 
 A template for building **Rails mountable engine gems** with PostgreSQL UUID primary keys, TailwindCSS, and GitHub Codespaces integration.
 
@@ -83,15 +83,15 @@ For current UI work, prefer the top-level README plus the live FlatPack demo app
 ## 📁 Project Structure
 
 ```
-gem_template/
+recording_studio_messages/
 ├── app/
-│   ├── controllers/gem_template/
-│   └── views/gem_template/
+│   ├── controllers/recording_studio_messages/
+│   └── views/recording_studio_messages/
 ├── config/routes.rb
 ├── db/migrate/              # Engine migrations
 ├── lib/
-│   ├── gem_template.rb
-│   ├── gem_template/
+│   ├── recording_studio_messages.rb
+│   ├── recording_studio_messages/
 │   │   ├── configuration.rb
 │   │   ├── engine.rb
 │   │   ├── version.rb
@@ -101,7 +101,7 @@ gem_template/
 │   └── generators/
 ├── test/dummy/              # Test Rails app
 ├── docs/                    # Documentation
-└── gem_template.gemspec
+└── recording_studio_messages.gemspec
 ```
 
 ---

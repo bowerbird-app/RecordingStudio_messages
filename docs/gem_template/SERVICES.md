@@ -1,5 +1,5 @@
 > **Architecture Documentation**
-> *   **Canonical Source:** [bowerbird-app/gem_template](https://github.com/bowerbird-app/gem_template/tree/main/docs/gem_template)
+> *   **Canonical Source:** [bowerbird-app/recording_studio_messages](https://github.com/bowerbird-app/recording_studio_messages/tree/main/docs/recording_studio_messages)
 > *   **Last Updated:** December 11, 2025
 >
 > *Maintainers: Please update the date above when modifying this file.*
@@ -8,14 +8,14 @@
 
 # Service Objects
 
-Business logic in GemTemplate is encapsulated in service objects using the Result monad pattern.
+Business logic in RecordingStudioMessages is encapsulated in service objects using the Result monad pattern.
 
 ---
 
 ## Usage
 
 ```ruby
-result = GemTemplate::Services::ExampleService.call(name: "World")
+result = RecordingStudioMessages::Services::ExampleService.call(name: "World")
 
 if result.success?
   puts result.value  # => "Hello, World!"
@@ -29,7 +29,7 @@ end
 Create your own services by inheriting from `BaseService`:
 
 ```ruby
-module GemTemplate
+module RecordingStudioMessages
   module Services
     class MyService < BaseService
       def initialize(param:)

@@ -1,4 +1,4 @@
-# GemTemplate
+# RecordingStudioMessages
 
 Internal template for building Rails engine addons on top of RecordingStudio.
 
@@ -136,4 +136,4 @@ See the [FlatPack README](https://github.com/bowerbird-app/flatpack) for full do
 
 ## Documentation
 
-The original gem template documentation is preserved in `docs/gem_template/` as architectural reference material. Use it as background on the engine conventions; the README and dummy app are the source of truth for the Recording Studio addon workflow.
+The original gem template documentation is preserved in `docs/recording_studio_messages/` as architectural reference material. Use it as background on the engine conventions; the README and dummy app are the source of truth for the Recording Studio addon workflow.
