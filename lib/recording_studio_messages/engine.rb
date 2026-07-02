@@ -17,8 +17,8 @@ module RecordingStudioMessages
     initializer "recording_studio_messages.configure_recordables", after: :load_config_initializers do
       config.to_prepare do
         RecordingStudioMessages.configuration.messages.each_value(&:validate!)
-        RecordingStudioMessages::MessageGroup.declare_recording_studio_recordable! if defined?(RecordingStudioMessages::MessageGroup)
-        RecordingStudioMessages::Message.declare_recording_studio_recordable! if defined?(RecordingStudioMessages::Message)
+        RecordingStudioMessages::MessageGroup.declare_recording_studio_recordable!
+        RecordingStudioMessages::Message.declare_recording_studio_recordable!
       end
     end
   end

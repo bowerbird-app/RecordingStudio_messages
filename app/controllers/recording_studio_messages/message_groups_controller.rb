@@ -52,7 +52,7 @@ module RecordingStudioMessages
       return recording if recording.recordable_type == "RecordingStudioMessages::MessageGroup" &&
                           RecordingStudioAccessible.authorized?(actor: current_actor_record, recording: recording, role: :view)
 
-      head :forbidden
+      raise ActionController::RoutingError, "Message group was not found or is not visible"
     end
 
     def group_params
