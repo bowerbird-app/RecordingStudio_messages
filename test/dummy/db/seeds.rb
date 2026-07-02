@@ -28,6 +28,8 @@ accessible_workspace = Workspace.find_or_create_by!(name: "Client Workspace")
 private_workspace = Workspace.find_or_create_by!(name: "Private Workspace")
 folder = Folder.find_or_create_by!(name: "Product Docs")
 page = Page.find_or_create_by!(title: "Getting Started")
+site_messages = SiteMessages.find_or_create_by!(name: "Site messages")
+support_messages = SupportMessages.find_or_create_by!(name: "Support messages")
 
 previous_actor = Current.actor
 Current.actor = user
@@ -39,8 +41,9 @@ begin
   private_root_recording = RecordingStudio.root_recording_for(private_workspace)
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
-
   find_or_record_child.call(page, root_recording, folder_recording)
+  site_messages_recording = RecordingStudio.root_recording_for(site_messages)
+  support_messages_recording = find_or_record_child.call(support_messages, root_recording, root_recording)
 ensure
   Current.actor = previous_actor
 end
@@ -49,4 +52,6 @@ puts "Seeded: admin@admin.com / Password"
 puts "Seeded: Workspace '#{workspace.name}' with root recording ##{root_recording.id}"
 puts "Seeded: Workspace '#{accessible_workspace.name}' with root recording ##{accessible_root_recording.id}"
 puts "Seeded: Workspace '#{private_workspace.name}' with root recording ##{private_root_recording.id}"
+puts "Seeded: SiteMessages root recording ##{site_messages_recording.id}"
+puts "Seeded: SupportMessages recording ##{support_messages_recording.id}"
 puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
