@@ -5,4 +5,5 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require_relative "simplecov_helper"
 require "minitest/autorun"
 require "rails"
+require "active_support/core_ext"
 require "recording_studio_messages"

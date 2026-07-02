@@ -7,67 +7,44 @@ class ConfigurationTest < Minitest::Test
     @configuration = RecordingStudioMessages::Configuration.new
   end
 
-  def test_merge_updates_known_attributes
-    @configuration.merge!(api_key: "abc123", timeout: 9, enable_feature_x: true)
+  def test_multiple_message_keys_and_container_collection
+    @configuration.messages(:support) { |messages| messages.container_type = "SupportMessages" }
+    @configuration.messages(:site) { |messages| messages.container_type = "SiteMessages" }
 
-    assert_equal "abc123", @configuration.api_key
-    assert_equal 9, @configuration.timeout
-    assert_equal true, @configuration.enable_feature_x
+    assert_equal %w[SupportMessages SiteMessages], @configuration.container_recordable_types
+    assert_equal :support, @configuration.message_config!(:support).key
   end
 
-  def test_merge_ignores_unknown_keys
-    @configuration.merge!(unknown_key: "ignored", timeout: 7)
+  def test_default_create_group_authorization_is_container_edit
+    config = @configuration.messages(:support)
 
-    refute_respond_to @configuration, :unknown_key
-    assert_equal 7, @configuration.timeout
+    assert_equal({ type: :container_access, role: :edit }, config.effective_create_group_authorization)
   end
 
-  def test_merge_with_non_enumerable_is_noop
-    original = @configuration.to_h
+  def test_action_authorization_config_validates_action
+    config = @configuration.messages(:site)
+    config.container_type = "SiteMessages"
+    config.create_group_authorization = { type: :action, action: :"recording_studio_messages.create_group" }
 
-    @configuration.merge!(nil)
-
-    assert_nil @configuration.api_key if original[:api_key].nil?
-    assert_equal original[:api_key], @configuration.api_key unless original[:api_key].nil?
-    assert_equal original[:timeout], @configuration.timeout
-    assert_equal original[:enable_feature_x], @configuration.enable_feature_x
+    assert config.validate!
   end
 
-  def test_initialize_uses_environment_api_key_and_defaults
-    previous_value = ENV.fetch("RECORDING_STUDIO_MESSAGES_API_KEY", nil)
-    ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] = "env-token"
+  def test_unknown_role_fails_configuration
+    config = @configuration.messages(:site)
+    config.container_type = "SiteMessages"
+    config.create_group_authorization = { type: :container_access, role: :owner }
 
-    configuration = RecordingStudioMessages::Configuration.new
-
-    assert_equal "env-token", configuration.api_key
-    assert_equal false, configuration.enable_feature_x
-    assert_equal 5, configuration.timeout
-    assert_instance_of RecordingStudioMessages::Hooks, configuration.hooks
-  ensure
-    ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] = previous_value
+    assert_raises(RecordingStudioMessages::ConfigurationError) { config.validate! }
   end
 
-  def test_merge_accepts_string_keys
-    @configuration.merge!("api_key" => "string-key", "timeout" => 12)
+  def test_recipient_defaults_fail_closed
+    config = @configuration.messages(:site)
 
-    assert_equal "string-key", @configuration.api_key
-    assert_equal 12, @configuration.timeout
-  end
-
-  def test_to_h_reports_registered_hook_counts
-    @configuration.hooks.before_initialize { nil }
-    @configuration.hooks.before_initialize { nil }
-    @configuration.hooks.after_service { nil }
-
-    result = @configuration.to_h
-
-    assert_equal 2, result.fetch(:hooks_registered).fetch(:before_initialize)
-    assert_equal 1, result.fetch(:hooks_registered).fetch(:after_service)
-  end
-
-  def test_configure_without_block_is_safe
-    RecordingStudioMessages.configure
-
-    assert_kind_of RecordingStudioMessages::Configuration, RecordingStudioMessages.configuration
+    assert_empty config.recipient_actor_types
+    assert_nil config.recipient_search
+    assert_nil config.recipient_allowed
+    assert_equal 2, config.minimum_recipient_query_length
+    assert_equal 10, config.recipient_search_limit
+    assert_equal 50, config.max_recipients
   end
 end
