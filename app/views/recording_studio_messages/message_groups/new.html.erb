@@ -1,0 +1,25 @@
+<%= render FlatPack::Chat::Layout::Component.new(variant: :single) do |layout| %>
+  <% layout.panel do %>
+    <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
+      <% panel.header do %>
+        <%= render FlatPack::Chat::Header::Component.new(title: "New message") %>
+      <% end %>
+      <% panel.messages do %>
+        <% if @error.present? %>
+          <%= render FlatPack::Alert::Component.new(variant: :error) do %><%= @error %><% end %>
+        <% end %>
+        <%= form_with url: message_groups_path(messages_config.key, container_recording_id: container_recording.id), scope: :message_group do |form| %>
+          <div class="space-y-4">
+            <%= render FlatPack::TextInput::Component.new(form: form, name: :subject, label: "Subject", required: false) %>
+            <p class="text-sm text-(--text-muted-color)">Recipient search is provided by the host app configuration. Submit recipients as type/id pairs.</p>
+            <%= render FlatPack::Chat::Composer::Component.new do |composer| %>
+              <% composer.center do %>
+                <%= render FlatPack::Chat::Textarea::Component.new(name: "message_group[body]") %>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

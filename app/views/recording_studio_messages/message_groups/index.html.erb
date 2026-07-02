@@ -1,0 +1,43 @@
+<%= render FlatPack::Chat::Layout::Component.new(variant: :single) do |layout| %>
+  <% layout.panel do %>
+    <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
+      <% panel.header do %>
+        <%= render FlatPack::Chat::Header::Component.new(title: messages_config.name) do |header| %>
+          <% header.right do %>
+            <% if @can_create_group %>
+              <%= render FlatPack::Button::Component.new(href: new_message_group_path(messages_config.key, container_recording_id: container_recording.id), variant: :primary) do %>
+                New message
+              <% end %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <% panel.messages do %>
+        <% if @message_group_recordings.empty? %>
+          <%= render FlatPack::EmptyState::Component.new(title: "No messages", description: "Start a message group when you are ready.") %>
+        <% else %>
+          <div class="space-y-2">
+            <% @message_group_recordings.each do |recording| %>
+              <% group = recording.recordable %>
+              <%= link_to message_group_path(messages_config.key, recording, container_recording_id: container_recording.id), class: "block rounded-lg border border-(--surface-border-color) bg-(--surface-background-color) p-4" do %>
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <p class="font-medium"><%= group.display_title %></p>
+                    <p class="text-sm text-(--text-muted-color)"><%= group.messages.order(created_at: :desc).first&.body.to_s.truncate(120) %></p>
+                  </div>
+                  <%= render FlatPack::Badge::Component.new do %>
+                    <%= l(group.last_message_at || group.updated_at, format: :short) %>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+          <% if @paginator.has_more? %>
+            <div class="mt-4 text-center text-sm text-(--text-muted-color)" data-next-page="<%= @paginator.next_page %>">More messages available</div>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

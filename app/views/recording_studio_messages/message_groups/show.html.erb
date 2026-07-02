@@ -1,0 +1,23 @@
+<%= render FlatPack::Chat::Layout::Component.new(variant: :single) do |layout| %>
+  <% layout.panel do %>
+    <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
+      <% panel.header do %>
+        <%= render FlatPack::Chat::Header::Component.new(title: @message_group_recording.recordable.display_title) %>
+      <% end %>
+      <% panel.messages do %>
+        <%= render FlatPack::Chat::MessageList::Component.new(history_url: history_message_group_path(messages_config.key, @message_group_recording, container_recording_id: container_recording.id, page: @paginator.older_page), history_has_more: @paginator.has_more?) do %>
+          <%= render partial: "recording_studio_messages/messages/message", collection: @message_recordings, as: :message_recording %>
+        <% end %>
+      <% end %>
+      <% panel.composer do %>
+        <% if @can_post %>
+          <%= form_with url: message_group_messages_path(messages_config.key, @message_group_recording, container_recording_id: container_recording.id), scope: :message do %>
+            <%= render FlatPack::Chat::Composer::Component.new %>
+          <% end %>
+        <% else %>
+          <%= render FlatPack::Alert::Component.new(variant: :info) do %>You can view this thread but cannot post messages.<% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

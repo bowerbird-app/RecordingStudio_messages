@@ -1,31 +1,16 @@
 # frozen_string_literal: true
 
-# Example migration for a Recording Studio addon.
-#
-# This creates a workspace-scoped table owned by the addon. Use it as a starting
-# point for addon-specific data that hangs off the host application's root
-# Workspace recordable.
-#
-class CreateRecordingStudioMessagesPages < ActiveRecord::Migration[8.1]
+class CreateRecordingStudioMessagesMessageGroups < ActiveRecord::Migration[8.1]
   def change
-    create_table :recording_studio_messages_pages, id: :uuid do |t|
-      t.uuid :workspace_id, null: false
-      t.string :title, null: false
-      t.string :slug, null: false
-      t.jsonb :content, default: {}, null: false
-      t.boolean :published, default: false, null: false
+    create_table :recording_studio_messages_message_groups, id: :uuid do |t|
+      t.string :title
+      t.string :subject
+      t.jsonb :metadata, null: false, default: {}
+      t.datetime :last_message_at
 
       t.timestamps
     end
 
-    add_page_indexes
-  end
-
-  private
-
-  def add_page_indexes
-    add_index :recording_studio_messages_pages, :workspace_id
-    add_index :recording_studio_messages_pages, %i[workspace_id slug], unique: true
-    add_index :recording_studio_messages_pages, :published
+    add_index :recording_studio_messages_message_groups, :last_message_at
   end
 end

@@ -6,16 +6,15 @@ Gem::Specification.new do |spec|
   spec.name        = "recording_studio_messages"
   spec.version     = RecordingStudioMessages::VERSION
   spec.authors     = ["Bowerbird"]
-  spec.homepage    = "https://github.com/bowerbird-app/RecordingStudio_recording_studio_messages"
-  spec.summary     = "Recording Studio addon template for Rails engines"
-  spec.description = "An internal template for building Recording Studio addons with Rails 8.1, " \
-                     "UUID-backed PostgreSQL models, TailwindCSS, and GitHub Codespaces support"
+  spec.homepage    = "https://github.com/bowerbird-app/RecordingStudio_messages"
+  spec.summary     = "Reusable Recording Studio messaging addon"
+  spec.description = "A Rails engine that adds configurable, RecordingStudio-backed message groups and messages with FlatPack UI."
   spec.license     = "MIT"
   spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/bowerbird-app/RecordingStudio_recording_studio_messages"
-  spec.metadata["changelog_uri"] = "https://github.com/bowerbird-app/RecordingStudio_recording_studio_messages/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = spec.homepage
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
   spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
@@ -23,4 +22,7 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency "rails", "~> 8.1.0"
+  spec.add_dependency "recording_studio", "~> 3.0"
+  spec.add_dependency "recording_studio_accessible", ">= 0.4.1"
+  spec.add_dependency "flat_pack"
 end

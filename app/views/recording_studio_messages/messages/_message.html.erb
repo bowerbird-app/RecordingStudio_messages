@@ -1,0 +1,8 @@
+<% message = message_recording.recordable %>
+<%= render FlatPack::Chat::MessageRecord::Component.new(
+  body: message.body,
+  sender_name: message.sender&.respond_to?(:name) && message.sender.name.present? ? message.sender.name : message.sender_type,
+  direction: message.sender_type == current_actor_record.class.name && message.sender_id.to_s == current_actor_record.id.to_s ? :outgoing : :incoming,
+  state: :sent,
+  timestamp: message.created_at
+) %>
