@@ -13,7 +13,11 @@ module RecordingStudioMessages
     def create!
       raise ActiveRecord::RecordInvalid, RecordingStudioMessages::Message.new unless @body.strip.present?
 
-      recording = @message_group_recording.record(RecordingStudioMessages::Message, actor: @actor) do |message|
+      recording = @message_group_recording.record(
+        RecordingStudioMessages::Message,
+        actor: @actor,
+        parent_recording: @message_group_recording
+      ) do |message|
         message.message_group = @message_group_recording.recordable
         message.sender_type = @actor.class.name
         message.sender_id = @actor.id

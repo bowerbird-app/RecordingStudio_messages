@@ -12,9 +12,18 @@
           <div class="space-y-4">
             <%= render FlatPack::TextInput::Component.new(form: form, name: :subject, label: "Subject", required: false) %>
             <p class="text-sm text-(--text-muted-color)">Recipient search is provided by the host app configuration. Submit recipients as type/id pairs.</p>
+            <% if messages_config.recipient_actor_types.any? %>
+              <div class="grid gap-4 md:grid-cols-2">
+                <%= render FlatPack::TextInput::Component.new(name: "message_group[recipients][][recipient_type]", label: "Recipient type", value: messages_config.recipient_actor_types.first) %>
+                <%= render FlatPack::TextInput::Component.new(name: "message_group[recipients][][recipient_id]", label: "Recipient ID") %>
+              </div>
+            <% end %>
             <%= render FlatPack::Chat::Composer::Component.new do |composer| %>
               <% composer.center do %>
                 <%= render FlatPack::Chat::Textarea::Component.new(name: "message_group[body]") %>
+              <% end %>
+              <% composer.right do %>
+                <%= render FlatPack::Button::Component.new(text: "Send", style: :primary, type: "submit") %>
               <% end %>
             <% end %>
           </div>

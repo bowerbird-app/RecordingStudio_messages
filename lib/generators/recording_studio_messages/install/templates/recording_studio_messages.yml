@@ -1,9 +1,7 @@
 development:
-  api_key: "dev-key"
-  enable_feature_x: true
-  timeout: 5
+  default_page_size: 25
+  message_page_size: 25
 
 production:
-  api_key: <%= ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] %>
-  enable_feature_x: false
-  timeout: 5
+  default_page_size: 25
+  message_page_size: 25

@@ -47,4 +47,13 @@ class ConfigurationTest < Minitest::Test
     assert_equal 10, config.recipient_search_limit
     assert_equal 50, config.max_recipients
   end
+
+  def test_hooks_registry_is_configured
+    calls = []
+
+    @configuration.hooks.after_initialize { calls << :after_initialize }
+    @configuration.hooks.run(:after_initialize)
+
+    assert_equal [:after_initialize], calls
+  end
 end

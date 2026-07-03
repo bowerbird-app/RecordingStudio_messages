@@ -3,11 +3,7 @@
 module RecordingStudioMessages
   class MessagesController < ApplicationController
     def create
-      message_group_recording = RecordingStudio::Recording.unscoped.find(params[:message_group_id])
-      unless message_group_recording.recordable_type == "RecordingStudioMessages::MessageGroup" &&
-             RecordingStudioAccessible.authorized?(actor: current_actor_record, recording: message_group_recording, role: :edit)
-        return head :forbidden
-      end
+      message_group_recording = find_message_group_recording!(params[:message_group_id], role: :edit)
 
       MessageCreator.new(
         message_group_recording: message_group_recording,

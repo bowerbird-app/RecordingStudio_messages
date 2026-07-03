@@ -46,5 +46,14 @@ module RecordingStudioMessages
     def require_create_group_authorization!
       head :forbidden unless create_group_authorized?
     end
+
+    def find_message_group_recording!(id, role:)
+      recording = RecordingStudio::Recording.unscoped.find(id)
+      return recording if recording.recordable_type == "RecordingStudioMessages::MessageGroup" &&
+                          recording.parent_recording_id == container_recording.id &&
+                          RecordingStudioAccessible.authorized?(actor: current_actor_record, recording: recording, role: role)
+
+      raise ActionController::RoutingError, "Message group was not found or is not visible"
+    end
   end
 end

@@ -12,7 +12,14 @@
       <% panel.composer do %>
         <% if @can_post %>
           <%= form_with url: message_group_messages_path(messages_config.key, @message_group_recording, container_recording_id: container_recording.id), scope: :message do %>
-            <%= render FlatPack::Chat::Composer::Component.new %>
+            <%= render FlatPack::Chat::Composer::Component.new do |composer| %>
+              <% composer.center do %>
+                <%= render FlatPack::Chat::Textarea::Component.new(name: "message[body]") %>
+              <% end %>
+              <% composer.right do %>
+                <%= render FlatPack::Button::Component.new(text: "Send", style: :primary, type: "submit") %>
+              <% end %>
+            <% end %>
           <% end %>
         <% else %>
           <%= render FlatPack::Alert::Component.new(variant: :info) do %>You can view this thread but cannot post messages.<% end %>

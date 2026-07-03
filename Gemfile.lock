@@ -2,7 +2,10 @@ PATH
   remote: .
   specs:
     recording_studio_messages (0.1.1)
+      flat_pack
       rails (~> 8.1.0)
+      recording_studio (~> 3.0)
+      recording_studio_accessible (>= 0.4.1)
 
 GEM
   remote: https://rubygems.org/

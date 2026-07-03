@@ -48,11 +48,7 @@ module RecordingStudioMessages
     private
 
     def find_visible_message_group!
-      recording = RecordingStudio::Recording.unscoped.find(params[:id])
-      return recording if recording.recordable_type == "RecordingStudioMessages::MessageGroup" &&
-                          RecordingStudioAccessible.authorized?(actor: current_actor_record, recording: recording, role: :view)
-
-      raise ActionController::RoutingError, "Message group was not found or is not visible"
+      find_message_group_recording!(params[:id], role: :view)
     end
 
     def group_params

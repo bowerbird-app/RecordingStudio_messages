@@ -8,6 +8,7 @@ module RecordingStudioMessages
     DEFAULT_PAGE_SIZE = 25
 
     attr_accessor :current_actor, :layout, :default_page_size, :message_page_size
+    attr_reader :hooks
 
     def initialize
       @current_actor = nil
@@ -15,6 +16,7 @@ module RecordingStudioMessages
       @default_page_size = DEFAULT_PAGE_SIZE
       @message_page_size = DEFAULT_PAGE_SIZE
       @messages = {}
+      @hooks = Hooks.new
     end
 
     def messages(key = nil)

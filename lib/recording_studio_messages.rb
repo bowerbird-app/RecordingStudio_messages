@@ -7,6 +7,7 @@ require "recording_studio_messages/version"
 require "recording_studio_messages/dependency_check"
 RecordingStudioMessages::DependencyCheck.verify!
 require "recording_studio_messages/configuration"
+require "recording_studio_messages/hooks"
 require "recording_studio_messages/engine"
 require "recording_studio_messages/services/create_group_authorizer"
 require "recording_studio_messages/services/container_resolver"
