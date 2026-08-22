@@ -4,7 +4,8 @@ RecordingStudio.configure do |config|
   config.recordable_types = [
     "Workspace",
     "Folder",
-    "Page"
+    "Page",
+    "RecordingStudioAttachable::Attachment"
   ]
 
   config.require_recordable_declarations = true

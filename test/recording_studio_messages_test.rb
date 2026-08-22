@@ -96,6 +96,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"Workspace"'
     assert_includes initializer_source, '"Folder"'
     assert_includes initializer_source, '"Page"'
+    assert_includes initializer_source, '"RecordingStudioAttachable::Attachment"'
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
     refute_includes initializer_source, "MessageMount"
