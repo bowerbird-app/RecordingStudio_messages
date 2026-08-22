@@ -18,6 +18,12 @@ module RecordingStudioMessages
         existing = @parent_recording.message_mount(@key)
         return existing if existing
 
+        record_mount
+      end
+
+      private
+
+      def record_mount
         mount = RecordingStudioMessages::MessageMount.new(key: @key)
         RecordingStudio.record!(
           action: "created",
@@ -27,8 +33,6 @@ module RecordingStudioMessages
           actor: @actor
         ).recording
       end
-
-      private
 
       def validate!
         raise ArgumentError, "parent recording is required" if @parent_recording.blank?

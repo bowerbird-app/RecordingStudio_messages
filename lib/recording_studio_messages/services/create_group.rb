@@ -15,29 +15,31 @@ module RecordingStudioMessages
 
       def call
         validate!
-
-        group = RecordingStudioMessages::MessageGroup.new(title: @title)
-        group_recording = RecordingStudio.record!(
-          action: "created",
-          recordable: group,
-          root_recording: @mount_recording.root_recording || @mount_recording,
-          parent_recording: @mount_recording,
-          actor: @actor
-        ).recording
-
+        group_recording = record_group
         grant_owner!(group_recording)
         group_recording
       end
 
       private
 
+      def record_group
+        group = RecordingStudioMessages::MessageGroup.new(title: @title)
+        RecordingStudio.record!(
+          action: "created",
+          recordable: group,
+          root_recording: @mount_recording.root_recording || @mount_recording,
+          parent_recording: @mount_recording,
+          actor: @actor
+        ).recording
+      end
+
       def validate!
         raise ArgumentError, "mount recording is required" if @mount_recording.blank?
         raise ArgumentError, "title is required" if @title.blank?
         raise ArgumentError, "actor is required" if @actor.blank?
-        unless mount_recordable?
-          raise RecordingStudioMessages::Error, "Groups must be created under a message mount"
-        end
+        return if mount_recordable?
+
+        raise RecordingStudioMessages::Error, "Groups must be created under a message mount"
       end
 
       def mount_recordable?

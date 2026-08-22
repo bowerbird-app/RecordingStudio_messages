@@ -22,7 +22,7 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to staff_desk_path
+    assert_redirected_to "/staff/desk"
     follow_redirect!
     assert_includes response.body, "Trying a quieter type scale next."
     assert_includes response.body, "Sent."
