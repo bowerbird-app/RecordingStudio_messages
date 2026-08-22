@@ -5,7 +5,7 @@
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 
 <div class="flex min-h-[70vh] w-full flex-col overflow-hidden rounded-[var(--chat-composer-radius)] border border-[var(--chat-border-color)] bg-[var(--chat-background-color)]">
-  <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
+  <%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
     <% panel.header do %>
       <%= render FlatPack::Chat::Header::Component.new(
         title: group_recording.recordable.title
@@ -60,6 +60,7 @@
               <% dropdown.menu_item(
                 text: "Upload files or images",
                 icon: "file",
+                type: "button",
                 data: { action: "click->flat-pack--chat-sender#openFilePicker" }
               ) %>
             <% end %>

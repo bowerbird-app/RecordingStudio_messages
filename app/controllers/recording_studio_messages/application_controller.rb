@@ -7,18 +7,8 @@ module RecordingStudioMessages
     helper RecordingStudioMessages::PanelHelper
 
     helper_method :current_messages_actor
-    helper_method :recording_studio_accessible if defined?(RecordingStudioAccessible::Engine)
-    helper_method :recording_studio_attachable if defined?(RecordingStudioAttachable::Engine)
 
     private
-
-    def recording_studio_accessible
-      main_app.recording_studio_accessible
-    end
-
-    def recording_studio_attachable
-      main_app.recording_studio_attachable
-    end
 
     def current_messages_actor
       return Current.actor if defined?(Current) && Current.respond_to?(:actor) && Current.actor.present?

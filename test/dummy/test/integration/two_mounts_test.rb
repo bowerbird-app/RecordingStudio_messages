@@ -53,6 +53,26 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Hero still"
   end
 
+  test "catalog keeps the seeded desks when another conversation reuses the title" do
+    leftover_workspace = Workspace.create!(name: "Leftover #{SecureRandom.hex(4)}")
+    leftover_root = RecordingStudio.root_recording_for(leftover_workspace)
+    RecordingStudioAccessible.bootstrap_owner_access!(recording: leftover_root, actor: @staff)
+    leftover_mount = leftover_root.ensure_message_mount("support", actor: @staff)
+    leftover_group = RecordingStudioMessages.create_group(
+      leftover_mount,
+      title: DummyCatalog::SUPPORT_TITLE,
+      actor: @staff
+    )
+
+    refute_equal leftover_group, DummyCatalog.support_group_recording
+    assert_equal DummyCatalog.support_mount_recording, DummyCatalog.support_group_recording.parent_recording
+    assert RecordingStudioAccessible.authorized?(
+      actor: @staff,
+      recording: DummyCatalog.support_group_recording,
+      role: :view
+    )
+  end
+
   test "empty conversation shows plus access when the grant list is empty" do
     sign_in @staff
     get recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
