@@ -165,6 +165,25 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes readme, "0.1.84"
   end
 
+  def test_send_replaces_the_thread_over_turbo_without_action_cable
+    controller = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/messages_controller.rb", __dir__)
+    )
+    helper = File.read(
+      File.expand_path("../app/helpers/recording_studio_messages/panel_helper.rb", __dir__)
+    )
+    stream = File.read(
+      File.expand_path("../app/views/recording_studio_messages/messages/create.turbo_stream.erb", __dir__)
+    )
+
+    assert_includes controller, "format.turbo_stream"
+    assert_includes helper, "messages_panel_list_id"
+    assert_includes stream, "turbo_stream.replace messages_panel_list_id"
+    assert_includes stream, "turbo_stream.replace messages_panel_composer_id"
+    refute_includes controller, "ActionCable"
+    refute File.exist?(File.expand_path("../app/channels", __dir__))
+  end
+
   def test_engine_does_not_ship_a_home_view
     view_path = File.expand_path("../app/views/recording_studio_messages/home/index.html.erb", __dir__)
 

@@ -17,7 +17,12 @@ module RecordingStudioMessages
         url: panel_url
       )
 
-      redirect_to after_send_path, notice: "Sent."
+      @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to after_send_path, notice: "Sent." }
+      end
     end
 
     private
