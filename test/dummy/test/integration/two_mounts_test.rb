@@ -18,6 +18,8 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
 
     assert RecordingStudio.capability_enabled?(:messages, for: Workspace)
     assert RecordingStudio.capability_enabled?(:messages, for: Mailbox)
+    assert_equal ["support"], Array(RecordingStudio.capability_options(:messages, for: Workspace)[:keys]).map(&:to_s)
+    assert_equal ["inbox"], Array(RecordingStudio.capability_options(:messages, for: Mailbox)[:keys]).map(&:to_s)
     assert_equal "Workspace", support_mount.parent_recording.recordable_type
     assert_equal "Mailbox", inbox_mount.parent_recording.recordable_type
     refute_equal support_mount.parent_recording, inbox_mount.parent_recording
@@ -36,7 +38,10 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Studio help"
     assert_includes response.body, "The homepage hero feels a bit loud"
     assert_includes response.body, "flat-pack--chat-panel"
+    assert_includes response.body, "flat-pack--chat-sender"
+    assert_includes response.body, "Upload files or images"
     refute_includes response.body, "Sign out"
+    refute_includes response.body, "recording-studio-root-switchable--root-switch-dropdown"
     refute_includes response.body, "Chat::Layout"
 
     sign_in @customer

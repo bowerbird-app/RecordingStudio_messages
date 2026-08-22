@@ -18,7 +18,7 @@ find_or_grant = lambda do |recording, actor, role, manager|
   existing = RecordingStudioAccessible.access_recordings_for_actor(recording: recording, actor: actor)
   return existing.first if existing.present?
 
-  if RecordingStudioAccessible.access_recordings_for(recording).none?
+  if recording.parent_recording_id.blank? && RecordingStudioAccessible.access_recordings_for(recording).none?
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: recording, actor: actor)
     raise result.error if result.failure?
     return result.value if role.to_s == "admin"
@@ -92,7 +92,7 @@ begin
   ) || RecordingStudioMessages.create_group(
     inbox_mount,
     title: DummyCatalog::INBOX_TITLE,
-    actor: customer
+    actor: staff
   )
 
   empty_group = RecordingStudio::Recording.find_by(
@@ -100,20 +100,20 @@ begin
     recordable: RecordingStudioMessages::MessageGroup.find_by(title: DummyCatalog::EMPTY_TITLE)
   )
   if empty_group.blank?
-    empty_group = support_mount.record(
-      RecordingStudioMessages::MessageGroup,
-      actor: staff,
-      parent_recording: support_mount
-    ) do |group|
-      group.title = DummyCatalog::EMPTY_TITLE
-    end
+    empty_group = RecordingStudio.record!(
+      action: "created",
+      recordable: RecordingStudioMessages::MessageGroup.new(title: DummyCatalog::EMPTY_TITLE),
+      root_recording: support_mount.root_recording,
+      parent_recording: support_mount,
+      actor: staff
+    ).recording
   end
 
   find_or_grant.call(support_group, staff, :admin, staff)
   find_or_grant.call(support_group, customer, :edit, staff)
   find_or_grant.call(support_group, agent, :view, staff)
-  find_or_grant.call(inbox_group, customer, :admin, customer)
-  find_or_grant.call(inbox_group, staff, :edit, customer)
+  find_or_grant.call(inbox_group, customer, :admin, staff)
+  find_or_grant.call(inbox_group, staff, :edit, staff)
 
   support_bodies = [
     [staff, "The homepage hero feels a bit loud. Can we calm it down?"],
@@ -125,11 +125,13 @@ begin
     next if existing.present?
 
     Current.actor = actor
-    support_group.record(
-      RecordingStudioMessages::Message,
-      actor: actor,
-      parent_recording: support_group
-    ) { |message| message.body = body }
+    RecordingStudio.record!(
+      action: "created",
+      recordable: RecordingStudioMessages::Message.new(body: body),
+      root_recording: support_group.root_recording,
+      parent_recording: support_group,
+      actor: actor
+    )
   end
 
   inbox_bodies = [
@@ -141,11 +143,13 @@ begin
     next if existing.present?
 
     Current.actor = actor
-    inbox_group.record(
-      RecordingStudioMessages::Message,
-      actor: actor,
-      parent_recording: inbox_group
-    ) { |message| message.body = body }
+    RecordingStudio.record!(
+      action: "created",
+      recordable: RecordingStudioMessages::Message.new(body: body),
+      root_recording: inbox_group.root_recording,
+      parent_recording: inbox_group,
+      actor: actor
+    )
   end
 
   attached_message = RecordingStudio::Recording.find_by(

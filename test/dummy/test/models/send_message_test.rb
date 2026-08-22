@@ -73,6 +73,14 @@ class SendMessageTest < ActiveSupport::TestCase
     end
   end
 
+  test "ensure_message_mount rejects a key that is not enabled on the type" do
+    error = assert_raises(RecordingStudioMessages::Error) do
+      @root.ensure_message_mount("inbox", actor: @staff)
+    end
+
+    assert_match(/inbox/, error.message)
+  end
+
   test "membership is accessible grants and does not add participant recordables" do
     actors = RecordingStudioMessages.granted_actors(@group).map(&:email)
 

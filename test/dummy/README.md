@@ -12,7 +12,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Seeded conversations, people, an agent, lines, and one image attachment
 - Staff desk (`/staff/desk`) and Inbox (`/inbox`) using Flatpack `Chat::Panel`
 - Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
-- Root Switchable in the default-layout chrome, not a host-only shell
+- No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
 - Mounted Messages, Accessible, Attachable, and Recording Studio engines
 
 ## Quick Start
@@ -42,7 +42,7 @@ Devise sign-in keeps `layouts/application` so the login card can stay centered. 
 - `tailwind`
 - Importmap JS, including `@hotwired/turbo-rails`
 
-The host injects `flat_pack/application` and the Root Switchable control through `app/views/recording_studio/_default_layout_head.html.erb`. Do not put the switcher or a Sign out button in the home view body or the chat panel.
+The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
 

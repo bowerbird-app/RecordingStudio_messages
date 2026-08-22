@@ -71,6 +71,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes controller_source, "flat_pack_sidebar"
     refute File.exist?(File.expand_path("dummy/app/views/layouts/flat_pack_sidebar.html.erb", __dir__))
     refute File.exist?(File.expand_path("dummy/app/views/layouts/flat_pack/_sidebar.html.erb", __dir__))
+
+    default_layout_head = File.read(
+      File.expand_path("dummy/app/views/recording_studio/_default_layout_head.html.erb", __dir__)
+    )
+    refute_includes default_layout_head, "recording_studio_root_switch_dropdown"
+    refute_includes default_layout_head, "Sign out"
   end
 
   def test_dummy_login_layout_keeps_flatpack_assets_without_tight_main_offset

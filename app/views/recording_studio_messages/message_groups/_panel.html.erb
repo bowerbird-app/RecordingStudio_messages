@@ -4,7 +4,7 @@
 <% form_url = local_assigns[:form_url].presence || messages_panel_form_url(group_recording) %>
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 
-<div class="flex min-h-[70vh] w-full flex-col overflow-hidden rounded-2xl border border-(--chat-border-color) bg-(--chat-background-color)">
+<div class="flex min-h-[70vh] w-full flex-col overflow-hidden rounded-[var(--chat-composer-radius)] border border-[var(--chat-border-color)] bg-[var(--chat-background-color)]">
   <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
     <% panel.header do %>
       <%= render FlatPack::Chat::Header::Component.new(
@@ -36,15 +36,33 @@
     <% end %>
 
     <% panel.composer do %>
-      <%= form_with url: form_url, method: :post, local: true, multipart: true do %>
+      <%= form_with url: form_url, method: :post, local: true, multipart: true, data: { controller: "flat-pack--chat-sender" } do %>
         <%= hidden_field_tag :return_to, return_to %>
+        <%= file_field_tag "message[files][]",
+              multiple: true,
+              accept: "image/*,application/pdf,text/plain",
+              class: "hidden",
+              data: { flat_pack__chat_sender_target: "fileInput" } %>
         <%= render FlatPack::Chat::Composer::Component.new do |composer| %>
           <% composer.left do %>
-            <%= file_field_tag "message[files][]",
-                  multiple: true,
-                  accept: "image/*,application/pdf,text/plain",
-                  aria: { label: "Add a file" },
-                  class: "max-w-40 text-xs text-(--chat-input-text-color)" %>
+            <%= render FlatPack::Button::Dropdown::Component.new(
+              text: "",
+              icon: "plus",
+              style: :ghost,
+              size: :md,
+              show_chevron: false,
+              placement: :top_left,
+              trigger_attributes: {
+                aria: { label: "Add a file" },
+                title: "Add a file"
+              }
+            ) do |dropdown| %>
+              <% dropdown.menu_item(
+                text: "Upload files or images",
+                icon: "file",
+                data: { action: "click->flat-pack--chat-sender#openFilePicker" }
+              ) %>
+            <% end %>
           <% end %>
           <% composer.center do %>
             <%= render FlatPack::TextArea::Component.new(
