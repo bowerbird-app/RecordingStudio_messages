@@ -51,6 +51,8 @@ Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That
 
 There is no group list in this version. Dummy staff and customer pages each open one seeded panel.
 
+Sending does not wait on a cable. The composer posts as a Turbo stream. The response replaces the message list (and the composer, so the field is empty again). A full HTML visit still works and shows a flash. Do not add Action Cable here.
+
 ## Related docs
 
 - Product install and API: `README.md`

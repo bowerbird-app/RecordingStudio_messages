@@ -1,0 +1,23 @@
+<% current_actor = local_assigns.fetch(:current_actor) %>
+<% group_recording = local_assigns.fetch(:group_recording) %>
+<% message_recordings = local_assigns.fetch(:message_recordings) %>
+
+<%= render FlatPack::Chat::MessageList::Component.new(
+  stick_to_bottom: true,
+  id: messages_panel_list_id(group_recording)
+) do %>
+  <% if message_recordings.empty? %>
+    <%= render FlatPack::Chat::SystemMessage::Component.new do %>
+      Nothing here yet. Write the first line.
+    <% end %>
+  <% else %>
+    <% message_recordings.group_by { |recording| message_timestamp(recording).to_date }.each do |day, recordings| %>
+      <%= render FlatPack::Chat::DateDivider::Component.new(label: day.strftime("%-d %b %Y")) %>
+      <% recordings.each do |message_recording| %>
+        <%= render "recording_studio_messages/message_groups/message",
+                   message_recording: message_recording,
+                   current_actor: current_actor %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

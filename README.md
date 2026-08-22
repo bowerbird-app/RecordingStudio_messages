@@ -132,7 +132,7 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 v1 is one Flatpack `Chat::Panel` (header, messages, composer). There is no group list, no second inbox, and no Support-specific copy. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core owns back and close. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
 
-Composer uploads go through Attachable. Look at the live kit: [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel) and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
+Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel) and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
 ## Dummy host
 

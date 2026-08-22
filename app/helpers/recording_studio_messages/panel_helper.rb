@@ -14,6 +14,14 @@ module RecordingStudioMessages
       request.fullpath
     end
 
+    def messages_panel_list_id(group_recording)
+      "conversation-#{group_recording.id}-messages"
+    end
+
+    def messages_panel_composer_id(group_recording)
+      "conversation-#{group_recording.id}-composer"
+    end
+
     def message_sender_for(message_recording)
       created = message_recording.events.where(action: "created").order(:occurred_at, :created_at).first
       created&.actor
