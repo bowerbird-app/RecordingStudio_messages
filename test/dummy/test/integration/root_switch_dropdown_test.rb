@@ -35,6 +35,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Dummy host"
+    assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_includes response.body, "flat_pack/application"
     assert_includes response.body, "@hotwired/turbo-rails"

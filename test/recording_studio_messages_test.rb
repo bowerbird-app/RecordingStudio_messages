@@ -18,7 +18,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_equal "~> 0.7.0", gemspec_constraint(gemspec, "recording_studio_accessible")
     assert_equal "~> 0.4", gemspec_constraint(gemspec, "recording_studio_attachable")
     assert_equal "~> 0.2.5", gemspec_constraint(gemspec, "recording_studio_notifications")
-    assert_equal "~> 0.1.133", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal "~> 0.1.135", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -31,9 +31,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.133"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
+    assert_includes gemfile, 'ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"'
+    refute_includes gemfile, 'tag: "v0.1.133"'
     assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_accessible")
     assert_equal "~> 0.2.5", gemfile_constraint(gemfile, "recording_studio_notifications")
+    assert_equal "~> 0.1.135", gemfile_constraint(gemfile, "flat_pack")
   end
 
   def test_dummy_gemfile_pins_verified_family_github_tags
@@ -44,7 +47,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.133"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
+    assert_includes gemfile, 'ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"'
+    refute_includes gemfile, 'tag: "v0.1.133"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v0.1.134"'
     refute_includes gemfile, 'tag: "0.3.1"'
@@ -79,8 +84,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     default_layout_head = File.read(
       File.expand_path("dummy/app/views/recording_studio/_default_layout_head.html.erb", __dir__)
     )
+    assert_includes default_layout_head, 'document.documentElement.setAttribute("data-theme", "rounded")'
     refute_includes default_layout_head, "recording_studio_root_switch_dropdown"
     refute_includes default_layout_head, "Sign out"
+    assert File.exist?(File.expand_path("dummy/app/controllers/concerns/html_rounded_theme.rb", __dir__))
   end
 
   def test_dummy_login_layout_keeps_flatpack_assets_without_tight_main_offset

@@ -34,6 +34,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     get staff_desk_path
 
     assert_response :success
+    assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_includes response.body, "Studio help"
     assert_includes response.body, "The homepage hero feels a bit loud"
@@ -48,6 +49,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     get inbox_path
 
     assert_response :success
+    assert_select "html[data-theme='rounded']", count: 1
     assert_includes response.body, "Site inbox"
     assert_includes response.body, "Did the press stills land?"
     assert_includes response.body, "Hero still"

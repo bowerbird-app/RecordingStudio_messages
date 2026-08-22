@@ -35,7 +35,8 @@ gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.133"
+gem "flat_pack", github: "bowerbird-app/flatpack",
+    ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f" # PR #159, 0.1.135
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
 
@@ -45,7 +46,7 @@ gem "recording_studio", "~> 4.2"
 gem "recording_studio_accessible", "~> 0.7.0"
 gem "recording_studio_attachable", "~> 0.4"
 gem "recording_studio_notifications", "~> 0.2.5"
-gem "flat_pack", "~> 0.1.133"
+gem "flat_pack", "~> 0.1.135"
 ```
 
 Then:
@@ -129,7 +130,7 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Screens
 
-v1 is one Flatpack `Chat::Panel` (header, messages, composer). There is no group list, no second inbox, and no Support-specific copy. Product pages use core `UsesDefaultLayout` and `html data-theme="rounded"`. Core owns back and close. Do not put Sign out or Root Switchable in the page slot.
+v1 is one Flatpack `Chat::Panel` (header, messages, composer). There is no group list, no second inbox, and no Support-specific copy. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core owns back and close. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
 
 Composer uploads go through Attachable. Look at the live kit: [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel) and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
@@ -159,7 +160,7 @@ Seeds add both conversations, Ada Staff, Casey Patron, the Relay agent, lines in
 | `recording_studio_accessible` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
 | `recording_studio_attachable` | `~> 0.4` | `0.4.0` | `0.4.0` |
 | `recording_studio_notifications` | `~> 0.2.5` | `v0.2.5` | `0.2.5` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.133` | `v0.1.133` | `0.1.134` (untagged) |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.135` | PR `#159` merge `09b6bbb1d82e05ca39c3fdc056d2d070d78f164f` | `0.1.135` on that draft |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
