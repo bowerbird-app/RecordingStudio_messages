@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RecordingStudioMessages::Engine.routes.draw do
-  resources :message_groups, only: [:show] do
+  resources :message_groups, only: %i[index show] do
     resources :messages, only: [:create]
   end
 end

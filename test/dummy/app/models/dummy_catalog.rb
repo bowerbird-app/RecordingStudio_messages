@@ -4,6 +4,7 @@ module DummyCatalog
   SUPPORT_KEY = "support"
   INBOX_KEY = "inbox"
   SUPPORT_TITLE = "Studio help"
+  LAUNCH_TITLE = "Launch notes"
   INBOX_TITLE = "Site inbox"
   EMPTY_TITLE = "Open conversation"
 
@@ -44,6 +45,10 @@ module DummyCatalog
 
     def support_group_recording
       group_recording_under(support_mount_recording, SUPPORT_TITLE)
+    end
+
+    def launch_group_recording
+      group_recording_under(support_mount_recording, LAUNCH_TITLE)
     end
 
     def inbox_group_recording

@@ -1,0 +1,5 @@
+<% recording_studio_page_nav(title: messages_inbox_title(@mount_recording)) %>
+
+<%= render "recording_studio_messages/message_groups/inbox",
+           group_recordings: @group_recordings,
+           current_actor: current_messages_actor %>
