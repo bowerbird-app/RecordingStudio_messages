@@ -36,7 +36,7 @@ gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_access
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"
 gem "flat_pack", github: "bowerbird-app/flatpack",
-    ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f" # PR #159, 0.1.135
+    ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23" # PR #159 HEAD, 0.1.135
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
 
@@ -160,7 +160,7 @@ Seeds add both conversations, Ada Staff, Casey Patron, the Relay agent, lines in
 | `recording_studio_accessible` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
 | `recording_studio_attachable` | `~> 0.4` | `0.4.0` | `0.4.0` |
 | `recording_studio_notifications` | `~> 0.2.5` | `v0.2.5` | `0.2.5` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.135` | PR `#159` merge `09b6bbb1d82e05ca39c3fdc056d2d070d78f164f` | `0.1.135` on that draft |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.135` | PR `#159` HEAD `daceb04b76578b2d7adfa42a65e1f66f42d24f23` | `0.1.135` on that draft (no tag) |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
