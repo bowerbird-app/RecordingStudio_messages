@@ -32,8 +32,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"'
+    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
+    refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
     refute_includes gemfile, 'tag: "v0.1.133"'
+    refute_includes gemfile, 'tag: "v0.1.135"'
     assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_accessible")
     assert_equal "~> 0.2.5", gemfile_constraint(gemfile, "recording_studio_notifications")
     assert_equal "~> 0.1.135", gemfile_constraint(gemfile, "flat_pack")
@@ -48,8 +50,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"'
+    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
+    refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
     refute_includes gemfile, 'tag: "v0.1.133"'
+    refute_includes gemfile, 'tag: "v0.1.135"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v0.1.134"'
     refute_includes gemfile, 'tag: "0.3.1"'
