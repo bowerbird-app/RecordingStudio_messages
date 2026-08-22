@@ -63,7 +63,8 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     assert DummyCatalog.inbox_group_recording.recordable
     assert RecordingStudioMessages.message_recordings(DummyCatalog.support_group_recording).any?
     assert RecordingStudioMessages.message_recordings(DummyCatalog.inbox_group_recording).any?(&:has_attachments?)
-    assert_equal 3, Workspace.count
+    seeded_workspace_names = ["Studio Workspace", "Client Workspace", "Private Workspace"]
+    assert_equal 3, Workspace.where(name: seeded_workspace_names).count
     assert_equal 2, User.where(email: %w[admin@admin.com casey@example.com]).count
 
     assert_no_difference -> { User.count } do

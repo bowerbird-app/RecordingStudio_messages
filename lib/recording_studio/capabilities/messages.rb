@@ -3,8 +3,8 @@
 module RecordingStudio
   module Capabilities
     module Messages
-      def self.to(**options)
-        RecordingStudio::Capabilities.include_for(:messages, **options)
+      def self.to(**)
+        RecordingStudio::Capabilities.include_for(:messages, **)
       end
 
       module RecordingMethods

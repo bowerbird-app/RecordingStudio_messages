@@ -21,10 +21,18 @@ module RecordingStudioMessages
 
     def message_sender_name(actor)
       return "Someone" if actor.blank?
-      return actor.name if actor.respond_to?(:name) && actor.name.present?
-      return actor.email.to_s.split("@").first.to_s.titleize if actor.respond_to?(:email) && actor.email.present?
 
-      actor.class.name.demodulize
+      named_actor(actor) || emailed_actor(actor) || actor.class.name.demodulize
+    end
+
+    def named_actor(actor)
+      actor.name if actor.respond_to?(:name) && actor.name.present?
+    end
+
+    def emailed_actor(actor)
+      return unless actor.respond_to?(:email) && actor.email.present?
+
+      actor.email.to_s.split("@").first.to_s.titleize
     end
 
     def outgoing_message?(message_recording, actor:)

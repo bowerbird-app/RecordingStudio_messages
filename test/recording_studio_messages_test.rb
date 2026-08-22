@@ -56,7 +56,11 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/services/base_service.rb", __dir__))
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/services/example_service.rb", __dir__))
     refute File.exist?(File.expand_path("../app/controllers/recording_studio_messages/home_controller.rb", __dir__))
-    assert File.exist?(File.expand_path("../app/controllers/recording_studio_messages/message_groups_controller.rb", __dir__))
+    controller_path = File.expand_path(
+      "../app/controllers/recording_studio_messages/message_groups_controller.rb",
+      __dir__
+    )
+    assert File.exist?(controller_path)
     assert File.exist?(File.expand_path("../app/models/recording_studio_messages/message_mount.rb", __dir__))
     refute File.exist?(File.expand_path("../app/models/recording_studio_messages/participant.rb", __dir__))
   end

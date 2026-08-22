@@ -12,6 +12,8 @@ require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
+require "recording_studio_messages/services/uploaded_file"
+require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/services/send_message"
 
 module RecordingStudioMessages
@@ -82,6 +84,12 @@ module RecordingStudioMessages
 
       RecordingStudioNotifications.register_notification_type(
         MESSAGE_RECEIVED_TYPE,
+        **message_received_type_options
+      )
+    end
+
+    def message_received_type_options
+      {
         label: "Message received",
         description: "A new message arrived in a conversation you can see.",
         icon: :chat_bubble_left,
@@ -89,7 +97,7 @@ module RecordingStudioMessages
         default_channels: [:in_app],
         available_channels: [:in_app],
         scope: :root
-      )
+      }
     end
   end
 end
