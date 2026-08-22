@@ -5,6 +5,10 @@ RecordingStudio.configure do |config|
     "Workspace",
     "Folder",
     "Page",
+    "Mailbox",
+    "RecordingStudioMessages::MessageMount",
+    "RecordingStudioMessages::MessageGroup",
+    "RecordingStudioMessages::Message",
     "RecordingStudioAttachable::Attachment"
   ]
 

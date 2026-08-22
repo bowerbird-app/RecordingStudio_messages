@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.1.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.2.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -56,6 +56,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/services/base_service.rb", __dir__))
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/services/example_service.rb", __dir__))
     refute File.exist?(File.expand_path("../app/controllers/recording_studio_messages/home_controller.rb", __dir__))
+    assert File.exist?(File.expand_path("../app/controllers/recording_studio_messages/message_groups_controller.rb", __dir__))
+    assert File.exist?(File.expand_path("../app/models/recording_studio_messages/message_mount.rb", __dir__))
+    refute File.exist?(File.expand_path("../app/models/recording_studio_messages/participant.rb", __dir__))
   end
 
   def test_dummy_app_uses_recording_studio_default_layout
@@ -112,8 +115,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"RecordingStudioAttachable::Attachment"'
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
-    refute_includes initializer_source, "MessageMount"
-    refute_includes initializer_source, "MessageGroup"
+    assert_includes initializer_source, "RecordingStudioMessages::MessageMount"
+    assert_includes initializer_source, "RecordingStudioMessages::MessageGroup"
+    assert_includes initializer_source, "RecordingStudioMessages::Message"
+    assert_includes initializer_source, '"Mailbox"'
   end
 
   def test_dummy_readme_explains_dummy_app_purpose
@@ -121,7 +126,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     readme_source = File.read(readme_path)
 
     assert_includes readme_source, "This Rails app exists to prove Recording Studio Messages"
-    assert_includes readme_source, "/recording_studio"
+    assert_includes readme_source, "/staff/desk"
+    assert_includes readme_source, "/inbox"
     assert_includes readme_source, "https://flatpack.bowerbird.io/"
   end
 
@@ -129,6 +135,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     readme = File.read(File.expand_path("../README.md", __dir__))
 
     assert_includes readme, "https://flatpack.bowerbird.io/"
+    assert_includes readme, "ensure_message_mount"
+    assert_includes readme, "notify_each"
+    assert_includes readme, "two mounts"
+    assert_includes readme, "Do not add a Notifications → Messages dependency"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"

@@ -12,6 +12,13 @@ class RecordingStudioDeclarationsTest < ActiveSupport::TestCase
     assert_equal ["Workspace"], RecordingStudio.root_recordable_types
     assert_equal %w[Workspace Folder], RecordingStudio.allowed_parent_types_for("Folder")
     assert_equal %w[Workspace Folder], RecordingStudio.allowed_parent_types_for(Page)
+    assert_includes RecordingStudio.allowed_parent_types_for("Mailbox"), "Workspace"
+    assert_includes RecordingStudio.allowed_parent_types_for("RecordingStudioMessages::MessageMount"), "Workspace"
+    assert_includes RecordingStudio.allowed_parent_types_for("RecordingStudioMessages::MessageMount"), "Mailbox"
+    assert_equal ["RecordingStudioMessages::MessageMount"],
+                 RecordingStudio.allowed_parent_types_for("RecordingStudioMessages::MessageGroup")
+    assert_equal ["RecordingStudioMessages::MessageGroup"],
+                 RecordingStudio.allowed_parent_types_for("RecordingStudioMessages::Message")
   end
 
   test "root recordable creates a root recording" do

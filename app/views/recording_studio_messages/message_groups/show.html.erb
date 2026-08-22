@@ -1,0 +1,6 @@
+<% recording_studio_page_nav(title: @group_recording.recordable.title) %>
+
+<%= render "recording_studio_messages/message_groups/panel",
+           group_recording: @group_recording,
+           message_recordings: @message_recordings,
+           current_actor: current_messages_actor %>

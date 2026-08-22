@@ -1,8 +1,29 @@
 # Recording Studio Messages
 
-Threads and chat for Recording Studio hosts.
+One gem for every conversation desk. A host enables `:messages` on a recording, then hangs one keyed mount per desk — staff help, a site inbox, or both at once.
 
-This slice is the renamed engine plus family pins. Message types, groups, and screens come later. GitHub hosting is not a reason to skip the gemspec pins.
+People and agents stay actors. Membership is an Accessible grant on the conversation, not a child record.
+
+## How it fits together
+
+```text
+Any recording that enables :messages
+└── MessageMount (key: support, inbox, …)
+    └── Conversation
+        ├── Access grants (people and agents)
+        └── Messages
+            └── Attachments
+```
+
+Two desks are two mounts of this gem, not two gems.
+
+| Type | Role | Access |
+|---|---|---|
+| `MessageMount` | Keyed child of a messages-enabled recording | Capability-owned |
+| `MessageGroup` | A conversation | Accessible |
+| `Message` | A line in that conversation | Attachable |
+
+Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency.
 
 ## Install
 
@@ -33,10 +54,84 @@ Then:
 bundle install
 bin/rails generate recording_studio_messages:install
 bin/rails generate recording_studio_messages:migrations
+bin/rails generate recording_studio_accessible:migrations
+bin/rails generate recording_studio_attachable:migrations
+bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
-Notifications must not depend on this gem. This gem depends on Notifications.
+## Enablement
+
+Accessible on a root stays `RecordingStudio.enable_capability`. Mixins use `.to`.
+
+```ruby
+class Workspace < ApplicationRecord
+  recording_studio_recordable label: "Workspace", root: true
+  RecordingStudio.enable_capability(:accessible, on: self)
+  include RecordingStudio::Capabilities::Messages.to
+end
+
+class Mailbox < ApplicationRecord
+  recording_studio_recordable label: "Mailbox",
+                              root: false,
+                              allowed_parent_types: ["Workspace"]
+
+  include RecordingStudio::Capabilities::Messages.to
+end
+```
+
+Register every type the dummy or host uses:
+
+```ruby
+RecordingStudio.configure do |config|
+  config.recordable_types = [
+    "Workspace",
+    "Mailbox",
+    "RecordingStudioMessages::MessageMount",
+    "RecordingStudioMessages::MessageGroup",
+    "RecordingStudioMessages::Message",
+    "RecordingStudioAttachable::Attachment"
+  ]
+end
+```
+
+`MessageGroup` enables Accessible itself. `Message` includes Attachable itself. Do not add Participant recordables.
+
+Mount the screens:
+
+```ruby
+mount RecordingStudioMessages::Engine, at: "/recording_studio_messages"
+mount RecordingStudioAccessible::Engine, at: "/recording_studio_accessible"
+mount RecordingStudioAttachable::Engine, at: "/recording_studio_attachable"
+```
+
+## Public API
+
+```ruby
+mount = workspace_recording.ensure_message_mount(:support, actor: current_actor)
+group = RecordingStudioMessages.create_group(mount, title: "Studio help", actor: current_actor)
+
+RecordingStudioMessages.send_message(
+  group_recording: group,
+  body: "The quieter crop is in.",
+  actor: current_actor,
+  files: uploaded_files,
+  url: staff_desk_path
+)
+
+RecordingStudioAccessible.authorized?(actor: current_actor, recording: group, role: :view)
+RecordingStudioMessages.granted_actors(group)
+```
+
+Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
+
+Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty.
+
+## Screens
+
+v1 is one Flatpack `Chat::Panel` (header, messages, composer). There is no group list, no second inbox, and no Support-specific copy. Product pages use core `UsesDefaultLayout` and `html data-theme="rounded"`. Core owns back and close. Do not put Sign out or Root Switchable in the page slot.
+
+Composer uploads go through Attachable. Look at the live kit: [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel) and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
 ## Dummy host
 
@@ -44,12 +139,19 @@ Notifications must not depend on this gem. This gem depends on Notifications.
 
 Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Root Switchable sits in that chrome. Devise sign-in keeps `layouts/application` and still loads Flatpack CSS/JS plus Turbo.
 
-| Field    | Value           |
-|----------|-----------------|
-| Email    | admin@admin.com |
-| Password | Password        |
+| Field    | Value              |
+|----------|--------------------|
+| Email    | admin@admin.com    |
+| Password | Password           |
+| Email    | casey@example.com  |
+| Password | Password           |
 
-Dummy kit pins resolved on 2026-08-22 from each repo's latest GitHub tag and `version.rb` on the default branch:
+The dummy proves two mounts at once:
+
+- `support` on Studio Workspace → Staff desk (`/staff/desk`)
+- `inbox` on the Site mailbox → Inbox (`/inbox`)
+
+Seeds add both conversations, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown.
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
@@ -61,9 +163,9 @@ Dummy kit pins resolved on 2026-08-22 from each repo's latest GitHub tag and `ve
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
-## Flatpack
+## Out of this version
 
-All screens use Flatpack ViewComponents. See the [Flatpack README](https://github.com/bowerbird-app/flatpack) and the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
+Group-list layout, realtime, typing, read receipts, email as a notice channel, Admin, and Support-specific copy.
 
 ## Documentation
 

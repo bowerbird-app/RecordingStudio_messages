@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
 RecordingStudioMessages::Engine.routes.draw do
-  root "home#index"
+  resources :message_groups, only: [:show] do
+    resources :messages, only: [:create]
+  end
 end
