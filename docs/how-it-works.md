@@ -50,7 +50,7 @@ Rounded is a named Flatpack theme. It has to live on the `html` element. Core of
 
 Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That is why the dummy pins Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) HEAD (`0.1.135`, `daceb04b76578b2d7adfa42a65e1f66f42d24f23`): named themes rebind those tokens so rounded CTAs are charcoal. There is no `v0.1.135` tag.
 
-Dummy staff desk and inbox land on that list. Support seeds two conversations so the list is real. Inbox still shows the list when it has one row.
+Dummy staff desk and inbox land on that list. Support seeds two conversations so the list is real. Inbox still shows the list when it has one row. The list only renders complete InboxRows — a name and a latest line. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the list.
 
 Sending does not wait on a cable. The composer posts as a Turbo stream. The response replaces the message list (and the composer, so the field is empty again). A full HTML visit still works and shows a flash. Do not add Action Cable here.
 

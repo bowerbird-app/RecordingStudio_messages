@@ -2,4 +2,6 @@
 
 <%= render "recording_studio_messages/message_groups/inbox",
            group_recordings: @group_recordings,
-           current_actor: current_messages_actor %>
+           current_actor: current_messages_actor,
+           title: messages_inbox_title(@mount_recording),
+           mount_recording: @mount_recording %>
