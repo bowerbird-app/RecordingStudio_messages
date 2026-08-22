@@ -49,7 +49,10 @@ module RecordingStudioMessages
     def message_attachments_for(message_recording)
       return [] unless message_recording.respond_to?(:attachments)
 
-      Array(message_recording.attachments)
+      records = message_recording.attachments
+      return records.to_a if records.respond_to?(:to_a)
+
+      Array(records)
     rescue StandardError
       []
     end
