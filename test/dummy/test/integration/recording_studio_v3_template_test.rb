@@ -59,7 +59,13 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     assert_equal "support", support_mount.recordable.key
     assert_equal "inbox", inbox_mount.recordable.key
     assert_equal DummyCatalog.support_group_recording.parent_recording, support_mount
+    assert_equal DummyCatalog.launch_group_recording.parent_recording, support_mount
     assert_equal DummyCatalog.inbox_group_recording.parent_recording, inbox_mount
+    assert RecordingStudioAccessible.authorized?(
+      actor: User.find_by!(email: "admin@admin.com"),
+      recording: DummyCatalog.launch_group_recording,
+      role: :view
+    )
     assert DummyCatalog.inbox_group_recording.recordable
     assert RecordingStudioMessages.message_recordings(DummyCatalog.support_group_recording).any?
     assert RecordingStudioMessages.message_recordings(DummyCatalog.inbox_group_recording).any?(&:has_attachments?)

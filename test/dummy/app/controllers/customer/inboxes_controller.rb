@@ -3,13 +3,20 @@
 module Customer
   class InboxesController < ApplicationController
     def show
-      @group_recording = DummyCatalog.inbox_group_recording
-      actor = Current.actor || current_user
-      unless actor && RecordingStudioAccessible.authorized?(actor: actor, recording: @group_recording, role: :view)
-        redirect_to root_path, alert: "You cannot open this conversation" and return
-      end
+      @mount_recording = DummyCatalog.inbox_mount_recording
+      @group_recordings = viewable_groups_on_mount
+      return if @group_recordings.any?
 
-      @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
+      redirect_to root_path, alert: "You cannot open this conversation"
+    end
+
+    private
+
+    def viewable_groups_on_mount
+      RecordingStudioMessages.viewable_group_recordings(
+        actor: Current.actor || current_user,
+        mount_recording: @mount_recording
+      )
     end
   end
 end

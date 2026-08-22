@@ -6,6 +6,7 @@ module RecordingStudioMessages
 
     helper RecordingStudioAccessible::AvatarsHelper if defined?(RecordingStudioAccessible::AvatarsHelper)
     helper RecordingStudioMessages::PanelHelper
+    helper RecordingStudioMessages::InboxHelper
 
     helper_method :current_messages_actor
 

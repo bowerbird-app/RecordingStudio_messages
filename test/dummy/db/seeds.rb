@@ -85,6 +85,13 @@ begin
       actor: staff
     )
 
+  launch_group = DummyCatalog.find_group_recording_under(support_mount, DummyCatalog::LAUNCH_TITLE) ||
+    RecordingStudioMessages.create_group(
+      support_mount,
+      title: DummyCatalog::LAUNCH_TITLE,
+      actor: staff
+    )
+
   inbox_group = DummyCatalog.find_group_recording_under(inbox_mount, DummyCatalog::INBOX_TITLE) ||
     RecordingStudioMessages.create_group(
       inbox_mount,
@@ -106,6 +113,8 @@ begin
   find_or_grant.call(support_group, staff, :admin, staff)
   find_or_grant.call(support_group, customer, :edit, staff)
   find_or_grant.call(support_group, agent, :view, staff)
+  find_or_grant.call(launch_group, staff, :admin, staff)
+  find_or_grant.call(launch_group, customer, :edit, staff)
   find_or_grant.call(inbox_group, customer, :admin, staff)
   find_or_grant.call(inbox_group, staff, :edit, staff)
 
@@ -124,6 +133,24 @@ begin
       recordable: RecordingStudioMessages::Message.new(body: body),
       root_recording: support_group.root_recording,
       parent_recording: support_group,
+      actor: actor
+    )
+  end
+
+  launch_bodies = [
+    [staff, "Can we lock the launch copy tonight?"],
+    [customer, "I will send a quieter line this evening."]
+  ]
+  launch_bodies.each do |actor, body|
+    existing = RecordingStudioMessages::Message.find_by(body: body)
+    next if existing.present?
+
+    Current.actor = actor
+    RecordingStudio.record!(
+      action: "created",
+      recordable: RecordingStudioMessages::Message.new(body: body),
+      root_recording: launch_group.root_recording,
+      parent_recording: launch_group,
       actor: actor
     )
   end
@@ -177,5 +204,5 @@ puts "Seeded: Workspace '#{accessible_workspace.name}' with root recording ##{ac
 puts "Seeded: Workspace '#{private_workspace.name}' with root recording ##{private_root_recording.id}"
 puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
 puts "Seeded: Mailbox '#{mailbox.name}'"
-puts "Seeded: support mount and inbox mount with conversations"
+puts "Seeded: support mount (Studio help, Launch notes) and inbox mount with conversations"
 puts "Seeded: empty conversation '#{empty_group.recordable.title}'"

@@ -16,6 +16,8 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - `:message_received` notification type. Send calls `RecordingStudioNotifications.notify_each` for other granted actors
 - Flatpack `Chat::Panel` screens (header, messages, composer). Header faces use `recording_studio_accessible_avatars`
 - Dummy staff desk and inbox that prove two mounts at once, with seeded people, an agent, lines, and one attachment
+- `message_groups#index` lists conversations the current actor can view through Accessible grants. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. A row opens `Chat::Panel` show
+- `viewable_group_recordings(actor:, mount_recording:)` scopes that list. Dummy support mount seeds two real conversations so the list is not a single jump to a panel
 - Send replaces the Chat::Panel thread and composer over Turbo so the new line lands in place. There is no Action Cable in this version
 
 ### Changed
@@ -28,13 +30,14 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - Point host and dummy Gemfiles at Flatpack PR `#159` HEAD (`0.1.135`, ref `daceb04b76578b2d7adfa42a65e1f66f42d24f23`). Do not use a merge commit or `tag: "v0.1.135"` — that tag does not exist. Do not stay on `v0.1.133` if you want charcoal rounded CTAs
 - Put `data-theme="rounded"` on `html`. Body-only theme is not enough. The dummy helper is the host workaround while core leaves `<html>` bare
 - Send now answers Turbo by replacing `conversation-<id>-messages` and the composer. Do not add Action Cable. HTML posts still redirect with a flash
+- Open a mount on `message_groups#index` (`?mount_id=`). Do not jump straight to show when a desk has conversations. Index uses Accessible `:view` on each `MessageGroup`
 - Include `RecordingStudio::Capabilities::Messages.to` on each host type that should hold a mount
 - Register `MessageMount`, `MessageGroup`, `Message`, and `RecordingStudioAttachable::Attachment` in `recording_studio.rb`
 - Run `recording_studio_messages:migrations` plus Accessible, Attachable, and Notifications migrations
 - Mount Messages, Accessible, and Attachable
 - Do not add a Notifications → Messages edge
 - Do not add Participant recordables. Grants on the conversation are the membership list
-- v1 has no group list, realtime, typing, read receipts, email channel, or Admin slice
+- v1 has no realtime, typing, read receipts, email channel, or Admin slice
 
 ## [0.1.0] - 2026-08-22
 

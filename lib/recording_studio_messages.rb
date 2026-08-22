@@ -12,6 +12,7 @@ require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
+require "recording_studio_messages/services/list_groups"
 require "recording_studio_messages/services/uploaded_file"
 require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/services/send_message"
@@ -53,6 +54,10 @@ module RecordingStudioMessages
       RecordingStudioAccessible.access_recordings_for(group_recording).filter_map do |access_recording|
         access_recording.recordable&.actor
       end
+    end
+
+    def viewable_group_recordings(actor:, mount_recording: nil)
+      Services::ListGroups.call(actor: actor, mount_recording: mount_recording)
     end
 
     def message_recordings(group_recording)

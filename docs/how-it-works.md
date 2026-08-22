@@ -37,19 +37,20 @@ Use the public helpers:
 
 - `ensure_message_mount` to hang or find a keyed mount
 - `create_group` to open a conversation and grant the first owner
+- `viewable_group_recordings` to list conversations the current actor can view
 - `send_message` to write a line, attach files, and notify everyone else who has a grant
 
 Do not insert `Recording` rows by hand. Do not invent a second access list.
 
 ## Screens
 
-v1 is a single Flatpack chat panel: header, messages, composer. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
+A mount opens on the conversation list (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. A row goes to the existing `Chat::Panel` show. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
 
 Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
 
 Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That is why the dummy pins Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) HEAD (`0.1.135`, `daceb04b76578b2d7adfa42a65e1f66f42d24f23`): named themes rebind those tokens so rounded CTAs are charcoal. There is no `v0.1.135` tag.
 
-There is no group list in this version. Dummy staff and customer pages each open one seeded panel.
+Dummy staff desk and inbox land on that list. Support seeds two conversations so the list is real. Inbox still shows the list when it has one row.
 
 Sending does not wait on a cable. The composer posts as a Turbo stream. The response replaces the message list (and the composer, so the field is empty again). A full HTML visit still works and shows a flash. Do not add Action Cable here.
 

@@ -122,6 +122,7 @@ RecordingStudioMessages.send_message(
 
 RecordingStudioAccessible.authorized?(actor: current_actor, recording: group, role: :view)
 RecordingStudioMessages.granted_actors(group)
+RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_recording: mount)
 ```
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
@@ -130,9 +131,9 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Screens
 
-v1 is one Flatpack `Chat::Panel` (header, messages, composer). There is no group list, no second inbox, and no Support-specific copy. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core owns back and close. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
+The desk opens on `message_groups#index`. That page lists conversations the current actor can view through Accessible (`authorized?` `:view` on each `MessageGroup`). There is no Participant list, Pundit, CanCan, or host `admin?` check. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. Each row opens the existing `Chat::Panel` show. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core owns back and close. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
 
-Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel) and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
+Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::InboxRow](https://flatpack.bowerbird.io/demo/chat/inbox_row), [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel), and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
 ## Dummy host
 
@@ -149,10 +150,10 @@ Authenticated dummy pages use Recording Studio's shared default layout (`UsesDef
 
 The dummy proves two mounts at once:
 
-- `support` on Studio Workspace → Staff desk (`/staff/desk`)
-- `inbox` on the Site mailbox → Inbox (`/inbox`)
+- `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
+- `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Seeds add both conversations, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown.
+Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
@@ -166,7 +167,7 @@ There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [git
 
 ## Out of this version
 
-Group-list layout, realtime, typing, read receipts, email as a notice channel, Admin, and Support-specific copy.
+Realtime, typing, read receipts, email as a notice channel, Admin, and Support-specific copy.
 
 ## Documentation
 

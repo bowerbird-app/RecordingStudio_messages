@@ -1,0 +1,15 @@
+<% group_recordings = local_assigns.fetch(:group_recordings) %>
+
+<% if group_recordings.blank? %>
+  <%= render FlatPack::Chat::SystemMessage::Component.new do %>
+    Nothing here yet.
+  <% end %>
+<% else %>
+  <div class="w-full max-w-2xl">
+    <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
+      <% group_recordings.each do |group_recording| %>
+        <%= render FlatPack::Chat::InboxRow::Component.new(**messages_inbox_row(group_recording)) %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

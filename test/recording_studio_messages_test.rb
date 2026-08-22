@@ -72,6 +72,35 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert File.exist?(controller_path)
     assert File.exist?(File.expand_path("../app/models/recording_studio_messages/message_mount.rb", __dir__))
     refute File.exist?(File.expand_path("../app/models/recording_studio_messages/participant.rb", __dir__))
+    refute File.exist?(File.expand_path("../app/models/recording_studio_messages/pundit.rb", __dir__))
+  end
+
+  def test_message_groups_index_lists_inbox_rows_without_a_custom_acl
+    routes = File.read(File.expand_path("../config/routes.rb", __dir__))
+    controller = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/message_groups_controller.rb", __dir__)
+    )
+    inbox = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_inbox.html.erb", __dir__)
+    )
+    list_groups = File.read(
+      File.expand_path("../lib/recording_studio_messages/services/list_groups.rb", __dir__)
+    )
+    api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
+
+    assert_includes routes, "%i[index show]"
+    assert_includes controller, "def index"
+    assert_includes controller, "viewable_group_recordings"
+    assert_includes api, "def viewable_group_recordings"
+    assert_includes list_groups, "RecordingStudioAccessible.authorized?"
+    assert_includes list_groups, "role: :view"
+    assert_includes inbox, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
+    assert_includes inbox, "FlatPack::Chat::InboxRow::Component"
+    refute_includes controller, "Pundit"
+    refute_includes controller, "CanCan"
+    refute_includes controller, "user.admin?"
+    refute_includes list_groups, "Pundit"
+    refute_includes list_groups, "CanCan"
   end
 
   def test_dummy_app_uses_recording_studio_default_layout

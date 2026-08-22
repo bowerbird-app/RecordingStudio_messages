@@ -1,8 +1,5 @@
 <% recording_studio_page_nav(title: "Inbox") %>
 
-<%= render "recording_studio_messages/message_groups/panel",
-           group_recording: @group_recording,
-           message_recordings: @message_recordings,
-           current_actor: Current.actor,
-           form_url: recording_studio_messages.message_group_messages_path(@group_recording),
-           return_to: inbox_path %>
+<%= render "recording_studio_messages/message_groups/inbox",
+           group_recordings: @group_recordings,
+           current_actor: Current.actor %>

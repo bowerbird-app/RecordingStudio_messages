@@ -29,7 +29,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
                     "RecordingStudioMessages::MessageMount"
   end
 
-  test "staff desk shows the support conversation and inbox shows the mailbox conversation" do
+  test "staff desk and inbox land on the conversation list for each mount" do
     sign_in @staff
     get staff_desk_path
 
@@ -37,10 +37,9 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_includes response.body, "Studio help"
-    assert_includes response.body, "The homepage hero feels a bit loud"
-    assert_includes response.body, "flat-pack--chat-panel"
-    assert_includes response.body, "flat-pack--chat-sender"
-    assert_includes response.body, "Upload files or images"
+    assert_includes response.body, "Launch notes"
+    assert_select "[data-controller='flat-pack--list-selectable']"
+    refute_includes response.body, "flat-pack--chat-panel"
     refute_includes response.body, "Sign out"
     refute_includes response.body, "recording-studio-root-switchable--root-switch-dropdown"
     refute_includes response.body, "Chat::Layout"
@@ -51,8 +50,8 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "html[data-theme='rounded']", count: 1
     assert_includes response.body, "Site inbox"
-    assert_includes response.body, "Did the press stills land?"
-    assert_includes response.body, "Hero still"
+    assert_includes response.body, "They are in. I attached the first frame."
+    refute_includes response.body, "flat-pack--chat-panel"
   end
 
   test "catalog keeps the seeded desks when another conversation reuses the title" do
