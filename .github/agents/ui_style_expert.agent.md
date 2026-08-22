@@ -13,7 +13,7 @@ FlatPack ViewComponents are the default UI primitive in this repository because 
 
 ## Reference Workflow
 
-- Use the live FlatPack demo app at `https://flatpack-c6p8f.ondigitalocean.app/` as the approved UI reference for current shared components and patterns.
+- Use the live Flatpack kit at `https://flatpack.bowerbird.io/` as the approved UI reference for current shared components and patterns.
 - Start with the demo app's table of components when you need a quick inventory of available FlatPack building blocks.
 - Treat user-provided FlatPack demo URLs as task context and use them to guide recommendations or implementation decisions.
 - In Codespaces or other restricted environments, the user may need to enable access to that URL before the demo app can be inspected.

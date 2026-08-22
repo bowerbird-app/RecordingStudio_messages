@@ -5,7 +5,7 @@ applyTo: ["app/views/**/*.erb", "test/dummy/app/views/**/*.erb"]
 
 # View Guidelines
 
-- Use the live FlatPack demo app at `https://flatpack-c6p8f.ondigitalocean.app/` as the approved UI reference when you need to inspect current shared components and patterns.
+- Use the live Flatpack kit at `https://flatpack.bowerbird.io/` as the approved UI reference when you need to inspect current shared components and patterns.
 - Start with the demo app's table of components before introducing new custom UI.
 - Prefer `render FlatPack::...` components over custom HTML whenever an equivalent component exists.
 - Prefer standardized, testable FlatPack ViewComponents over one-off ERB structures or custom JavaScript behaviors.

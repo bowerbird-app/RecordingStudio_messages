@@ -20,7 +20,6 @@ Layout/LineLength:
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
-    - 'lib/gem_template/hooks.rb'
 
 Metrics/MethodLength:
   Exclude:
@@ -47,8 +46,7 @@ Naming/VariableNumber:
   Exclude:
     - 'test/**/*'
 
-# Don't require super in service initialize methods
+# Don't require super in leftover initialize methods
 Lint/MissingSuper:
   Exclude:
-    - 'lib/gem_template/services/**/*'
-    - 'test/services/**/*'
+    - 'test/**/*'
