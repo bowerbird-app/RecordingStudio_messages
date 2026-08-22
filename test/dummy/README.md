@@ -1,15 +1,16 @@
-# Dummy App
+# Dummy host
 
-This Rails app exists to validate the Recording Studio addon template in a real host application.
+This Rails app exists to prove Recording Studio Messages in a real host. It is not the product.
 
 ## What It Covers
 
 - Devise authentication with a seeded admin user
 - `Current.actor` wiring for Recording Studio events
 - Root workspace plus seeded folder and page recordables
-- FlatPack layout integration and Tailwind source scanning
+- Accessible enabled on Workspace
+- Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
+- Root Switchable in the default-layout chrome, not a host-only shell
 - Mounted `RecordingStudio::Engine` route behavior inside a host app
-- A starter sidebar menu and companion docs pages for gem-specific onboarding
 
 ## Quick Start
 
@@ -27,18 +28,34 @@ Then open the app and sign in with:
 - Email: `admin@admin.com`
 - Password: `Password`
 
+## Layouts and assets
+
+Authenticated pages include `RecordingStudio::UsesDefaultLayout` and render `recording_studio/default_layout`. That layout owns the back/close chrome and Flatpack flash alerts.
+
+Devise sign-in keeps `layouts/application` so the login card can stay centered. That layout still loads:
+
+- `flat_pack/variables`
+- `flat_pack/application`
+- `tailwind`
+- Importmap JS, including `@hotwired/turbo-rails`
+
+The host injects `flat_pack/application` and the Root Switchable control through `app/views/recording_studio/_default_layout_head.html.erb`. Do not put the switcher or a Sign out button in the home view body.
+
+Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
+
+Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
+
 ## Useful Routes
 
-- `/` - dummy app home page and template guidance
+- `/` - dummy host home page
 - `/recording_studio` - redirects to `/` while the mounted Recording Studio engine stays available under that prefix for non-root routes
 - `/users/sign_in` - Devise sign-in page
-- `/docs/install`, `/docs/config`, `/docs/recordable_types`, `/docs/recordings_tree`, `/docs/gem_views`, `/docs/methods` - starter sidebar pages to adapt for the gem
 - `/up` - Rails health check
 
 ## Why This App Exists
 
-Use this app to verify the generated addon experience before renaming the gem or copying patterns into another host app. If a layout, route, asset source, or Recording Studio initializer change breaks here, the template likely needs adjustment before reuse.
+Use this app to verify the renamed messages engine boots in a host. If a layout, route, asset source, or Recording Studio initializer change breaks here, the gem likely needs adjustment before reuse.
 
-The authenticated layout in `app/views/layouts/flat_pack_sidebar.html.erb` and sidebar menu in `app/views/layouts/flat_pack/_sidebar.html.erb` are a styled skeleton, not the final information architecture for every addon. Replace the sidebar items and docs page content so they match the gem's actual concepts and workflows.
+This slice does not add message types or screens.
 
-Likewise, the home page in `app/views/home/index.html.erb` should stay a minimal demo surface for the gem's core feature. Do not turn it into a wall of documentation; the dedicated sidebar pages exist so deeper explanations can live in focused sections.
+Authenticated pages use Recording Studio's shared default layout. Devise sign-in keeps `layouts/application`.

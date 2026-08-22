@@ -44,7 +44,7 @@ Use `Rails Gem Architect` as the default implementation specialist when the user
 2. **Delegate deliberately**
 	 - Send the smallest clear sub-task to each specialist.
 	 - Include relevant constraints from user instructions.
-	 - For UI work, tell the specialist to check existing FlatPack components first, using the live FlatPack demo app (`https://flatpack-c6p8f.ondigitalocean.app/`) and its component table when relevant.
+	 - For UI work, tell the specialist to check existing FlatPack components first, using the live Flatpack kit (`https://flatpack.bowerbird.io/`) and its component table when relevant.
 	 - Avoid redundant delegation when one specialist is enough.
 
 3. **Integrate and decide**

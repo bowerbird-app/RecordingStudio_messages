@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
 
 /* Include dummy app views for Tailwind CSS */
 @source "../../views/**/*.erb";
@@ -10,6 +10,27 @@
 /* Scan FlatPack components for classes used by the bundled ViewComponents */
 @source "../../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
 @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
+
+/* Linked gem trees created by Root Switchable's TailwindSourceLinker */
+@source "../../../vendor/flat_pack/app/components/**/*.rb";
+@source "../../../vendor/flat_pack/app/components/**/*.erb";
+@source "../../../vendor/recording_studio/app/views/**/*.erb";
+@source "../../../vendor/recording_studio_root_switchable/app/views/**/*.erb";
+
+/* Dummy bundle, CI, mise, and rbenv installs */
+@source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
+@source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
+@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../../../../home/*/.local/share/mise/installs/ruby/*/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.rb";
+@source "../../../../../../home/*/.local/share/mise/installs/ruby/*/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.erb";
+@source "../../../../../../home/*/.local/share/mise/installs/ruby/*/lib/ruby/gems/*/bundler/gems/RecordingStudio-*/app/views/**/*.erb";
+@source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.rb";
+@source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.erb";
+@source "../../../../../../home/*/.rbenv/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";
