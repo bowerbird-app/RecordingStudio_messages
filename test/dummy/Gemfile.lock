@@ -65,9 +65,9 @@ PATH
       flat_pack (~> 0.1.133)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
-      recording_studio_accessible (~> 0.7)
+      recording_studio_accessible (~> 0.7.0)
       recording_studio_attachable (~> 0.4)
-      recording_studio_notifications (~> 0.2)
+      recording_studio_notifications (~> 0.2.5)
 
 GEM
   remote: https://rubygems.org/
