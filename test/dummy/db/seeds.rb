@@ -35,8 +35,9 @@ find_or_grant = lambda do |recording, actor, role, manager|
   result.value
 end
 
+# Visible charcoal still so the inbox attachment is not a 1×1 speck.
 tiny_png = lambda do
-  ["89504E470D0A1A0A0000000D4948445200000001000000010802000000907753DE0000000C4944415408D763F8CFC00000000300017D9B4F0B0000000049454E44AE426082"].pack("H*")
+  ["89504e470d0a1a0a0000000d49484452000000f00000008808020000005646f169000001244944415478daeddd310d00400c03b132eaf06c3a943f8c47d125b26404d1eda9ee0731ca04081a040d82064123681034081a040d8246d020681034081a048da041d020681034081a4183a041d02068103482064183a041d02068040d82064183a041d0081a040d82064123681034081a040d8246d0206810349c053db31043d0081a040d82064123681034081a040d8246d020681034081a048da041d020681034081a4183a041d02068103482064183a041d02068040d82064183a041d0081a040d82064123682b1014b4ef515c2383a041d02068040d82064183a041d0081a040d82064183a01134081a040d82064123681034081a040d8246d020681034081a048da041d020681034081a4183a041d02068040d82064183a041d0081a040d82862b1fc45e9b46b93ff5200000000049454e44ae426082"].pack("H*")
 end
 
 staff = User.find_or_create_by!(email: "admin@admin.com") do |user|
@@ -148,15 +149,22 @@ begin
   attached_message = RecordingStudio::Recording.find_by(
     recordable: RecordingStudioMessages::Message.find_by(body: "They are in. I attached the first frame.")
   )
-  if attached_message && !attached_message.has_attachments?
+  if attached_message
     Current.actor = staff
-    attached_message.import_attachment(
-      io: StringIO.new(tiny_png.call),
-      filename: "hero-still.png",
-      content_type: "image/png",
-      actor: staff,
-      name: "Hero still"
-    )
+    existing = attached_message.attachments.to_a
+    tiny = existing.select { |recording| recording.recordable&.file&.byte_size.to_i < 200 }
+    tiny.each do |recording|
+      recording.remove_attachment(actor: staff)
+    end
+    if attached_message.attachments.none?
+      attached_message.import_attachment(
+        io: StringIO.new(tiny_png.call),
+        filename: "hero-still.png",
+        content_type: "image/png",
+        actor: staff,
+        name: "Hero still"
+      )
+    end
   end
 ensure
   Current.actor = previous_actor
