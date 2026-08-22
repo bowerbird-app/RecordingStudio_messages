@@ -45,6 +45,10 @@ Do not insert `Recording` rows by hand. Do not invent a second access list.
 
 v1 is a single Flatpack chat panel: header, messages, composer. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
 
+Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
+
+Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That is why the dummy pins Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`): named themes rebind those tokens so rounded CTAs are charcoal.
+
 There is no group list in this version. Dummy staff and customer pages each open one seeded panel.
 
 ## Related docs

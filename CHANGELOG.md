@@ -19,9 +19,13 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 
 ### Changed
 - README is the product guide for mounts, enablement, and the dummy proof
+- Dummy puts `data-theme="rounded"` on the `html` element. Core default layout only sets it on `body`, which is not enough for Flatpack named themes
+- Flatpack pin moves to [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`~> 0.1.135`, merge `09b6bbb1d82e05ca39c3fdc056d2d070d78f164f`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). No Messages CSS fork
 
 ### Upgrade notes
-- Bump to `0.2.0` and keep the family pins from 0.1.0
+- Bump to `0.2.0` and keep the family pins from 0.1.0, except Flatpack
+- Point host and dummy Gemfiles at Flatpack PR `#159` (`0.1.135`, ref `09b6bbb1d82e05ca39c3fdc056d2d070d78f164f`). Do not stay on `v0.1.133` if you want charcoal rounded CTAs
+- Put `data-theme="rounded"` on `html`. Body-only theme is not enough. The dummy helper is the host workaround while core leaves `<html>` bare
 - Include `RecordingStudio::Capabilities::Messages.to` on each host type that should hold a mount
 - Register `MessageMount`, `MessageGroup`, `Message`, and `RecordingStudioAttachable::Attachment` in `recording_studio.rb`
 - Run `recording_studio_messages:migrations` plus Accessible, Attachable, and Notifications migrations
