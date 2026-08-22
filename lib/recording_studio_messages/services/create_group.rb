@@ -16,15 +16,16 @@ module RecordingStudioMessages
       def call
         validate!
 
-        group_recording = @mount_recording.record(
-          RecordingStudioMessages::MessageGroup,
-          actor: @actor,
-          parent_recording: @mount_recording
-        ) do |group|
-          group.title = @title
-        end
+        group = RecordingStudioMessages::MessageGroup.new(title: @title)
+        group_recording = RecordingStudio.record!(
+          action: "created",
+          recordable: group,
+          root_recording: @mount_recording.root_recording || @mount_recording,
+          parent_recording: @mount_recording,
+          actor: @actor
+        ).recording
 
-        bootstrap_owner!(group_recording)
+        grant_owner!(group_recording)
         group_recording
       end
 
@@ -43,13 +44,18 @@ module RecordingStudioMessages
         @mount_recording.recordable_type == "RecordingStudioMessages::MessageMount"
       end
 
-      def bootstrap_owner!(group_recording)
+      def grant_owner!(group_recording)
         return unless defined?(RecordingStudioAccessible)
 
-        RecordingStudioAccessible.bootstrap_owner_access!(
+        result = RecordingStudioAccessible.grant_access(
           recording: group_recording,
-          actor: @actor
+          actor: @actor,
+          role: :admin,
+          manager_actor: @actor
         )
+        return if result.success?
+
+        raise RecordingStudioMessages::Error, result.error
       end
     end
   end

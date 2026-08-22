@@ -54,13 +54,14 @@ module RecordingStudioMessages
       end
 
       def record_message
-        @group_recording.record(
-          RecordingStudioMessages::Message,
-          actor: @actor,
-          parent_recording: @group_recording
-        ) do |message|
-          message.body = @body
-        end
+        message = RecordingStudioMessages::Message.new(body: @body)
+        RecordingStudio.record!(
+          action: "created",
+          recordable: message,
+          root_recording: @group_recording.root_recording || @group_recording,
+          parent_recording: @group_recording,
+          actor: @actor
+        ).recording
       end
 
       def attach_files!(message_recording)

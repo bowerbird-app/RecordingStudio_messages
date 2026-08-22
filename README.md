@@ -68,7 +68,7 @@ Accessible on a root stays `RecordingStudio.enable_capability`. Mixins use `.to`
 class Workspace < ApplicationRecord
   recording_studio_recordable label: "Workspace", root: true
   RecordingStudio.enable_capability(:accessible, on: self)
-  include RecordingStudio::Capabilities::Messages.to
+  include RecordingStudio::Capabilities::Messages.to(keys: [:support])
 end
 
 class Mailbox < ApplicationRecord
@@ -76,7 +76,7 @@ class Mailbox < ApplicationRecord
                               root: false,
                               allowed_parent_types: ["Workspace"]
 
-  include RecordingStudio::Capabilities::Messages.to
+  include RecordingStudio::Capabilities::Messages.to(keys: [:inbox])
 end
 ```
 
@@ -137,7 +137,7 @@ Composer uploads go through Attachable. Look at the live kit: [Chat::Panel](http
 
 `test/dummy/` is a host that proves the gem. It is not the product.
 
-Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Root Switchable sits in that chrome. Devise sign-in keeps `layouts/application` and still loads Flatpack CSS/JS plus Turbo.
+Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Do not put Sign out or Root Switchable in that slot. Devise sign-in keeps `layouts/application` and still loads Flatpack CSS/JS plus Turbo.
 
 | Field    | Value              |
 |----------|--------------------|

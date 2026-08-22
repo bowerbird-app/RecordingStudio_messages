@@ -36,7 +36,7 @@ Notifications are facts, not recordings. They live in the Notifications tables. 
 Use the public helpers:
 
 - `ensure_message_mount` to hang or find a keyed mount
-- `create_group` to open a conversation and bootstrap the first owner
+- `create_group` to open a conversation and grant the first owner
 - `send_message` to write a line, attach files, and notify everyone else who has a grant
 
 Do not insert `Recording` rows by hand. Do not invent a second access list.

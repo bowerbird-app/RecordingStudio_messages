@@ -18,13 +18,14 @@ module RecordingStudioMessages
         existing = @parent_recording.message_mount(@key)
         return existing if existing
 
-        @parent_recording.record(
-          RecordingStudioMessages::MessageMount,
-          actor: @actor,
-          parent_recording: @parent_recording
-        ) do |mount|
-          mount.key = @key
-        end
+        mount = RecordingStudioMessages::MessageMount.new(key: @key)
+        RecordingStudio.record!(
+          action: "created",
+          recordable: mount,
+          root_recording: @parent_recording.root_recording || @parent_recording,
+          parent_recording: @parent_recording,
+          actor: @actor
+        ).recording
       end
 
       private
@@ -32,7 +33,7 @@ module RecordingStudioMessages
       def validate!
         raise ArgumentError, "parent recording is required" if @parent_recording.blank?
         raise ArgumentError, "mount key is required" if @key.blank?
-        unless RecordingStudio.capability_enabled?(:messages, for: @parent_recording.recordable)
+        unless RecordingStudio.capability_enabled?(:messages, for: parent_type)
           raise RecordingStudioMessages::Error, "Messages is not enabled on this type"
         end
 
@@ -42,8 +43,12 @@ module RecordingStudioMessages
         raise RecordingStudioMessages::Error, "Mount key #{@key} is not enabled on this type"
       end
 
+      def parent_type
+        @parent_recording.recordable_type
+      end
+
       def allowed_keys
-        options = RecordingStudio.capability_options(:messages, for: @parent_recording.recordable) || {}
+        options = RecordingStudio.capability_options(:messages, for: parent_type) || {}
         Array(options[:keys] || options[:key]).map(&:to_s)
       end
     end
