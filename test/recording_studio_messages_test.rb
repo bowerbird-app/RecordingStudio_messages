@@ -14,13 +14,26 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_gemspec_pins_recording_studio_family
     gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio", "~> 4.2"'
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_accessible", "~> 0.7"'
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_attachable", "~> 0.4"'
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_notifications", "~> 0.2"'
-    assert_includes gemspec, 'spec.add_dependency "flat_pack", "~> 0.1.133"'
+    assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
+    assert_equal "~> 0.7.0", gemspec_constraint(gemspec, "recording_studio_accessible")
+    assert_equal "~> 0.4", gemspec_constraint(gemspec, "recording_studio_attachable")
+    assert_equal "~> 0.2.5", gemspec_constraint(gemspec, "recording_studio_notifications")
+    assert_equal "~> 0.1.133", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
+  end
+
+  def test_root_gemfile_resolves_the_same_family_tags
+    gemfile = File.read(File.expand_path("../Gemfile", __dir__))
+
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.133"'
+    assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_accessible")
+    assert_equal "~> 0.2.5", gemfile_constraint(gemfile, "recording_studio_notifications")
   end
 
   def test_dummy_gemfile_pins_verified_family_github_tags
@@ -125,5 +138,17 @@ class RecordingStudioMessagesTest < Minitest::Test
     view_path = File.expand_path("../app/views/recording_studio_messages/home/index.html.erb", __dir__)
 
     refute File.exist?(view_path)
+  end
+
+  private
+
+  def gemspec_constraint(gemspec, name)
+    match = gemspec.match(/spec\.add_dependency "#{Regexp.escape(name)}", "([^"]+)"/)
+    match && match[1]
+  end
+
+  def gemfile_constraint(gemfile, name)
+    match = gemfile.match(/gem "#{Regexp.escape(name)}", "([^"]+)"/)
+    match && match[1]
   end
 end

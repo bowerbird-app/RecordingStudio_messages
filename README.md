@@ -21,9 +21,9 @@ gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages
 ```ruby
 # gemspec / host Gemfile constraints
 gem "recording_studio", "~> 4.2"
-gem "recording_studio_accessible", "~> 0.7"
+gem "recording_studio_accessible", "~> 0.7.0"
 gem "recording_studio_attachable", "~> 0.4"
-gem "recording_studio_notifications", "~> 0.2"
+gem "recording_studio_notifications", "~> 0.2.5"
 gem "flat_pack", "~> 0.1.133"
 ```
 
@@ -54,9 +54,9 @@ Dummy kit pins resolved on 2026-08-22 from each repo's latest GitHub tag and `ve
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
 | `recording_studio` | `~> 4.2` | `v4.2.0` | `4.2.0` |
-| `recording_studio_accessible` | `~> 0.7` | `v0.7.0` | `0.7.0` |
+| `recording_studio_accessible` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
 | `recording_studio_attachable` | `~> 0.4` | `0.4.0` | `0.4.0` |
-| `recording_studio_notifications` | `~> 0.2` | `v0.2.5` | `0.2.5` |
+| `recording_studio_notifications` | `~> 0.2.5` | `v0.2.5` | `0.2.5` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.133` | `v0.1.133` | `0.1.134` (untagged) |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).

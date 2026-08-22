@@ -11,7 +11,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 
 ### Added
 - Engine identity `recording_studio_messages` / `RecordingStudioMessages`
-- Gemspec pins: `recording_studio ~> 4.2`, `recording_studio_accessible ~> 0.7`, `recording_studio_attachable ~> 0.4`, `recording_studio_notifications ~> 0.2`, `flat_pack ~> 0.1.133`
+- Gemspec pins: `recording_studio ~> 4.2`, `recording_studio_accessible ~> 0.7.0`, `recording_studio_attachable ~> 0.4`, `recording_studio_notifications ~> 0.2.5`, `flat_pack ~> 0.1.133`
 - Dummy GitHub tags for the same family, plus Root Switchable `v0.5.0` for host chrome
 
 ### Changed
