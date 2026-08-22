@@ -1,0 +1,63 @@
+<% message_recording = local_assigns.fetch(:message_recording) %>
+<% current_actor = local_assigns.fetch(:current_actor) %>
+<% sender = message_sender_for(message_recording) %>
+<% outgoing = outgoing_message?(message_recording, actor: current_actor) %>
+<% direction = outgoing ? :outgoing : :incoming %>
+<% sender_name = message_sender_name(sender) %>
+<% bubble = outgoing ? FlatPack::Chat::SentMessage::Component : FlatPack::Chat::ReceivedMessage::Component %>
+<% attachments = message_attachments_for(message_recording) %>
+
+<div
+  class="transition-[margin] duration-base"
+  data-flat-pack-chat-record="true"
+  data-flat-pack-chat-record-sender="<%= sender_name %>"
+  data-flat-pack-chat-record-direction="<%= direction %>"
+>
+  <%= render FlatPack::Chat::MessageGroup::Component.new(
+    direction: direction,
+    show_avatar: !outgoing,
+    show_name: !outgoing,
+    sender_name: sender_name
+  ) do |group| %>
+    <% unless outgoing %>
+      <% group.avatar do %>
+        <%= render FlatPack::Avatar::Component.new(name: sender_name, size: :sm) %>
+      <% end %>
+    <% end %>
+    <% group.message do %>
+      <%= render bubble.new(state: :sent) do |message| %>
+        <% attachments.each do |attachment_recording| %>
+          <% attachment = attachment_recording.recordable %>
+          <% next if attachment.blank? %>
+          <% if attachment.attachment_kind.to_s == "image" %>
+            <% message.media_attachment do %>
+              <%= render FlatPack::Chat::Attachment::Component.new(
+                name: attachment.name,
+                type: :image,
+                meta: attachment.original_filename,
+                href: message_attachment_href(attachment_recording),
+                thumbnail_url: message_attachment_thumbnail(attachment_recording)
+              ) %>
+            <% end %>
+          <% else %>
+            <% message.attachment do %>
+              <%= render FlatPack::Chat::Attachment::Component.new(
+                name: attachment.name,
+                type: :file,
+                meta: attachment.original_filename,
+                href: message_attachment_href(attachment_recording)
+              ) %>
+            <% end %>
+          <% end %>
+        <% end %>
+        <% message.meta do %>
+          <%= render FlatPack::Chat::MessageMeta::Component.new(
+            timestamp: message_timestamp(message_recording),
+            state: :sent
+          ) %>
+        <% end %>
+        <%= message_recording.recordable&.body %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

@@ -3,15 +3,22 @@
 <div class="flex w-full flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
     title: "Dummy host",
-    subtitle: "This app proves the messages gem in a real host. It is not the product.",
+    subtitle: "Two message desks on one gem. This host is not the product.",
     variant: :h1
   ) %>
 
-  <%= render FlatPack::Card::Component.new(style: :default) do |card| %>
-    <% card.body do %>
-      <p class="text-sm leading-6 text-(--surface-content-color)">
-        Sign in stays at admin@admin.com. Threads are not in this slice yet.
-      </p>
-    <% end %>
-  <% end %>
+  <div class="flex flex-wrap gap-3">
+    <%= render FlatPack::Button::Component.new(
+      text: "Staff desk",
+      url: staff_desk_path,
+      style: :primary,
+      size: :md
+    ) %>
+    <%= render FlatPack::Button::Component.new(
+      text: "Inbox",
+      url: inbox_path,
+      style: :secondary,
+      size: :md
+    ) %>
+  </div>
 </div>

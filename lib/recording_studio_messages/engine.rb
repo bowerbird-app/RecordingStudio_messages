@@ -94,7 +94,16 @@ module RecordingStudioMessages
 
     # Run after_initialize hooks
     initializer "recording_studio_messages.after_initialize", after: "recording_studio_messages.load_config" do |_app|
+      RecordingStudioMessages.register_integration!
       RecordingStudioMessages.configuration.hooks.run(:after_initialize, self)
+    end
+
+    initializer "recording_studio_messages.register_recording_studio_integration" do |app|
+      RecordingStudioMessages.register_integration!
+
+      app.config.after_initialize do
+        RecordingStudioMessages.register_integration!
+      end
     end
 
     # Apply model extensions when models are loaded

@@ -1,0 +1,63 @@
+<% current_actor = local_assigns.fetch(:current_actor) %>
+<% group_recording = local_assigns.fetch(:group_recording) %>
+<% message_recordings = local_assigns.fetch(:message_recordings) %>
+<% form_url = local_assigns[:form_url].presence || messages_panel_form_url(group_recording) %>
+<% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
+
+<div class="flex min-h-[70vh] w-full flex-col overflow-hidden rounded-2xl border border-(--chat-border-color) bg-(--chat-background-color)">
+  <%= render FlatPack::Chat::Panel::Component.new do |panel| %>
+    <% panel.header do %>
+      <%= render FlatPack::Chat::Header::Component.new(
+        title: group_recording.recordable.title
+      ) do |header| %>
+        <% header.right do %>
+          <%= recording_studio_accessible_avatars(group_recording, button_style: :ghost) %>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% panel.messages do %>
+      <%= render FlatPack::Chat::MessageList::Component.new(stick_to_bottom: true) do %>
+        <% if message_recordings.empty? %>
+          <%= render FlatPack::Chat::SystemMessage::Component.new do %>
+            Nothing here yet. Write the first line.
+          <% end %>
+        <% else %>
+          <% message_recordings.group_by { |recording| message_timestamp(recording).to_date }.each do |day, recordings| %>
+            <%= render FlatPack::Chat::DateDivider::Component.new(label: day.strftime("%-d %b %Y")) %>
+            <% recordings.each do |message_recording| %>
+              <%= render "recording_studio_messages/message_groups/message",
+                         message_recording: message_recording,
+                         current_actor: current_actor %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <% panel.composer do %>
+      <%= form_with url: form_url, method: :post, local: true, multipart: true do %>
+        <%= hidden_field_tag :return_to, return_to %>
+        <%= render FlatPack::Chat::Composer::Component.new do |composer| %>
+          <% composer.left do %>
+            <%= file_field_tag "message[files][]",
+                  multiple: true,
+                  accept: "image/*,application/pdf,text/plain",
+                  aria: { label: "Add a file" },
+                  class: "max-w-40 text-xs text-(--chat-input-text-color)" %>
+          <% end %>
+          <% composer.center do %>
+            <%= render FlatPack::TextArea::Component.new(
+              name: "message[body]",
+              rows: 1,
+              autogrow: true,
+              submit_on_enter: true,
+              placeholder: "Write a message",
+              class: "min-h-[var(--chat-composer-control-height)] max-h-32 rounded-lg border-[var(--chat-input-border-color)] bg-[var(--chat-input-background-color)] px-4 py-[var(--chat-composer-control-padding-y)] text-sm leading-5 text-[var(--chat-input-text-color)] placeholder:text-[var(--chat-input-placeholder-color)] focus:ring-[var(--chat-input-focus-ring-color)]"
+            ) %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</div>

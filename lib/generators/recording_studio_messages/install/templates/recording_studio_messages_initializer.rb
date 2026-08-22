@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
 RecordingStudioMessages.configure do |config|
-  # Set your API key (recommended to use ENV or Rails credentials)
-  # config.api_key = ENV["RECORDING_STUDIO_MESSAGES_API_KEY"]
-
-  # Enable optional feature X
-  # config.enable_feature_x = false
-
-  # Timeout in seconds for external calls
-  # config.timeout = 5
+  # Hosts can set options here. Enable :messages on the types that should hold a mount:
+  # include RecordingStudio::Capabilities::Messages.to
 end

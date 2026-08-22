@@ -5,7 +5,7 @@
 - This repository is the Recording Studio Messages addon.
 - Preserve engine namespace isolation under `RecordingStudioMessages`.
 - Treat `docs/gem_template/` as architectural reference material. For current addon workflow, prefer the top-level README and the dummy app.
-- Keep changes small and scoped. Do not add Message types or screens unless the request requires it.
+- Keep changes small and scoped. Conversations use keyed `MessageMount`s, Accessible grants on `MessageGroup`, and Attachable on `Message`. Do not add Participant recordables or a Notifications → Messages edge.
 
 ## UI Conventions
 

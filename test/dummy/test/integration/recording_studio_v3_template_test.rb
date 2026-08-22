@@ -35,11 +35,15 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     private_workspace = Workspace.find_by!(name: "Private Workspace")
     folder = Folder.find_by!(name: "Product Docs")
     page = Page.find_by!(title: "Getting Started")
+    mailbox = Mailbox.find_by!(name: "Site mailbox")
     root_recording = RecordingStudio::Recording.find_by!(recordable: workspace)
     accessible_root_recording = RecordingStudio::Recording.find_by!(recordable: accessible_workspace)
     private_root_recording = RecordingStudio::Recording.find_by!(recordable: private_workspace)
     folder_recording = RecordingStudio::Recording.find_by!(recordable: folder)
     page_recording = RecordingStudio::Recording.find_by!(recordable: page)
+    mailbox_recording = RecordingStudio::Recording.find_by!(recordable: mailbox)
+    support_mount = root_recording.message_mount("support")
+    inbox_mount = mailbox_recording.message_mount("inbox")
 
     assert_nil Current.actor
     assert_nil root_recording.parent_recording_id
@@ -49,7 +53,18 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     assert_equal root_recording, folder_recording.root_recording
     assert_equal folder_recording, page_recording.parent_recording
     assert_equal root_recording, page_recording.root_recording
+    assert_equal root_recording, mailbox_recording.parent_recording
+    assert_equal root_recording, support_mount.parent_recording
+    assert_equal mailbox_recording, inbox_mount.parent_recording
+    assert_equal "support", support_mount.recordable.key
+    assert_equal "inbox", inbox_mount.recordable.key
+    assert_equal DummyCatalog.support_group_recording.parent_recording, support_mount
+    assert_equal DummyCatalog.inbox_group_recording.parent_recording, inbox_mount
+    assert DummyCatalog.inbox_group_recording.recordable
+    assert RecordingStudioMessages.message_recordings(DummyCatalog.support_group_recording).any?
+    assert RecordingStudioMessages.message_recordings(DummyCatalog.inbox_group_recording).any?(&:has_attachments?)
     assert_equal 3, Workspace.count
+    assert_equal 2, User.where(email: %w[admin@admin.com casey@example.com]).count
 
     assert_no_difference -> { User.count } do
       assert_no_difference -> { RecordingStudio::Recording.count } do

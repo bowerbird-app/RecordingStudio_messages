@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors     = ["Bowerbird"]
   spec.homepage    = "https://github.com/bowerbird-app/RecordingStudio_messages"
   spec.summary     = "Threads and chat for Recording Studio hosts"
-  spec.description = "A Recording Studio addon for threads and chat. This slice is the " \
-                     "renamed engine plus family pins. Message types come later."
+  spec.description = "Keyed message mounts, conversations, and a Flatpack chat panel " \
+                     "for Recording Studio hosts."
   spec.license     = "MIT"
   spec.required_ruby_version = ">= 3.3.0"
 

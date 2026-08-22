@@ -3,7 +3,32 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
+
+## [0.2.0] - 2026-08-22
+
+Conversations land. One gem, keyed mounts, Accessible membership, Attachable files, and a Flatpack chat panel.
+
+### Added
+- `:messages` capability. Host types include `RecordingStudio::Capabilities::Messages.to`
+- `MessageMount` (keyed child), `MessageGroup` (Accessible conversation), `Message` (Attachable line)
+- `ensure_message_mount`, `create_group`, `send_message`, and `granted_actors`
+- `:message_received` notification type. Send calls `RecordingStudioNotifications.notify_each` for other granted actors
+- Flatpack `Chat::Panel` screens (header, messages, composer). Header faces use `recording_studio_accessible_avatars`
+- Dummy staff desk and inbox that prove two mounts at once, with seeded people, an agent, lines, and one attachment
+
+### Changed
+- README is the product guide for mounts, enablement, and the dummy proof
+
+### Upgrade notes
+- Bump to `0.2.0` and keep the family pins from 0.1.0
+- Include `RecordingStudio::Capabilities::Messages.to` on each host type that should hold a mount
+- Register `MessageMount`, `MessageGroup`, `Message`, and `RecordingStudioAttachable::Attachment` in `recording_studio.rb`
+- Run `recording_studio_messages:migrations` plus Accessible, Attachable, and Notifications migrations
+- Mount Messages, Accessible, and Attachable
+- Do not add a Notifications → Messages edge
+- Do not add Participant recordables. Grants on the conversation are the membership list
+- v1 has no group list, realtime, typing, read receipts, email channel, or Admin slice
 
 ## [0.1.0] - 2026-08-22
 
@@ -32,4 +57,5 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
+[0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.1.0
