@@ -46,5 +46,10 @@ test/dummy/config/credentials/*.key
 *.gem
 pkg/
 
+# Review captures stay on the agent disk, not in git
+/doc/review/*.png
+/doc/review/*.jpg
+/doc/review/*.mp4
+
 # Rename script state
 .rename_state.yml
