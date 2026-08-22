@@ -10,9 +10,20 @@ module RecordingStudioMessages
       "Conversations"
     end
 
+    def messages_inbox_rows(group_recordings)
+      Array(group_recordings).filter_map do |group_recording|
+        row = messages_inbox_row(group_recording)
+        row if messages_inbox_row_complete?(row)
+      end
+    end
+
     def messages_inbox_row(group_recording)
       latest = RecordingStudioMessages.message_recordings(group_recording).last
       messages_inbox_row_arguments(group_recording, latest)
+    end
+
+    def messages_inbox_row_complete?(row)
+      row[:chat_group_name].present? && row[:latest_preview].present?
     end
 
     def messages_inbox_row_arguments(group_recording, latest)
@@ -29,7 +40,7 @@ module RecordingStudioMessages
     end
 
     def messages_inbox_group_name(group_recording)
-      group_recording.recordable&.title.presence || "Conversation"
+      group_recording.recordable&.title.to_s.strip.presence
     end
 
     def messages_inbox_latest_sender(latest)

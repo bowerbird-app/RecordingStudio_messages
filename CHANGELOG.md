@@ -16,7 +16,7 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - `:message_received` notification type. Send calls `RecordingStudioNotifications.notify_each` for other granted actors
 - Flatpack `Chat::Panel` screens (header, messages, composer). Header faces use `recording_studio_accessible_avatars`
 - Dummy staff desk and inbox that prove two mounts at once, with seeded people, an agent, lines, and one attachment
-- `message_groups#index` lists conversations the current actor can view through Accessible grants. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. A row opens `Chat::Panel` show
+- `message_groups#index` lists conversations the current actor can view through Accessible grants. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. A row opens `Chat::Panel` show. The list only paints complete InboxRows (name + latest line) and uses Flatpack `PageTitle`. Empty-grant conversations stay off the list until they have a real preview
 - `viewable_group_recordings(actor:, mount_recording:)` scopes that list. Dummy support mount seeds two real conversations so the list is not a single jump to a panel
 - Send replaces the Chat::Panel thread and composer over Turbo so the new line lands in place. There is no Action Cable in this version
 

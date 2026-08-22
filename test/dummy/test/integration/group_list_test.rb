@@ -20,11 +20,14 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_select "[data-controller='flat-pack--list-selectable']"
+    assert_includes response.body, "Staff desk"
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Launch notes"
     assert_includes response.body, "I will send a quieter line this evening."
     assert_select "a[href=?]", recording_studio_messages.message_group_path(DummyCatalog.support_group_recording)
     assert_select "a[href=?]", recording_studio_messages.message_group_path(DummyCatalog.launch_group_recording)
+    refute_includes response.body, "Open conversation"
+    refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
     refute_includes response.body, "flat-pack--chat-panel"
     refute_includes response.body, "Sign out"
     refute_includes response.body, "Pundit"
@@ -52,6 +55,7 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Launch notes"
+    refute_includes response.body, "Open conversation"
     refute_includes response.body, "Site inbox"
     refute_includes response.body, "Did the press stills land?"
   end

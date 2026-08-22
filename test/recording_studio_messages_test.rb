@@ -80,6 +80,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     controller = File.read(
       File.expand_path("../app/controllers/recording_studio_messages/message_groups_controller.rb", __dir__)
     )
+    helper = File.read(
+      File.expand_path("../app/helpers/recording_studio_messages/inbox_helper.rb", __dir__)
+    )
     inbox = File.read(
       File.expand_path("../app/views/recording_studio_messages/message_groups/_inbox.html.erb", __dir__)
     )
@@ -94,8 +97,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def viewable_group_recordings"
     assert_includes list_groups, "RecordingStudioAccessible.authorized?"
     assert_includes list_groups, "role: :view"
+    assert_includes helper, "def messages_inbox_rows"
+    assert_includes helper, "messages_inbox_row_complete?"
+    assert_includes inbox, "FlatPack::PageTitle::Component"
+    assert_includes inbox, "messages_inbox_rows"
     assert_includes inbox, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes inbox, "FlatPack::Chat::InboxRow::Component"
+    refute_includes helper, '"Conversation"'
     refute_includes controller, "Pundit"
     refute_includes controller, "CanCan"
     refute_includes controller, "user.admin?"
