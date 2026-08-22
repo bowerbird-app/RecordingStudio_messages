@@ -8,7 +8,14 @@ module RecordingStudioMessages
     def create
       @group_recording = find_group_recording
       authorize_group!(:edit)
+      send_current_message
+      load_thread_messages
+      respond_after_send
+    end
 
+    private
+
+    def send_current_message
       RecordingStudioMessages.send_message(
         group_recording: @group_recording,
         body: message_params[:body],
@@ -16,16 +23,18 @@ module RecordingStudioMessages
         files: uploaded_files,
         url: panel_url
       )
+    end
 
+    def load_thread_messages
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
+    end
 
+    def respond_after_send
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_to after_send_path, notice: "Sent." }
       end
     end
-
-    private
 
     def message_params
       params.fetch(:message, {}).permit(:body, files: [])
