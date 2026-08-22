@@ -20,7 +20,7 @@ class SendMessageTest < ActiveSupport::TestCase
     @root = RecordingStudio.root_recording_for(@workspace)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     @mount = @root.ensure_message_mount("support", actor: @staff)
-    @group = RecordingStudioMessages.create_group(@mount, title: "Studio help", actor: @staff)
+    @group = RecordingStudioMessages.create_group(@mount, title: "Notify conversation", actor: @staff)
     result = RecordingStudioAccessible.grant_access(
       recording: @group,
       actor: @customer,

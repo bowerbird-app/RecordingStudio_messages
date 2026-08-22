@@ -25,21 +25,33 @@ module DummyCatalog
       mailbox_recording.message_mount(INBOX_KEY)
     end
 
-    def group_recording(title)
-      group = RecordingStudioMessages::MessageGroup.find_by!(title: title)
-      RecordingStudio::Recording.find_by!(recordable: group)
+    def group_recordings_under(mount)
+      RecordingStudio::Recording.unscoped.where(
+        parent_recording_id: mount.id,
+        recordable_type: "RecordingStudioMessages::MessageGroup",
+        trashed_at: nil
+      ).includes(:recordable)
+    end
+
+    def find_group_recording_under(mount, title)
+      group_recordings_under(mount).detect { |recording| recording.recordable&.title == title }
+    end
+
+    def group_recording_under(mount, title)
+      find_group_recording_under(mount, title) ||
+        raise(ActiveRecord::RecordNotFound, "No #{title.inspect} conversation under this desk")
     end
 
     def support_group_recording
-      group_recording(SUPPORT_TITLE)
+      group_recording_under(support_mount_recording, SUPPORT_TITLE)
     end
 
     def inbox_group_recording
-      group_recording(INBOX_TITLE)
+      group_recording_under(inbox_mount_recording, INBOX_TITLE)
     end
 
     def empty_group_recording
-      group_recording(EMPTY_TITLE)
+      group_recording_under(support_mount_recording, EMPTY_TITLE)
     end
   end
 end

@@ -89,7 +89,6 @@ module RecordingStudioMessages
           recipients: recipients,
           notification_type: :message_received,
           actor: @actor,
-          notifiable: message_recording.recordable,
           recording: message_recording,
           root_recording: @group_recording.root_recording,
           title: notification_title,

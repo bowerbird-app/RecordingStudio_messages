@@ -4,7 +4,8 @@ module Staff
   class DesksController < ApplicationController
     def show
       @group_recording = DummyCatalog.support_group_recording
-      unless RecordingStudioAccessible.authorized?(actor: Current.actor, recording: @group_recording, role: :view)
+      actor = Current.actor || current_user
+      unless actor && RecordingStudioAccessible.authorized?(actor: actor, recording: @group_recording, role: :view)
         redirect_to root_path, alert: "You cannot open this conversation" and return
       end
 

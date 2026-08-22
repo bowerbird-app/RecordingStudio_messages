@@ -77,28 +77,21 @@ begin
   support_mount = root_recording.ensure_message_mount(DummyCatalog::SUPPORT_KEY, actor: staff)
   inbox_mount = mailbox_recording.ensure_message_mount(DummyCatalog::INBOX_KEY, actor: staff)
 
-  support_group = RecordingStudio::Recording.find_by(
-    parent_recording: support_mount,
-    recordable: RecordingStudioMessages::MessageGroup.find_by(title: DummyCatalog::SUPPORT_TITLE)
-  ) || RecordingStudioMessages.create_group(
-    support_mount,
-    title: DummyCatalog::SUPPORT_TITLE,
-    actor: staff
-  )
+  support_group = DummyCatalog.find_group_recording_under(support_mount, DummyCatalog::SUPPORT_TITLE) ||
+    RecordingStudioMessages.create_group(
+      support_mount,
+      title: DummyCatalog::SUPPORT_TITLE,
+      actor: staff
+    )
 
-  inbox_group = RecordingStudio::Recording.find_by(
-    parent_recording: inbox_mount,
-    recordable: RecordingStudioMessages::MessageGroup.find_by(title: DummyCatalog::INBOX_TITLE)
-  ) || RecordingStudioMessages.create_group(
-    inbox_mount,
-    title: DummyCatalog::INBOX_TITLE,
-    actor: staff
-  )
+  inbox_group = DummyCatalog.find_group_recording_under(inbox_mount, DummyCatalog::INBOX_TITLE) ||
+    RecordingStudioMessages.create_group(
+      inbox_mount,
+      title: DummyCatalog::INBOX_TITLE,
+      actor: staff
+    )
 
-  empty_group = RecordingStudio::Recording.find_by(
-    parent_recording: support_mount,
-    recordable: RecordingStudioMessages::MessageGroup.find_by(title: DummyCatalog::EMPTY_TITLE)
-  )
+  empty_group = DummyCatalog.find_group_recording_under(support_mount, DummyCatalog::EMPTY_TITLE)
   if empty_group.blank?
     empty_group = RecordingStudio.record!(
       action: "created",
