@@ -2,6 +2,10 @@
 
 module RecordingStudioMessages
   module PanelHelper
+    def messages_desk_panel_id
+      "messages-desk-panel"
+    end
+
     def messages_panel_form_url(group_recording)
       if respond_to?(:message_group_messages_path)
         message_group_messages_path(group_recording)

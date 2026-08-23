@@ -1,7 +1,14 @@
-<% recording_studio_page_nav(title: @group_recording.recordable.title) %>
+<% if turbo_frame_request? %>
+  <%= render "recording_studio_messages/message_groups/panel_frame",
+             group_recording: @group_recording,
+             message_recordings: @message_recordings,
+             current_actor: current_messages_actor %>
+<% else %>
+  <% recording_studio_page_nav(title: @group_recording.recordable.title) %>
 
-<%= render "recording_studio_messages/message_groups/desk",
-           group_recordings: @group_recordings,
-           group_recording: @group_recording,
-           message_recordings: @message_recordings,
-           current_actor: current_messages_actor %>
+  <%= render "recording_studio_messages/message_groups/desk",
+             group_recordings: @group_recordings,
+             group_recording: @group_recording,
+             message_recordings: @message_recordings,
+             current_actor: current_messages_actor %>
+<% end %>

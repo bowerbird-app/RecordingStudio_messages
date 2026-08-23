@@ -19,9 +19,11 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - `message_groups#index` is Flatpack `Chat::Layout` `:split`. Accessible `:view` scopes the sidebar. Sidebar rows are `Chat::InboxRow` only. The panel slot is `Chat::Panel`. Hollow empty-grant conversations stay off the sidebar
 - `viewable_group_recordings(actor:, mount_recording:)` scopes that list. Dummy support mount seeds two real conversations so the list is not a single jump to a panel
 - Send replaces the Chat::Panel thread and composer over Turbo so the new line lands in place. There is no Action Cable in this version
+- InboxRow clicks target the `messages-desk-panel` turbo frame. Layout Stimulus `openPanel` / `showPanel` shows the conversation under `md` without a full show visit
 
 ### Changed
 - README is the product guide for mounts, enablement, and the dummy proof
+- Core PageNav is the one back on the desk. Chat::Header has no `back_href`. Chat::Layout's injected mobile Back is hidden so the two do not stack
 - Dummy puts `data-theme="rounded"` on the `html` element. Core default layout only sets it on `body`, which is not enough for Flatpack named themes
 - Flatpack pin moves to [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`~> 0.1.135`, HEAD `daceb04b76578b2d7adfa42a65e1f66f42d24f23`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). No Messages CSS fork
 
@@ -31,6 +33,7 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - Put `data-theme="rounded"` on `html`. Body-only theme is not enough. The dummy helper is the host workaround while core leaves `<html>` bare
 - Send now answers Turbo by replacing `conversation-<id>-messages` and the composer. Do not add Action Cable. HTML posts still redirect with a flash
 - Open a mount on `message_groups#index` (`?mount_id=`). Do not jump straight to show when a desk has conversations. Index uses Accessible `:view` on each `MessageGroup`
+- InboxRow must set `turbo_frame` to `messages-desk-panel`. A row click must not full-visit show and remount the split desk
 - Include `RecordingStudio::Capabilities::Messages.to` on each host type that should hold a mount
 - Register `MessageMount`, `MessageGroup`, `Message`, and `RecordingStudioAttachable::Attachment` in `recording_studio.rb`
 - Run `recording_studio_messages:migrations` plus Accessible, Attachable, and Notifications migrations

@@ -26,8 +26,16 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Launch notes"
     assert_includes response.body, "I will send a quieter line this evening."
     assert_includes response.body, "flat-pack--chat-panel"
-    assert_select "a[href=?]", recording_studio_messages.message_group_path(DummyCatalog.support_group_recording)
-    assert_select "a[href=?]", recording_studio_messages.message_group_path(DummyCatalog.launch_group_recording)
+    assert_select "a[href=?][data-turbo-frame=?]",
+                  recording_studio_messages.message_group_path(DummyCatalog.support_group_recording),
+                  "messages-desk-panel"
+    assert_select "a[href=?][data-turbo-frame=?]",
+                  recording_studio_messages.message_group_path(DummyCatalog.launch_group_recording),
+                  "messages-desk-panel"
+    assert_select "turbo-frame#messages-desk-panel"
+    assert_includes response.body, "flat-pack-page-nav"
+    assert_includes response.body, "Back to conversations"
+    refute_includes response.body, "back_href"
     refute_includes response.body, "Open conversation"
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
     refute_includes response.body, "PageTitle"
@@ -47,6 +55,25 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat-pack--chat-panel"
     assert_includes response.body, "The homepage hero feels a bit loud"
     assert_includes response.body, "Studio help"
+    assert_includes response.body, "flat-pack-page-nav"
+    assert_select "[data-controller='flat-pack--chat-layout']"
+  end
+
+  test "inbox row click loads the panel through the desk turbo frame" do
+    sign_in @staff
+    group = DummyCatalog.support_group_recording
+
+    get recording_studio_messages.message_group_path(group),
+        headers: { "Turbo-Frame" => "messages-desk-panel" }
+
+    assert_response :success
+    assert_select "turbo-frame#messages-desk-panel"
+    assert_includes response.body, "flat-pack--chat-panel"
+    assert_includes response.body, "The homepage hero feels a bit loud"
+    assert_includes response.body, "Studio help"
+    refute_includes response.body, "flat-pack--chat-layout"
+    refute_includes response.body, "flat-pack-page-nav"
+    refute_includes response.body, "data-controller='flat-pack--chat-layout'"
   end
 
   test "engine index scopes to a mount and Accessible view grants" do
@@ -74,7 +101,11 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Site inbox"
     assert_includes response.body, "They are in. I attached the first frame."
     assert_includes response.body, "flat-pack--chat-panel"
-    assert_select "a[href=?]", recording_studio_messages.message_group_path(DummyCatalog.inbox_group_recording)
+    assert_select "a[href=?][data-turbo-frame=?]",
+                  recording_studio_messages.message_group_path(DummyCatalog.inbox_group_recording),
+                  "messages-desk-panel"
+    assert_select "turbo-frame#messages-desk-panel"
+    assert_includes response.body, "flat-pack-page-nav"
     refute_includes response.body, "Studio help"
   end
 
