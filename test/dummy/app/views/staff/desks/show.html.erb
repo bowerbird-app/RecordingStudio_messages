@@ -1,6 +1,9 @@
 <% recording_studio_page_nav(title: "Staff desk") %>
 
-<%= render "recording_studio_messages/message_groups/inbox",
+<%= render "recording_studio_messages/message_groups/desk",
            group_recordings: @group_recordings,
+           group_recording: @group_recording,
+           message_recordings: @message_recordings,
            current_actor: Current.actor,
-           title: "Staff desk" %>
+           form_url: @group_recording && recording_studio_messages.message_group_messages_path(@group_recording),
+           return_to: staff_desk_path %>

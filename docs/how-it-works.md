@@ -44,13 +44,13 @@ Do not insert `Recording` rows by hand. Do not invent a second access list.
 
 ## Screens
 
-A mount opens on the conversation list (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. Rows are Flatpack `Chat::InboxRow` inside a dense selectable `List`. A row goes to the existing `Chat::Panel` show. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
+A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. The sidebar is `Chat::InboxRow` only. The panel slot is the existing `Chat::Panel`. Clicking a row opens that conversation in the panel. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
 
 Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
 
 Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That is why the dummy pins Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) HEAD (`0.1.135`, `daceb04b76578b2d7adfa42a65e1f66f42d24f23`): named themes rebind those tokens so rounded CTAs are charcoal. There is no `v0.1.135` tag.
 
-Dummy staff desk and inbox land on that list. Support seeds two conversations so the list is real. Inbox still shows the list when it has one row. The list only renders complete InboxRows — a name and a latest line. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the list.
+Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 
 Sending does not wait on a cable. The composer posts as a Turbo stream. The response replaces the message list (and the composer, so the field is empty again). A full HTML visit still works and shows a flash. Do not add Action Cable here.
 

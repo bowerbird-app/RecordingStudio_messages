@@ -4,30 +4,28 @@
 <% form_url = local_assigns[:form_url].presence || messages_panel_form_url(group_recording) %>
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 
-<div class="flex min-h-[70vh] w-full flex-col overflow-hidden rounded-[var(--chat-composer-radius)] border border-[var(--chat-border-color)] bg-[var(--chat-background-color)]">
-  <%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
-    <% panel.header do %>
-      <%= render FlatPack::Chat::Header::Component.new(
-        title: group_recording.recordable.title
-      ) do |header| %>
-        <% header.right do %>
-          <%= recording_studio_accessible_avatars(group_recording, button_style: :ghost) %>
-        <% end %>
+<%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
+  <% panel.header do %>
+    <%= render FlatPack::Chat::Header::Component.new(
+      title: group_recording.recordable.title
+    ) do |header| %>
+      <% header.right do %>
+        <%= recording_studio_accessible_avatars(group_recording, button_style: :ghost) %>
       <% end %>
     <% end %>
-
-    <% panel.messages do %>
-      <%= render "recording_studio_messages/message_groups/message_list",
-                 group_recording: group_recording,
-                 message_recordings: message_recordings,
-                 current_actor: current_actor %>
-    <% end %>
-
-    <% panel.composer do %>
-      <%= render "recording_studio_messages/message_groups/composer",
-                 group_recording: group_recording,
-                 form_url: form_url,
-                 return_to: return_to %>
-    <% end %>
   <% end %>
-</div>
+
+  <% panel.messages do %>
+    <%= render "recording_studio_messages/message_groups/message_list",
+               group_recording: group_recording,
+               message_recordings: message_recordings,
+               current_actor: current_actor %>
+  <% end %>
+
+  <% panel.composer do %>
+    <%= render "recording_studio_messages/message_groups/composer",
+               group_recording: group_recording,
+               form_url: form_url,
+               return_to: return_to %>
+  <% end %>
+<% end %>

@@ -10,23 +10,23 @@ module RecordingStudioMessages
       "Conversations"
     end
 
-    def messages_inbox_rows(group_recordings)
+    def messages_inbox_rows(group_recordings, selected: nil)
       Array(group_recordings).filter_map do |group_recording|
-        row = messages_inbox_row(group_recording)
+        row = messages_inbox_row(group_recording, selected: selected)
         row if messages_inbox_row_complete?(row)
       end
     end
 
-    def messages_inbox_row(group_recording)
+    def messages_inbox_row(group_recording, selected: nil)
       latest = RecordingStudioMessages.message_recordings(group_recording).last
-      messages_inbox_row_arguments(group_recording, latest)
+      messages_inbox_row_arguments(group_recording, latest, selected: selected)
     end
 
     def messages_inbox_row_complete?(row)
       row[:chat_group_name].present? && row[:latest_preview].present?
     end
 
-    def messages_inbox_row_arguments(group_recording, latest)
+    def messages_inbox_row_arguments(group_recording, latest, selected: nil)
       {
         chat_group_name: messages_inbox_group_name(group_recording),
         latest_sender: messages_inbox_latest_sender(latest),
@@ -35,8 +35,12 @@ module RecordingStudioMessages
         unread_count: 0,
         avatar_items: messages_inbox_avatar_items(group_recording),
         href: messages_inbox_href(group_recording),
-        active: false
+        active: selected_inbox_row?(group_recording, selected)
       }
+    end
+
+    def selected_inbox_row?(group_recording, selected)
+      selected.present? && selected.id.to_s == group_recording.id.to_s
     end
 
     def messages_inbox_group_name(group_recording)

@@ -38,11 +38,11 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Launch notes"
+    assert_select "[data-controller='flat-pack--chat-layout']"
     assert_select "[data-controller='flat-pack--list-selectable']"
-    refute_includes response.body, "flat-pack--chat-panel"
+    assert_includes response.body, "flat-pack--chat-panel"
     refute_includes response.body, "Sign out"
     refute_includes response.body, "recording-studio-root-switchable--root-switch-dropdown"
-    refute_includes response.body, "Chat::Layout"
 
     sign_in @customer
     get inbox_path
@@ -51,7 +51,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_includes response.body, "Site inbox"
     assert_includes response.body, "They are in. I attached the first frame."
-    refute_includes response.body, "flat-pack--chat-panel"
+    assert_includes response.body, "flat-pack--chat-panel"
   end
 
   test "catalog keeps the seeded desks when another conversation reuses the title" do
