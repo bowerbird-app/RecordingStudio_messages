@@ -1,0 +1,30 @@
+<% current_actor = local_assigns.fetch(:current_actor) %>
+<% group_recordings = local_assigns.fetch(:group_recordings) %>
+<% selected_group = local_assigns[:group_recording] %>
+<% message_recordings = local_assigns[:message_recordings] %>
+<% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group) %>
+
+<%= render FlatPack::Chat::Layout::Component.new(variant: :split, class: "min-h-[70vh]") do |layout| %>
+  <% layout.sidebar do %>
+    <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
+      <% inbox_rows.each do |inbox_row| %>
+        <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% layout.panel do %>
+    <% if selected_group %>
+      <%= render "recording_studio_messages/message_groups/panel",
+                 group_recording: selected_group,
+                 message_recordings: message_recordings,
+                 current_actor: current_actor,
+                 form_url: local_assigns[:form_url],
+                 return_to: local_assigns[:return_to] %>
+    <% else %>
+      <%= render FlatPack::Chat::SystemMessage::Component.new do %>
+        Nothing here yet.
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

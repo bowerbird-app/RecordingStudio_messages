@@ -10,7 +10,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Accessible enabled on Workspace; Messages enabled on Workspace and Mailbox
 - Two keyed mounts at once: `support` on Studio Workspace, `inbox` on the Site mailbox
 - Seeded conversations, people, an agent, lines, and one image attachment
-- Staff desk (`/staff/desk`) and Inbox (`/inbox`) land on the conversation list (`Chat::InboxRow` in a dense selectable `List`). A row opens Flatpack `Chat::Panel`. Send replaces the thread over Turbo so the new line appears without Action Cable
+- Staff desk (`/staff/desk`) and Inbox (`/inbox`) land on Flatpack `Chat::Layout` `:split` (`Chat::InboxRow` sidebar + `Chat::Panel`). Send replaces the thread over Turbo so the new line appears without Action Cable
 - Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply (charcoal Send / mine after Flatpack PR #159)
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
