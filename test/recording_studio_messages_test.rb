@@ -83,8 +83,20 @@ class RecordingStudioMessagesTest < Minitest::Test
     helper = File.read(
       File.expand_path("../app/helpers/recording_studio_messages/inbox_helper.rb", __dir__)
     )
+    panel_helper = File.read(
+      File.expand_path("../app/helpers/recording_studio_messages/panel_helper.rb", __dir__)
+    )
     desk = File.read(
       File.expand_path("../app/views/recording_studio_messages/message_groups/_desk.html.erb", __dir__)
+    )
+    panel = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_panel.html.erb", __dir__)
+    )
+    show = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/show.html.erb", __dir__)
+    )
+    panel_frame = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_panel_frame.html.erb", __dir__)
     )
     list_groups = File.read(
       File.expand_path("../lib/recording_studio_messages/services/list_groups.rb", __dir__)
@@ -99,14 +111,26 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes list_groups, "role: :view"
     assert_includes helper, "def messages_inbox_rows"
     assert_includes helper, "messages_inbox_row_complete?"
-    assert_includes desk, "FlatPack::Chat::Layout::Component.new(variant: :split"
+    assert_includes helper, "turbo_frame: messages_desk_panel_id"
+    assert_includes helper, "def messages_inbox_row_link"
+    assert_includes panel_helper, "def messages_desk_panel_id"
+    assert_includes panel_helper, '"messages-desk-panel"'
+    assert_includes controller, "turbo_frame_request?"
+    assert_includes show, "turbo_frame_request?"
+    assert_includes show, "panel_frame"
+    assert_includes desk, "FlatPack::Chat::Layout::Component.new("
+    assert_includes desk, "variant: :split"
     assert_includes desk, "layout.sidebar"
     assert_includes desk, "layout.panel"
     assert_includes desk, "messages_inbox_rows"
+    assert_includes desk, "panel_frame"
+    assert_includes panel_frame, "messages_desk_panel_id"
+    assert_includes desk, "Back to conversations"
+    refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
     refute_includes desk, "FlatPack::PageTitle::Component"
-    refute_includes desk, "Conversations"
+    refute_includes desk, ">Conversations<"
     refute_includes helper, '"Conversation"'
     refute_includes controller, "Pundit"
     refute_includes controller, "CanCan"

@@ -44,7 +44,7 @@ Do not insert `Recording` rows by hand. Do not invent a second access list.
 
 ## Screens
 
-A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. The sidebar is `Chat::InboxRow` only. The panel slot is the existing `Chat::Panel`. Clicking a row opens that conversation in the panel. Core default layout owns back and close. Faces in the header come from Accessible. Composer files go through Attachable.
+A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. The sidebar is `Chat::InboxRow` only. The panel slot is the existing `Chat::Panel` inside a `messages-desk-panel` turbo frame. Clicking a row uses the kit path: InboxRow `turbo_frame` replaces that frame, and Layout Stimulus `openPanel` / `showPanel` hides the sidebar under `md`. It does not Turbo-visit show and remount the desk. Core PageNav owns back and close. Chat::Header has no `back_href`. Layout's injected mobile Back is hidden so the two do not stack. Faces in the header come from Accessible. Composer files go through Attachable.
 
 Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
 

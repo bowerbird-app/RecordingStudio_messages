@@ -34,8 +34,14 @@ module RecordingStudioMessages
         latest_at: latest && message_timestamp(latest),
         unread_count: 0,
         avatar_items: messages_inbox_avatar_items(group_recording),
-        href: messages_inbox_href(group_recording),
         active: selected_inbox_row?(group_recording, selected)
+      }.merge(messages_inbox_row_link(group_recording))
+    end
+
+    def messages_inbox_row_link(group_recording)
+      {
+        href: messages_inbox_href(group_recording),
+        turbo_frame: messages_desk_panel_id
       }
     end
 

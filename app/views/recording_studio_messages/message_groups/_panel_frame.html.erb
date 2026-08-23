@@ -1,0 +1,14 @@
+<%= turbo_frame_tag messages_desk_panel_id, class: "block h-full min-h-0" do %>
+  <% if local_assigns[:group_recording] %>
+    <%= render "recording_studio_messages/message_groups/panel",
+               group_recording: local_assigns[:group_recording],
+               message_recordings: local_assigns[:message_recordings],
+               current_actor: local_assigns.fetch(:current_actor),
+               form_url: local_assigns[:form_url],
+               return_to: local_assigns[:return_to] %>
+  <% else %>
+    <%= render FlatPack::Chat::SystemMessage::Component.new do %>
+      Nothing here yet.
+    <% end %>
+  <% end %>
+<% end %>

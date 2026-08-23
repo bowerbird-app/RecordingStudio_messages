@@ -16,6 +16,7 @@ module RecordingStudioMessages
       @mount_recording = @group_recording.parent_recording
       @group_recordings = viewable_groups_for_mount
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
+      render layout: false if turbo_frame_request?
     end
 
     private
