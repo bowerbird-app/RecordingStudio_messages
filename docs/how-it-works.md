@@ -59,3 +59,4 @@ Sending does not wait on a cable. The composer posts as a Turbo stream. The resp
 - Product install and API: `README.md`
 - Dummy operator guide: `test/dummy/README.md`
 - Engine internals: `docs/gem_template/`
+- Cloud Agent boot: `docs/cursor-skills.md`

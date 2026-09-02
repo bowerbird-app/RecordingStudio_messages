@@ -61,6 +61,15 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.2.1
+
+Cloud Agent boot files now live in this repo. Conversations, mounts, and screens
+are unchanged. No host or schema changes.
+
+1. Install Messages `0.2.1`. No new migration.
+2. Rebuild the Cloud Agent environment with Draft off so Build fetches the
+   skill pack.
+
 ## Enablement
 
 Accessible on a root stays `RecordingStudio.enable_capability`. Mixins use `.to`.
@@ -172,3 +181,12 @@ Realtime, typing, read receipts, email as a notice channel, Admin, and Support-s
 ## Documentation
 
 Engine internals stay in `docs/gem_template/` as architectural reference. The README and dummy app are the source of truth for this gem.
+
+## Cloud Agent boot
+
+Cloud Agent Builds run `.cursor/install.sh`, then `.cursor/fetch-skills.sh`.
+The install hook provisions a cold image. On a warm snapshot it skips apt,
+ruby-build, db:prepare, and tailwind when Ruby, bundle, and Postgres are
+already usable. Fetch-skills always runs last. `.cursor/start.sh` starts
+PostgreSQL on each boot. Rebuild with Draft off to load a new pack. See
+[Cursor skills in Cloud Agents](docs/cursor-skills.md).

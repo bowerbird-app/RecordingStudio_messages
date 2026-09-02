@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.2.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.2.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -22,6 +22,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
+    refute_includes gemspec, ".cursor"
   end
 
   def test_root_gemfile_resolves_the_same_family_tags
@@ -225,6 +226,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "notify_each"
     assert_includes readme, "two mounts"
     assert_includes readme, "Do not add a Notifications → Messages dependency"
+    assert_includes readme, "docs/cursor-skills.md"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"

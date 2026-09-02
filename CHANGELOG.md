@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.2.1] - 2026-09-02
+
+Cloud Agent Builds for this gem now match Billing 0.9.13. Conversations, mounts,
+and screens are unchanged.
+
+### Added
+- `.cursor/fetch-skills.sh`, `.cursor/install.sh`, `.cursor/start.sh`, and
+  `.cursor/environment.json` for Cloud Agent boot. Install skips apt,
+  ruby-build, db:prepare, and tailwind when Ruby, bundle, and Postgres are
+  already usable. A skippable provision failure does not fail the Build.
+  Fetch-skills always runs last. Start only brings PostgreSQL up.
+
+### Upgrade notes
+- No host or schema changes. Rebuild the Cloud Agent environment with Draft
+  off so Build loads the pack.
+
 ## [0.2.0] - 2026-08-22
 
 Conversations land. One gem, keyed mounts, Accessible membership, Attachable files, and a Flatpack chat panel.
@@ -69,5 +85,6 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
+[0.2.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.1
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.1.0
