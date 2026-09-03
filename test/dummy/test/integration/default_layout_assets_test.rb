@@ -42,17 +42,25 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, "button-ghost-background-color"
   end
 
-  test "devise sign in keeps its layout while still loading Flatpack CSS and JS" do
+  test "Users gem sign in keeps its layout and loads Flatpack assets" do
     get new_user_session_path
 
     assert_response :success
     refute_includes response.body, "data-recording-studio-default-layout"
     assert_select "html[data-theme='rounded']", count: 1
+    assert_select "h2", text: "Welcome back"
+    assert_select "input[type='email'][name='user[email]']"
+    assert_select "input[type='password'][name='user[password]']"
+    assert_select "button[type='submit']", text: "Sign in"
     assert_includes response.body, "flat_pack/application"
     assert_includes response.body, "flat_pack/variables"
     assert_includes response.body, "/assets/tailwind"
     assert_includes response.body, "@hotwired/turbo-rails"
     assert_includes response.body, "importmap"
     assert_select "form[action='/users/sign_in']"
+    assert_includes response.body, "min-h-dvh"
+    assert_includes response.body, "max-w-sm"
+    refute_includes response.body, "Default: admin@admin.com / Password"
+    refute_includes response.body, "FlatPack::Card::Component"
   end
 end

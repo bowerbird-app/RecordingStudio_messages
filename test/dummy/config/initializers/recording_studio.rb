@@ -6,6 +6,8 @@ RecordingStudio.configure do |config|
     "Folder",
     "Page",
     "Mailbox",
+    "RecordingStudioUser::People",
+    "RecordingStudioUser::Profile",
     "RecordingStudioMessages::MessageMount",
     "RecordingStudioMessages::MessageGroup",
     "RecordingStudioMessages::Message",

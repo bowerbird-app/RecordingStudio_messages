@@ -5,7 +5,9 @@
 
 /* Include RecordingStudio engine views for Tailwind CSS */
 @source "../../../vendor/bundle/**/recording_studio/app/views/**/*.erb";
+@source "../../../vendor/bundle/**/recording_studio_user/app/views/**/*.erb";
 @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/recordingstudio-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/RecordingStudio_users-*/app/views/**/*.erb";
 
 /* Scan FlatPack components for classes used by the bundled ViewComponents */
 @source "../../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
@@ -21,6 +23,7 @@
 @source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
 @source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
 @source "../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_users-*/app/views/**/*.erb";
 @source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
 @source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
 @source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";

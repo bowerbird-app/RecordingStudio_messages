@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.3.0] - 2026-09-03
+
+The dummy host now uses Recording Studio Users for shared password auth, and
+Messages follows the current Recording Studio dependency family.
+
+### Added
+- Recording Studio Users `0.8.0` from PR
+  [#20](https://github.com/bowerbird-app/RecordingStudio_users/pull/20), pinned
+  to commit `1adc7722ec58fcfeb43ff1e2e96849936a6e9411` until `v0.8.0` is tagged.
+- Users People, Profile, Identity, registration, confirmation, and optional OTP
+  migrations in the dummy host.
+- Accessible's `depends_on_recording_id` migration from `0.8.0`.
+
+### Changed
+- Dummy `/users/sign_in` and `/users/sign_up` use
+  `recording_studio_user_auth_for :users`. The copied Devise login view is gone;
+  the Users gem shared auth shell is the source of truth.
+- Updated Core to `4.2.1`, Accessible to `0.9.1`, Attachable to `0.5.1`,
+  Notifications to `0.3.1`, Root Switchable to `0.5.1`, Admin to `2.0.2`, and
+  Flatpack to `0.1.144`. Root and dummy lockfiles update all dependencies.
+
+### Upgrade notes
+- Bump Messages to `0.3.0` and use the dependency versions above.
+- Run `bin/rails generate recording_studio_accessible:migrations`, then
+  `bin/rails db:migrate`, for `depends_on_recording_id`.
+- Hosts adopting Users `0.8.0` should skip Devise sessions, registrations, and
+  passwords, call `recording_studio_user_auth_for :users`, mount the Users
+  engine, register People and Profile, run its migrations, and remove copied
+  Devise auth views. Add the OmniAuth callbacks controller only when the User
+  model is `:omniauthable`.
+- Replace the temporary Users commit ref with `tag: "v0.8.0"` after PR #20 is
+  merged and tagged.
+
 ## [0.2.1] - 2026-09-02
 
 Cloud Agent Builds for this gem now match Billing 0.9.13. Conversations, mounts,
@@ -86,5 +119,6 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not enable Message types in this slice
 
 [0.2.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.1
+[0.3.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.1.0

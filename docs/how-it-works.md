@@ -48,7 +48,8 @@ A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messag
 
 Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
 
-Primary buttons and mine bubbles stay on `:root` aliases in older Flatpack. That is why the dummy pins Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) HEAD (`0.1.135`, `daceb04b76578b2d7adfa42a65e1f66f42d24f23`): named themes rebind those tokens so rounded CTAs are charcoal. There is no `v0.1.135` tag.
+Flatpack `0.1.144` provides the named-theme aliases that keep rounded primary
+buttons and mine bubbles charcoal.
 
 Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 
