@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.3.0] - 2026-09-03
+
+Authentication now goes through Recording Studio Users. Attachable and Flatpack
+pins rise so Bundler can resolve Users 0.7.0.
+
+### Added
+- Runtime dependency on `recording_studio_user` `~> 0.7.0`
+- Dummy mounts Users, registers People and Profile, and seeds profiles for staff
+  and customer actors
+- Host Devise stays explicit; Users identifies people on top of it. OTP stays off
+
+### Changed
+- `recording_studio_attachable` pin rises to `~> 0.5.0` (`v0.5.0`)
+- `flat_pack` pin rises to `~> 0.1.143` (`v0.1.143`)
+- Dummy and root Gemfiles pin Users `v0.7.0` and Admin `v2.0.2` for resolution
+
+### Upgrade notes
+- Install Messages `0.3.0` with Users `v0.7.0`
+- Raise Attachable to `v0.5.0` and Flatpack to `v0.1.143`
+- Add Admin `v2.0.2` so Bundler can resolve Users' Admin dependency from GitHub
+- Run `recording_studio_user:install` and `recording_studio_user:migrations`, then
+  migrate
+- Register `RecordingStudioUser::People` and `RecordingStudioUser::Profile`
+- Record profiles for existing users (`RecordingStudioUser.record_profile!`)
+- Leave `otp_enabled` false unless the host also ships Notifications 0.3+
+
 ## [0.2.1] - 2026-09-02
 
 Cloud Agent Builds for this gem now match Billing 0.9.13. Conversations, mounts,
@@ -85,6 +111,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
+[0.3.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.0
 [0.2.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.1
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.1.0

@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.2.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.3.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -16,9 +16,10 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
     assert_equal "~> 0.7.0", gemspec_constraint(gemspec, "recording_studio_accessible")
-    assert_equal "~> 0.4", gemspec_constraint(gemspec, "recording_studio_attachable")
+    assert_equal "~> 0.5.0", gemspec_constraint(gemspec, "recording_studio_attachable")
     assert_equal "~> 0.2.5", gemspec_constraint(gemspec, "recording_studio_notifications")
-    assert_equal "~> 0.1.135", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal "~> 0.7.0", gemspec_constraint(gemspec, "recording_studio_user")
+    assert_equal "~> 0.1.143", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -30,16 +31,21 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.2"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
+    assert_includes gemfile, 'tag: "v0.1.143"'
+    assert_includes gemfile, 'gem "devise"'
     refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
     refute_includes gemfile, 'tag: "v0.1.133"'
     refute_includes gemfile, 'tag: "v0.1.135"'
+    refute_includes gemfile, 'tag: "0.4.0"'
     assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_accessible")
     assert_equal "~> 0.2.5", gemfile_constraint(gemfile, "recording_studio_notifications")
-    assert_equal "~> 0.1.135", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_user")
+    assert_equal "~> 0.1.143", gemfile_constraint(gemfile, "flat_pack")
   end
 
   def test_dummy_gemfile_pins_verified_family_github_tags
@@ -47,17 +53,21 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.2"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
+    assert_includes gemfile, 'tag: "v0.1.143"'
+    assert_includes gemfile, 'gem "devise"'
     refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
     refute_includes gemfile, 'tag: "v0.1.133"'
     refute_includes gemfile, 'tag: "v0.1.135"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v0.1.134"'
     refute_includes gemfile, 'tag: "0.3.1"'
+    refute_includes gemfile, 'tag: "0.4.0"'
     refute_includes gemfile, 'tag: "v0.1.84"'
   end
 
@@ -200,12 +210,27 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"Folder"'
     assert_includes initializer_source, '"Page"'
     assert_includes initializer_source, '"RecordingStudioAttachable::Attachment"'
+    assert_includes initializer_source, '"RecordingStudioUser::People"'
+    assert_includes initializer_source, '"RecordingStudioUser::Profile"'
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
     assert_includes initializer_source, "RecordingStudioMessages::MessageMount"
     assert_includes initializer_source, "RecordingStudioMessages::MessageGroup"
     assert_includes initializer_source, "RecordingStudioMessages::Message"
     assert_includes initializer_source, '"Mailbox"'
+  end
+
+  def test_dummy_wires_recording_studio_user_for_authentication
+    routes = File.read(File.expand_path("dummy/config/routes.rb", __dir__))
+    initializer = File.read(File.expand_path("dummy/config/initializers/recording_studio_user.rb", __dir__))
+    seeds = File.read(File.expand_path("dummy/db/seeds.rb", __dir__))
+
+    assert_includes routes, "RecordingStudioUser::Engine"
+    assert_includes routes, "recording_studio_users"
+    assert_includes initializer, "RecordingStudioUser.configure"
+    assert_includes initializer, "config.otp_enabled = false"
+    assert_includes seeds, "RecordingStudioUser.record_profile!"
+    assert Dir.glob(File.expand_path("dummy/db/migrate/*recording_studio_user*", __dir__)).any?
   end
 
   def test_dummy_readme_explains_dummy_app_purpose
@@ -216,6 +241,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme_source, "/staff/desk"
     assert_includes readme_source, "/inbox"
     assert_includes readme_source, "https://flatpack.bowerbird.io/"
+    assert_includes readme_source, "Recording Studio Users"
   end
 
   def test_readme_points_at_live_flatpack_kit
@@ -227,6 +253,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "two mounts"
     assert_includes readme, "Do not add a Notifications → Messages dependency"
     assert_includes readme, "docs/cursor-skills.md"
+    assert_includes readme, "recording_studio_user"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"

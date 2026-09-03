@@ -4,7 +4,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 
 ## What It Covers
 
-- Devise authentication with seeded staff and customer users
+- Recording Studio Users for authentication (Devise actor + People/Profile), with seeded staff and customer users and profiles
 - `Current.actor` wiring for Recording Studio events
 - Root workspace plus seeded folder, page, and mailbox recordables
 - Accessible enabled on Workspace; Messages enabled on Workspace and Mailbox
@@ -12,9 +12,9 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Seeded conversations, people, an agent, lines, and one image attachment
 - Staff desk (`/staff/desk`) and Inbox (`/inbox`) land on Flatpack `Chat::Layout` `:split` (`Chat::InboxRow` sidebar + `Chat::Panel`). A row click targets the `messages-desk-panel` turbo frame and Layout `showPanel` so a phone tap opens the conversation without remounting the list. Send replaces the thread over Turbo so the new line appears without Action Cable
 - Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
-- `html data-theme="rounded"` so Flatpack named theme tokens apply (charcoal Send / mine after Flatpack PR #159)
+- `html data-theme="rounded"` so Flatpack named theme tokens apply (charcoal Send / mine on Flatpack v0.1.143)
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
-- Mounted Messages, Accessible, Attachable, and Recording Studio engines
+- Mounted Messages, Accessible, Attachable, Users, and Recording Studio engines
 
 ## Quick Start
 
@@ -45,7 +45,7 @@ Devise sign-in keeps `layouts/application` so the login card can stay centered. 
 
 The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement` because core default layout leaves `<html>` bare. The dummy also copies the attribute onto the `html` tag in the response so the named theme is present without JavaScript. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
-Flatpack is pinned to [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) HEAD (`0.1.135`, `daceb04b76578b2d7adfa42a65e1f66f42d24f23`) so rounded rebinds primary-wired tokens. Rounded on the live kit is monochrome charcoal, not blue buttons.
+Flatpack is pinned to `v0.1.143` so rounded rebinds primary-wired tokens. Rounded on the live kit is monochrome charcoal, not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
 

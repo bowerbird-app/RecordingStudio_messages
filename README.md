@@ -27,16 +27,20 @@ Notifications stay on their own tables. This gem calls `RecordingStudioNotificat
 
 ## Install
 
-Add the gem next to Recording Studio 4.2, Accessible, Attachable, Notifications, and Flatpack.
+Add the gem next to Recording Studio 4.2, Accessible, Attachable, Notifications,
+Users, and Flatpack. Users owns sign-in; Accessible still authorizes conversation
+membership.
 
 ```ruby
 # Gemfile
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"
-gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"
+gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.0"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"
-gem "flat_pack", github: "bowerbird-app/flatpack",
-    ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23" # PR #159 HEAD, 0.1.135
+gem "recording_studio_user", github: "bowerbird-app/RecordingStudio_users", tag: "v0.7.0"
+gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.2" # Users transitive
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.143"
+gem "devise"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
 
@@ -44,9 +48,10 @@ gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages
 # gemspec / host Gemfile constraints
 gem "recording_studio", "~> 4.2"
 gem "recording_studio_accessible", "~> 0.7.0"
-gem "recording_studio_attachable", "~> 0.4"
+gem "recording_studio_attachable", "~> 0.5.0"
 gem "recording_studio_notifications", "~> 0.2.5"
-gem "flat_pack", "~> 0.1.135"
+gem "recording_studio_user", "~> 0.7.0"
+gem "flat_pack", "~> 0.1.143"
 ```
 
 Then:
@@ -58,17 +63,26 @@ bin/rails generate recording_studio_messages:migrations
 bin/rails generate recording_studio_accessible:migrations
 bin/rails generate recording_studio_attachable:migrations
 bin/rails generate recording_studio_notifications:migrations
+bin/rails generate recording_studio_user:install
+bin/rails generate recording_studio_user:migrations
 bin/rails db:migrate
 ```
 
-### Upgrading to 0.2.1
+Register `RecordingStudioUser::People` and `RecordingStudioUser::Profile` beside
+the Messages types. Leave Users OTP off unless the host also installs Notifications
+0.3+ for delivery.
 
-Cloud Agent boot files now live in this repo. Conversations, mounts, and screens
-are unchanged. No host or schema changes.
+### Upgrading to 0.3.0
 
-1. Install Messages `0.2.1`. No new migration.
-2. Rebuild the Cloud Agent environment with Draft off so Build fetches the
-   skill pack.
+Messages now depends on Recording Studio Users `~> 0.7.0` for authentication.
+Attachable and Flatpack pins rise to match Users.
+
+1. Install Messages `0.3.0`.
+2. Add `recording_studio_user` `v0.7.0` (and Admin `v2.0.2` for Bundler resolution).
+3. Raise Attachable to `v0.5.0` and Flatpack to `v0.1.143`.
+4. Run `recording_studio_user:install` and `recording_studio_user:migrations`, then migrate.
+5. Register People and Profile. Seed or record profiles for existing actors.
+6. OTP stays off in this slice; do not enable it without Notifications 0.3+.
 
 ## Enablement
 
@@ -97,6 +111,8 @@ RecordingStudio.configure do |config|
   config.recordable_types = [
     "Workspace",
     "Mailbox",
+    "RecordingStudioUser::People",
+    "RecordingStudioUser::Profile",
     "RecordingStudioMessages::MessageMount",
     "RecordingStudioMessages::MessageGroup",
     "RecordingStudioMessages::Message",
@@ -140,7 +156,7 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Screens
 
-The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under `md`. Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core PageNav owns back and close. Chat::Header has no back. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
+The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under `md`. Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack `v0.1.143` so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core PageNav owns back and close. Chat::Header has no back. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
 
 Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Layout](https://flatpack.bowerbird.io/demo/chat/layout), [Chat::InboxRow](https://flatpack.bowerbird.io/demo/chat/inbox_row), [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel), and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
@@ -168,9 +184,11 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 |---|---|---|---|
 | `recording_studio` | `~> 4.2` | `v4.2.0` | `4.2.0` |
 | `recording_studio_accessible` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
-| `recording_studio_attachable` | `~> 0.4` | `0.4.0` | `0.4.0` |
+| `recording_studio_attachable` | `~> 0.5.0` | `v0.5.0` | `0.5.0` |
 | `recording_studio_notifications` | `~> 0.2.5` | `v0.2.5` | `0.2.5` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.135` | PR `#159` HEAD `daceb04b76578b2d7adfa42a65e1f66f42d24f23` | `0.1.135` on that draft (no tag) |
+| `recording_studio_user` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
+| `recording_studio_admin` | `~> 2.0` (via Users) | `v2.0.2` | `2.0.2` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.143` | `v0.1.143` | `0.1.143` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 

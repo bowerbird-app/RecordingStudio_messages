@@ -45,12 +45,26 @@ staff = User.find_or_create_by!(email: "admin@admin.com") do |user|
   user.password_confirmation = "Password"
 end
 staff.update!(name: "Ada Staff") if staff.name != "Ada Staff"
+RecordingStudioUser.record_profile!(
+  staff,
+  actor: staff,
+  first_name: "Ada",
+  last_name: "Staff",
+  time_zone: "UTC"
+) unless RecordingStudioUser.profile_for(staff)
 
 customer = User.find_or_create_by!(email: "casey@example.com") do |user|
   user.password = "Password"
   user.password_confirmation = "Password"
 end
 customer.update!(name: "Casey Patron") if customer.name != "Casey Patron"
+RecordingStudioUser.record_profile!(
+  customer,
+  actor: customer,
+  first_name: "Casey",
+  last_name: "Patron",
+  time_zone: "UTC"
+) unless RecordingStudioUser.profile_for(customer)
 
 agent = Agent.find_or_create_by!(name: "Relay")
 
