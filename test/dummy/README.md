@@ -53,6 +53,12 @@ not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
 
+Propshaft does not rewrite CSS `@import` statements itself. Flatpack `0.1.144`
+uses logical imports in `flat_pack/application.css`, so
+`config/initializers/flatpack_css_imports.rb` resolves those imports to
+fingerprinted asset URLs. Keep the compiler until Flatpack ships imports that
+Propshaft can resolve without host help.
+
 Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
 ## Useful Routes

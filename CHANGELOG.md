@@ -22,6 +22,8 @@ Messages follows the current Recording Studio dependency family.
 - Dummy `/users/sign_in` and `/users/sign_up` use
   `recording_studio_user_auth_for :users`. The copied Devise login view is gone;
   the Users gem shared auth shell is the source of truth.
+- Dummy Propshaft rewrites Flatpack's logical CSS `@import` paths to digested
+  URLs so `variables`, `rich_text`, and `content_editor` load without 404s.
 - Updated Core to `4.2.1`, Accessible to `0.9.1`, Attachable to `0.5.1`,
   Notifications to `0.3.1`, Root Switchable to `0.5.1`, Admin to `2.0.2`, and
   Flatpack to `0.1.144`. Root and dummy lockfiles update all dependencies.
