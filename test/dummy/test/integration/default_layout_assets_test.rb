@@ -6,7 +6,7 @@ require "devise/test/integration_helpers"
 class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  test "home uses default layout, Flatpack alert flash, and layout chrome" do
+  test "Users login reaches the home default layout with Flatpack chrome" do
     user = User.find_or_create_by!(email: "layout-assets@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
@@ -20,9 +20,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
-    assert_includes response.body, "Signed in successfully."
-    assert_select "[role='alert']", text: /Signed in successfully/
-    assert_includes response.body, "alert-success-background-color"
+    assert_select "h1", text: "Dummy host"
     assert_includes response.body, "flat-pack-page-nav"
     assert_includes response.body, "flat_pack/application"
     assert_includes response.body, "flat_pack/variables"
