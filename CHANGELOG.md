@@ -11,9 +11,8 @@ The dummy host now uses Recording Studio Users for shared password auth, and
 Messages follows the current Recording Studio dependency family.
 
 ### Added
-- Recording Studio Users `0.8.0` from PR
-  [#20](https://github.com/bowerbird-app/RecordingStudio_users/pull/20), pinned
-  to commit `1adc7722ec58fcfeb43ff1e2e96849936a6e9411` until `v0.8.0` is tagged.
+- Recording Studio Users `0.8.0` from
+  [v0.8.0](https://github.com/bowerbird-app/RecordingStudio_users/releases/tag/v0.8.0).
 - Users People, Profile, Identity, registration, confirmation, and optional OTP
   migrations in the dummy host.
 - Accessible's `depends_on_recording_id` migration from `0.8.0`.
@@ -37,8 +36,7 @@ Messages follows the current Recording Studio dependency family.
   engine, register People and Profile, run its migrations, and remove copied
   Devise auth views. Add the OmniAuth callbacks controller only when the User
   model is `:omniauthable`.
-- Replace the temporary Users commit ref with `tag: "v0.8.0"` after PR #20 is
-  merged and tagged.
+- Pin Users with `tag: "v0.8.0"`.
 
 ## [0.2.1] - 2026-09-02
 

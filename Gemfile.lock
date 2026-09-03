@@ -49,8 +49,8 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_users.git
-  revision: 1adc7722ec58fcfeb43ff1e2e96849936a6e9411
-  ref: 1adc7722ec58fcfeb43ff1e2e96849936a6e9411
+  revision: 2500c8412956577936855fdb900195c3f1e0fe58
+  tag: v0.8.0
   specs:
     recording_studio_user (0.8.0)
       devise (~> 5.0)

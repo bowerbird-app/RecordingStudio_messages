@@ -173,7 +173,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_attachable` | `~> 0.5.1` | `v0.5.1` | `0.5.1` |
 | `recording_studio_notifications` | `~> 0.3.1` | `v0.3.1` | `0.3.1` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.144` | `v0.1.144` | `0.1.144` |
-| `recording_studio_user` (dummy host only) | `~> 0.8.0` | PR `#20` HEAD `1adc7722ec58fcfeb43ff1e2e96849936a6e9411` | `0.8.0` on that draft |
+| `recording_studio_user` (dummy host only) | `~> 0.8.0` | `v0.8.0` | `0.8.0` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
