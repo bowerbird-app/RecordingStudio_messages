@@ -13,8 +13,12 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Welcome back"
     assert_select "button[type='submit']", text: "Sign in"
     assert_includes response.body, 'data-theme="rounded"'
-    assert_includes response.body, "flat_pack/application"
+    assert_includes response.body, "flat_pack/variables"
+    assert_includes response.body, "flat_pack/rich_text"
+    assert_select "link[href*='flat_pack/application']", count: 0
     assert_includes response.body, "@hotwired/turbo-rails"
+    assert_select "main.min-h-dvh.items-center.justify-center", count: 1
+    assert_select "main.max-w-md", count: 0
     refute_includes response.body, "data-recording-studio-default-layout"
     refute_includes response.body, "mt-28"
     refute_includes response.body, "fixed inset-0"

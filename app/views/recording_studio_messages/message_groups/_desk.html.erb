@@ -6,9 +6,9 @@
 <%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
 <% desk_height_class = local_assigns[:desk_height_class].presence || "h-[calc(100dvh-8.5rem)]" %>
 
-<%# Chat::Layout is h-full. w-full min-w-0 lets the split shrink inside core main.
-    Do not fork Layout's 280px split grid. Layout's stacked Back to conversations stays
-    visible so a half-width window can return to the list without leaving the desk. %>
+<%# Chat::Layout is h-full. w-full min-w-0 lets the fluid split shrink inside core main.
+    Do not fork Layout's split CSS. Layout's stacked Back to conversations stays
+    visible so a stacked window can return to the list without leaving the desk. %>
 <div class="w-full min-w-0 <%= desk_height_class %>">
   <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
     <% layout.sidebar do %>

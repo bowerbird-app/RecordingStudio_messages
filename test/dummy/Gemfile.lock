@@ -60,10 +60,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_users.git
-  revision: 2500c8412956577936855fdb900195c3f1e0fe58
-  tag: v0.8.0
+  revision: ccc62a30a774a8c5002894d797bea4a89e27893a
+  tag: v0.8.2
   specs:
-    recording_studio_user (0.8.0)
+    recording_studio_user (0.8.2)
       devise (~> 5.0)
       flat_pack (~> 0.1.143)
       omniauth (~> 2.1)
@@ -81,10 +81,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: 55208adf6cc35dc3300146ef93e58414dba168bc
-  tag: v0.1.144
+  revision: eff821ae99c10dd995aad3fb7a260d093ad73bc9
+  tag: v0.1.148
   specs:
-    flat_pack (0.1.144)
+    flat_pack (0.1.148)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (~> 0.13)
@@ -94,7 +94,7 @@ PATH
   remote: ../..
   specs:
     recording_studio_messages (0.3.0)
-      flat_pack (~> 0.1.144)
+      flat_pack (~> 0.1.148)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       recording_studio_accessible (~> 0.9.1)
@@ -671,7 +671,7 @@ CHECKSUMS
   ffi (1.17.4-x86_64-darwin) sha256=aa70390523cf3235096cf64962b709b4cfbd5c082a2cb2ae714eb0fe2ccda496
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   ffi (1.17.4-x86_64-linux-musl) sha256=3fdf9888483de005f8ef8d1cf2d3b20d86626af206cbf780f6a6a12439a9c49e
-  flat_pack (0.1.144)
+  flat_pack (0.1.148)
   fugit (1.13.0) sha256=a4f093fce740da52f216740a5041e2a594ea763cdb89e8b2754ca4399634ab18
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
   hashie (5.1.0) sha256=c266471896f323c446ea8207f8ffac985d2718df0a0ba98651a3057096ca3870
@@ -762,7 +762,7 @@ CHECKSUMS
   recording_studio_messages (0.3.0)
   recording_studio_notifications (0.3.1)
   recording_studio_root_switchable (0.5.1)
-  recording_studio_user (0.8.0)
+  recording_studio_user (0.8.2)
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   reline (0.7.0) sha256=5b012d8e55dbf9d450f12bde2cf7d15ff546ae80b3f8f3b30e570d431815583d
   responders (3.2.1) sha256=c2772970cbda654c0e772d852e5a851e82cd8e96f5fa958650861ba75b8ffa84

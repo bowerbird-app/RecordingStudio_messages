@@ -38,6 +38,8 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "w-full min-w-0"
     refute_includes response.body, "min-h-[70vh]"
     assert_includes response.body, "Back to conversations"
+    assert_includes response.body, "sm:grid"
+    refute_includes response.body, "md:grid-cols-[280px"
     refute_includes response.body, "[data-flat-pack--chat-layout-target=\"panel\"] > div:first-child:has([aria-label=\"Back to conversations\"])"
     refute_includes response.body, "back_href"
     refute_includes response.body, "Open conversation"
@@ -113,6 +115,8 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "h-[calc(100dvh-8.5rem)]"
     assert_includes response.body, "w-full min-w-0"
     assert_includes response.body, "Back to conversations"
+    assert_includes response.body, "sm:grid"
+    refute_includes response.body, "md:grid-cols-[280px"
     refute_includes response.body, "[data-flat-pack--chat-layout-target=\"panel\"] > div:first-child:has([aria-label=\"Back to conversations\"])"
     refute_includes response.body, "Studio help"
   end

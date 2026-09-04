@@ -49,3 +49,4 @@
 
 /* Accessible's blank layout uses pt-16. Keep the utility even if a gem glob misses. */
 @source inline("pt-16");
+@source inline("min-h-dvh");

@@ -44,12 +44,12 @@ Do not insert `Recording` rows by hand. Do not invent a second access list.
 
 ## Screens
 
-A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. The sidebar is `Chat::InboxRow` only. The panel slot is the existing `Chat::Panel` inside a `messages-desk-panel` turbo frame. Clicking a row uses the kit path: InboxRow `turbo_frame` replaces that frame, and Layout Stimulus `openPanel` / `showPanel` hides the sidebar under `md`. It does not Turbo-visit show and remount the desk. Core PageNav owns page back and close. Chat::Header has no `back_href`. Layout's stacked Back to conversations stays visible so a half-width window can return to the list. Do not fork `md:grid-cols-[280px_1fr]`. The desk wrapper is `w-full min-w-0` plus the viewport height class. Faces in the header come from Accessible. Composer files go through Attachable.
+A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messages/message_groups`, optional `mount_id`). Index keeps the groups `RecordingStudioAccessible.authorized?` says the current actor can `:view`. That is Accessible on `MessageGroup`, not a second ACL. The sidebar is `Chat::InboxRow` only. The panel slot is the existing `Chat::Panel` inside a `messages-desk-panel` turbo frame. Clicking a row uses the kit path: InboxRow `turbo_frame` replaces that frame, and Layout Stimulus `openPanel` / `showPanel` hides the sidebar under the split breakpoint (`sm` by default). It does not Turbo-visit show and remount the desk. Core PageNav owns page back and close. Chat::Header has no `back_href`. Layout's stacked Back to conversations stays visible so a stacked window can return to the list. Do not fork Chat::Layout split CSS. The desk wrapper is `w-full min-w-0` plus the viewport height class. Faces in the header come from Accessible. Composer files go through Attachable.
 
 Rounded is a named Flatpack theme. It has to live on the `html` element. Core often puts `data-theme` on `body` only, which is not enough. The dummy copies rounded onto `html` (a small host helper plus `_default_layout_head.html.erb`). Do not restyle Chat::Panel in this gem. Square PageNav back is Flatpack.
 
-Flatpack `0.1.144` provides the named-theme aliases that keep rounded primary
-buttons and mine bubbles charcoal.
+Flatpack `0.1.148` provides the named-theme aliases that keep rounded primary
+buttons and mine bubbles charcoal, and a fluid Chat::Layout split from `sm`.
 
 Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 

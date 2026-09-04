@@ -3,7 +3,7 @@
 require "propshaft/compiler"
 require "set"
 
-# Flatpack 0.1.144's application stylesheet uses logical @import paths.
+# Flatpack's application stylesheet uses logical @import paths.
 # Propshaft fingerprints assets but does not rewrite CSS imports by default.
 class FlatpackCssImports < Propshaft::Compiler
   IMPORT_PATTERN = /@import "flat_pack\/([^"]+\.css)";/

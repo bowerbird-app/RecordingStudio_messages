@@ -37,11 +37,12 @@ Then open the app and sign in with:
 Authenticated pages include `RecordingStudio::UsesDefaultLayout` and render `recording_studio/default_layout`. That layout owns the back/close chrome and Flatpack flash alerts.
 
 Recording Studio Users owns `/users/sign_in` through
-`recording_studio_user_auth_for :users`. Its shared auth shell stays centered
-inside `layouts/application`. The host does not copy or override the gem login
-view. Profile and sign-in-method screens are product pages, so
+`recording_studio_user_auth_for :users`. Users `0.8.2` renders those screens in
+`layouts/recording_studio_user/auth` (one full-viewport centered chrome). The
+host does not copy or override the gem login view, and it does not wrap auth
+in `layouts/application`. Profile and sign-in-method screens are product pages, so
 `RecordingStudioUser.config.layout` points at `recording_studio/default_layout`;
-pointing it at `application` squeezes them into the narrow auth shell. Root
+pointing it at `application` squeezes them into the leftover Devise shell. Root
 Switchable renders in its own `recording_studio_root_switchable/blank` shell
 because its screens draw their own PageNav, and the host layout would stack a
 second back button. That layout still loads:
@@ -53,7 +54,7 @@ second back button. That layout still loads:
 
 The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement` because core default layout leaves `<html>` bare. The dummy also copies the attribute onto the `html` tag in the response so the named theme is present without JavaScript. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
-Flatpack is pinned to `v0.1.144`. Rounded on the live kit is monochrome charcoal,
+Flatpack is pinned to `v0.1.148`. Rounded on the live kit is monochrome charcoal,
 not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
@@ -65,7 +66,7 @@ A missing glob does not fail the build; it silently drops utilities that only
 a mounted engine uses. Accessible's `pt-16` is also listed with `@source inline`
 so that padding stays in the build.
 
-Propshaft does not rewrite CSS `@import` statements itself. Flatpack `0.1.144`
+Propshaft does not rewrite CSS `@import` statements itself. Flatpack
 uses logical imports in `flat_pack/application.css`, so
 `config/initializers/flatpack_css_imports.rb` resolves those imports to
 fingerprinted asset URLs. Keep the compiler until Flatpack ships imports that
@@ -90,4 +91,4 @@ Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.b
 Use this app to verify two mounts, Accessible membership, Attachable files, and the chat panel in a host. If a layout, route, asset source, or Recording Studio initializer change breaks here, the gem likely needs adjustment before reuse.
 
 Authenticated pages use Recording Studio's shared default layout. Users auth
-screens keep `layouts/application`.
+screens use `layouts/recording_studio_user/auth`.
