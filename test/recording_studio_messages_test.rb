@@ -132,7 +132,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes desk, "min-h-[70vh]"
     refute_match(/class="[^"]*md:grid-cols-\[280px/, desk)
     refute_includes desk, "display: none"
-    refute_includes desk, '<style>'
+    refute_includes desk, "<style>"
     refute_includes desk, "FlatPack::PageTitle::Component"
     refute_includes desk, ">Conversations<"
     refute_includes helper, '"Conversation"'
