@@ -59,9 +59,11 @@ not blue buttons.
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
 
 `@source` globs must cover wherever Bundler installed the gems, including
-`/usr/local/lib/ruby/gems` on the devcontainer and Cloud Agent images. A missing
-glob does not fail the build; it silently drops utilities that only a mounted
-engine uses, which is how Accessible screens lost their `pt-16` top padding.
+the repo-root `vendor/bundle` GitHub Actions uses, `/usr/local/lib/ruby/gems`
+on the devcontainer and Cloud Agent images, and `test/dummy/vendor/bundle`.
+A missing glob does not fail the build; it silently drops utilities that only
+a mounted engine uses. Accessible's `pt-16` is also listed with `@source inline`
+so that padding stays in the build.
 
 Propshaft does not rewrite CSS `@import` statements itself. Flatpack `0.1.144`
 uses logical imports in `flat_pack/application.css`, so
