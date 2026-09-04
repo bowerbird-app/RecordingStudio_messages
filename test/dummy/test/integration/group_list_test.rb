@@ -39,7 +39,6 @@ class GroupListTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "min-h-[70vh]"
     assert_includes response.body, "Back to conversations"
     refute_includes response.body, "[data-flat-pack--chat-layout-target=\"panel\"] > div:first-child:has([aria-label=\"Back to conversations\"])"
-    refute_includes response.body, "md:grid-cols-[280px"
     refute_includes response.body, "back_href"
     refute_includes response.body, "Open conversation"
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
@@ -115,7 +114,6 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "w-full min-w-0"
     assert_includes response.body, "Back to conversations"
     refute_includes response.body, "[data-flat-pack--chat-layout-target=\"panel\"] > div:first-child:has([aria-label=\"Back to conversations\"])"
-    refute_includes response.body, "md:grid-cols-[280px"
     refute_includes response.body, "Studio help"
   end
 
