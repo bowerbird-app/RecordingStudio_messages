@@ -3,6 +3,8 @@
 <% selected_group = local_assigns[:group_recording] %>
 <% message_recordings = local_assigns[:message_recordings] %>
 <% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group) %>
+<%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
+<% desk_height_class = local_assigns[:desk_height_class].presence || "h-[calc(100dvh-8.5rem)]" %>
 
 <style>
   [data-flat-pack--chat-layout-target="panel"] > div:first-child:has([aria-label="Back to conversations"]) {
@@ -10,21 +12,24 @@
   }
 </style>
 
-<%= render FlatPack::Chat::Layout::Component.new(variant: :split, class: "min-h-[70vh]") do |layout| %>
-  <% layout.sidebar do %>
-    <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
-      <% inbox_rows.each do |inbox_row| %>
-        <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
+<%# Chat::Layout is h-full, so the desk height belongs on this wrapper. %>
+<div class="<%= desk_height_class %>">
+  <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
+    <% layout.sidebar do %>
+      <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
+        <% inbox_rows.each do |inbox_row| %>
+          <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
+        <% end %>
       <% end %>
     <% end %>
-  <% end %>
 
-  <% layout.panel do %>
-    <%= render "recording_studio_messages/message_groups/panel_frame",
-               group_recording: selected_group,
-               message_recordings: message_recordings,
-               current_actor: current_actor,
-               form_url: local_assigns[:form_url],
-               return_to: local_assigns[:return_to] %>
+    <% layout.panel do %>
+      <%= render "recording_studio_messages/message_groups/panel_frame",
+                 group_recording: selected_group,
+                 message_recordings: message_recordings,
+                 current_actor: current_actor,
+                 form_url: local_assigns[:form_url],
+                 return_to: local_assigns[:return_to] %>
+    <% end %>
   <% end %>
-<% end %>
+</div>

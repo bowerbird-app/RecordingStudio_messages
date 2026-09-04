@@ -21,6 +21,8 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_select "h1", text: "Dummy host"
+    assert_select "a[href=?]", staff_desk_path, text: "Staff desk"
+    assert_select "a[href=?]", inbox_path, text: "Inbox"
     assert_includes response.body, "flat-pack-page-nav"
     assert_includes response.body, "flat_pack/application"
     assert_includes response.body, "flat_pack/variables"
@@ -38,6 +40,33 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, "alert-danger-background-color"
     assert_includes css, "button-secondary-background-color"
     assert_includes css, "button-ghost-background-color"
+  end
+
+  test "tailwind build includes utilities that only mounted engine screens use" do
+    css = Rails.root.join("app/assets/builds/tailwind.css").read
+
+    assert_includes css, ".pt-16"
+    assert_includes css, "height:calc(100dvh - 8.5rem)"
+  end
+
+  test "Users profile screens render in the core default layout" do
+    user = User.find_or_create_by!(email: "profile-layout@example.com") do |record|
+      record.password = "Password123!"
+      record.password_confirmation = "Password123!"
+    end
+    Current.actor = user
+    RecordingStudioUser.record_profile!(user, first_name: "Pat", last_name: "Profile", time_zone: "UTC")
+
+    sign_in user
+    get "/recording_studio_users/profile"
+
+    assert_response :success
+    assert_select "body[data-recording-studio-default-layout='true']", count: 1
+    assert_select "nav.flat-pack-page-nav", count: 1
+    assert_select "main.max-w-6xl", count: 1
+    assert_select "main.max-w-md", count: 0
+  ensure
+    Current.actor = nil
   end
 
   test "Flatpack application imports resolve without asset 404s" do

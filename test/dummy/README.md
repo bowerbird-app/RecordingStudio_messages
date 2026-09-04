@@ -39,7 +39,12 @@ Authenticated pages include `RecordingStudio::UsesDefaultLayout` and render `rec
 Recording Studio Users owns `/users/sign_in` through
 `recording_studio_user_auth_for :users`. Its shared auth shell stays centered
 inside `layouts/application`. The host does not copy or override the gem login
-view. That layout still loads:
+view. Profile and sign-in-method screens are product pages, so
+`RecordingStudioUser.config.layout` points at `recording_studio/default_layout`;
+pointing it at `application` squeezes them into the narrow auth shell. Root
+Switchable renders in its own `recording_studio_root_switchable/blank` shell
+because its screens draw their own PageNav, and the host layout would stack a
+second back button. That layout still loads:
 
 - `flat_pack/variables`
 - `flat_pack/application`
@@ -52,6 +57,11 @@ Flatpack is pinned to `v0.1.144`. Rounded on the live kit is monochrome charcoal
 not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
+
+`@source` globs must cover wherever Bundler installed the gems, including
+`/usr/local/lib/ruby/gems` on the devcontainer and Cloud Agent images. A missing
+glob does not fail the build; it silently drops utilities that only a mounted
+engine uses, which is how Accessible screens lost their `pt-16` top padding.
 
 Propshaft does not rewrite CSS `@import` statements itself. Flatpack `0.1.144`
 uses logical imports in `flat_pack/application.css`, so

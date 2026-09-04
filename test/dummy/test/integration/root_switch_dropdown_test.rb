@@ -47,7 +47,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     refute_includes response.body, 'href="/users/sign_out"'
   end
 
-  test "root switch page renders with the host default layout" do
+  test "root switch page keeps a single page nav in the gem shell" do
     user = User.find_or_create_by!(email: "root-switch-page-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
@@ -61,7 +61,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
 
     assert_response :success
-    assert_select "body[data-recording-studio-default-layout='true']", count: 1
+    assert_select "nav.flat-pack-page-nav", count: 1
+    assert_select "body[data-recording-studio-default-layout='true']", count: 0
     refute_includes response.body, "flat-pack-sidebar-layout"
   end
 

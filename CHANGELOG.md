@@ -23,6 +23,13 @@ Messages follows the current Recording Studio dependency family.
   the Users gem shared auth shell is the source of truth.
 - Dummy Propshaft rewrites Flatpack's logical CSS `@import` paths to digested
   URLs so `variables`, `rich_text`, and `content_editor` load without 404s.
+- Chat desks fill the viewport under PageNav (`h-[calc(100dvh-8.5rem)]` on the
+  desk wrapper) so the composer sits on the bottom edge.
+- Dummy profile screens use core `recording_studio/default_layout`. Root
+  Switchable uses its own blank shell so PageNav is not stacked. Home Staff
+  desk and Inbox buttons use Flatpack `href` so they are real links.
+- Dummy Tailwind scans system gem paths so mounted engine utilities such as
+  `pt-16` are in the build.
 - Updated Core to `4.2.1`, Accessible to `0.9.1`, Attachable to `0.5.1`,
   Notifications to `0.3.1`, Root Switchable to `0.5.1`, Admin to `2.0.2`, and
   Flatpack to `0.1.144`. Root and dummy lockfiles update all dependencies.

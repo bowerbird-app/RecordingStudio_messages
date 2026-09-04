@@ -35,5 +35,10 @@
 @source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.erb";
 @source "../../../../../../home/*/.rbenv/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 
+/* System Ruby installs (devcontainer and Cloud Agent). Without these, engine
+   layouts lose their own utilities, such as the padding on Accessible screens. */
+@source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
+
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";

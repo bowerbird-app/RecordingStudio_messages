@@ -5,8 +5,9 @@ RecordingStudioRootSwitchable.configure do |config|
     Current.actor || controller.current_user
   end
 
-  # Render the mounted switcher pages inside the app shell when users visit them.
-  config.layout = :application_layout
+  # The switcher screens draw their own PageNav, so they use the gem's own shell.
+  # Rendering them inside the host layout would stack a second back button.
+  config.layout = "recording_studio_root_switchable/blank"
 
   config.after_switch_redirect = lambda do |controller:, return_to:, **|
     candidate_path = return_to.presence

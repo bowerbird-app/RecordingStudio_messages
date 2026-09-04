@@ -127,6 +127,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
+    assert_includes desk, "h-[calc(100dvh-8.5rem)]"
+    assert_includes desk, "local_assigns[:desk_height_class]"
+    refute_includes desk, "min-h-[70vh]"
     refute_includes desk, "FlatPack::PageTitle::Component"
     refute_includes desk, ">Conversations<"
     refute_includes helper, '"Conversation"'

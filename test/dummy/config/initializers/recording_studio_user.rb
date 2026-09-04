@@ -6,7 +6,9 @@ RecordingStudioUser.configure do |config|
   config.mount_path = "/recording_studio_users"
   config.profile_route_path = "profile"
   config.admin_route_path = "admin"
-  config.layout = "application"
+  # Profile and sign-in-method screens are product pages, so they use core's
+  # default layout. The gem's auth screens keep their own centered layout.
+  config.layout = "recording_studio/default_layout"
   config.additional_profile_attributes = []
   config.require_password_confirmation = false
   # Devise login page heading (host sessions#new). Default "Welcome back".
