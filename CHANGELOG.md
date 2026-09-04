@@ -24,7 +24,9 @@ Messages follows the current Recording Studio dependency family.
 - Dummy Propshaft rewrites Flatpack's logical CSS `@import` paths to digested
   URLs so `variables`, `rich_text`, and `content_editor` load without 404s.
 - Chat desks fill the viewport under PageNav (`h-[calc(100dvh-8.5rem)]` on the
-  desk wrapper) so the composer sits on the bottom edge.
+  desk wrapper) so the composer sits on the bottom edge. The wrapper is also
+  `w-full min-w-0` so the split can shrink. Chat::Layout's stacked Back to
+  conversations stays visible; do not hide it and do not fork the 280px grid.
 - Dummy profile screens use core `recording_studio/default_layout`. Root
   Switchable uses its own blank shell so PageNav is not stacked. Home Staff
   desk and Inbox buttons use Flatpack `href` so they are real links.
@@ -36,6 +38,11 @@ Messages follows the current Recording Studio dependency family.
 
 ### Upgrade notes
 - Bump Messages to `0.3.0` and use the dependency versions above.
+- The desk wrapper is `w-full min-w-0` plus the existing height class. Keep
+  `min-w-0` on any flex or grid parent so a later Flatpack fluid-split width
+  fix can shrink the card instead of overflowing.
+- Do not hide Chat::Layout's stacked Back to conversations. Below `md`, that
+  control returns to the conversation list. Core PageNav Back leaves the desk.
 - Run `bin/rails generate recording_studio_accessible:migrations`, then
   `bin/rails db:migrate`, for `depends_on_recording_id`.
 - Hosts adopting Users `0.8.0` should skip Devise sessions, registrations, and
