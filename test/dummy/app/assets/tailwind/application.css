@@ -5,7 +5,9 @@
 
 /* Include RecordingStudio engine views for Tailwind CSS */
 @source "../../../vendor/bundle/**/recording_studio/app/views/**/*.erb";
+@source "../../../vendor/bundle/**/recording_studio_user/app/views/**/*.erb";
 @source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/recordingstudio-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/bundle/ruby/**/bundler/gems/RecordingStudio_users-*/app/views/**/*.erb";
 
 /* Scan FlatPack components for classes used by the bundled ViewComponents */
 @source "../../../vendor/bundle/**/flatpack/app/components/**/*.{rb,erb}";
@@ -21,7 +23,12 @@
 @source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
 @source "../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
 @source "../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_users-*/app/views/**/*.erb";
 @source "../../../vendor/bundle/**/bundler/gems/RecordingStudio_root_switchable*/app/views/**/*.erb";
+/* GitHub Actions ruby/setup-ruby caches gems at the repo-root vendor/bundle. */
+@source "../../../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
+@source "../../../../../vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
+@source "../../../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 @source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb";
 @source "../../../../../../usr/local/bundle/**/bundler/gems/flatpack-*/app/components/**/*.erb";
 @source "../../../../../../usr/local/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
@@ -32,5 +39,14 @@
 @source "../../../../../../home/*/.rbenv/**/bundler/gems/flatpack-*/app/components/**/*.erb";
 @source "../../../../../../home/*/.rbenv/**/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 
+/* System Ruby installs (devcontainer and Cloud Agent). Without these, engine
+   layouts lose their own utilities, such as the padding on Accessible screens. */
+@source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/RecordingStudio*/app/views/**/*.erb";
+@source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
+
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";
+
+/* Accessible's blank layout uses pt-16. Keep the utility even if a gem glob misses. */
+@source inline("pt-16");
+@source inline("min-h-dvh");

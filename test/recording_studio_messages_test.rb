@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.2.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.3.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -15,46 +15,43 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
 
     assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
-    assert_equal "~> 0.7.0", gemspec_constraint(gemspec, "recording_studio_accessible")
-    assert_equal "~> 0.4", gemspec_constraint(gemspec, "recording_studio_attachable")
-    assert_equal "~> 0.2.5", gemspec_constraint(gemspec, "recording_studio_notifications")
-    assert_equal "~> 0.1.135", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal "~> 0.9.1", gemspec_constraint(gemspec, "recording_studio_accessible")
+    assert_equal "~> 0.5.1", gemspec_constraint(gemspec, "recording_studio_attachable")
+    assert_equal "~> 0.3.1", gemspec_constraint(gemspec, "recording_studio_notifications")
+    assert_equal "~> 0.1.148", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
+    refute_includes gemspec, 'spec.add_dependency "recording_studio_user"'
     refute_includes gemspec, ".cursor"
   end
 
   def test_root_gemfile_resolves_the_same_family_tags
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
-    refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
-    refute_includes gemfile, 'tag: "v0.1.133"'
-    refute_includes gemfile, 'tag: "v0.1.135"'
-    assert_equal "~> 0.7.0", gemfile_constraint(gemfile, "recording_studio_accessible")
-    assert_equal "~> 0.2.5", gemfile_constraint(gemfile, "recording_studio_notifications")
-    assert_equal "~> 0.1.135", gemfile_constraint(gemfile, "flat_pack")
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"'
+    refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
+    assert_equal "~> 0.9.1", gemfile_constraint(gemfile, "recording_studio_accessible")
+    assert_equal "~> 0.3.1", gemfile_constraint(gemfile, "recording_studio_notifications")
+    assert_equal "~> 0.1.148", gemfile_constraint(gemfile, "flat_pack")
   end
 
   def test_dummy_gemfile_pins_verified_family_github_tags
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack"'
-    assert_includes gemfile, 'ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"'
-    refute_includes gemfile, "09b6bbb1d82e05ca39c3fdc056d2d070d78f164f"
-    refute_includes gemfile, 'tag: "v0.1.133"'
-    refute_includes gemfile, 'tag: "v0.1.135"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"'
+    refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v0.1.134"'
     refute_includes gemfile, 'tag: "0.3.1"'
@@ -126,10 +123,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "messages_inbox_rows"
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
-    assert_includes desk, "Back to conversations"
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
+    assert_includes desk, '<div class="w-full min-w-0 <%= desk_height_class %>">'
+    assert_includes desk, "h-[calc(100dvh-8.5rem)]"
+    assert_includes desk, "local_assigns[:desk_height_class]"
+    refute_includes desk, "min-h-[70vh]"
+    refute_match(/class="[^"]*md:grid-cols-\[280px/, desk)
+    refute_includes desk, "display: none"
+    refute_includes desk, "<style>"
     refute_includes desk, "FlatPack::PageTitle::Component"
     refute_includes desk, ">Conversations<"
     refute_includes helper, '"Conversation"'
@@ -173,6 +176,18 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes application_layout, "flat_pack_sidebar"
   end
 
+  def test_dummy_mounts_users_gem_auth_without_a_copied_login_view
+    routes = File.read(File.expand_path("dummy/config/routes.rb", __dir__))
+    initializer = File.read(File.expand_path("dummy/config/initializers/recording_studio_user.rb", __dir__))
+
+    assert_includes routes, "skip: %i[sessions registrations passwords]"
+    assert_includes routes, "recording_studio_user_auth_for :users"
+    assert_includes routes, "mount RecordingStudioUser::Engine"
+    assert_includes initializer, 'config.user_class_name = "User"'
+    assert_includes initializer, "config.otp_enabled = false"
+    refute File.exist?(File.expand_path("dummy/app/views/devise/sessions/new.html.erb", __dir__))
+  end
+
   def test_dummy_pins_turbo_and_loads_flatpack_js
     application_js = File.read(File.expand_path("dummy/app/javascript/application.js", __dir__))
     importmap = File.read(File.expand_path("dummy/config/importmap.rb", __dir__))
@@ -186,6 +201,9 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes tailwind_source, "vendor/bundle/**/bundler/gems/flatpack-*/app/components/**/*.rb"
     assert_includes tailwind_source, "vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb"
+    assert_includes tailwind_source, "../../../../../vendor/bundle/**/bundler/gems/RecordingStudio*/app/views/**/*.erb"
+    assert_includes tailwind_source, '@source inline("pt-16")'
+    assert_includes tailwind_source, '@source inline("min-h-dvh")'
     refute_includes tailwind_source, "@theme"
     refute_includes tailwind_source, ":root {"
     refute_includes tailwind_source, "--color-fp-primary"

@@ -6,18 +6,23 @@ require "devise/test/integration_helpers"
 class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  test "sign in page uses the devise layout and is not squished by the default layout" do
+  test "sign in page uses the Users gem layout and is not squished by the default layout" do
     get new_user_session_path
 
     assert_response :success
-    assert_includes response.body, "admin@admin.com"
-    assert_includes response.body, "Password"
+    assert_select "h2", text: "Welcome back"
+    assert_select "button[type='submit']", text: "Sign in"
     assert_includes response.body, 'data-theme="rounded"'
-    assert_includes response.body, "flat_pack/application"
+    assert_includes response.body, "flat_pack/variables"
+    assert_includes response.body, "flat_pack/rich_text"
+    assert_select "link[href*='flat_pack/application']", count: 0
     assert_includes response.body, "@hotwired/turbo-rails"
+    assert_select "main.min-h-dvh.items-center.justify-center", count: 1
+    assert_select "main.max-w-md", count: 0
     refute_includes response.body, "data-recording-studio-default-layout"
     refute_includes response.body, "mt-28"
     refute_includes response.body, "fixed inset-0"
+    refute_includes response.body, "Default: admin@admin.com / Password"
   end
 
   test "home page uses default layout without a switcher in the slot" do
@@ -46,7 +51,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     refute_includes response.body, 'href="/users/sign_out"'
   end
 
-  test "root switch page renders with the host default layout" do
+  test "root switch page keeps a single page nav in the gem shell" do
     user = User.find_or_create_by!(email: "root-switch-page-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
@@ -60,7 +65,8 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     get "/recording_studio_root_switchable/v1/root_switch?scope=all_workspaces"
 
     assert_response :success
-    assert_select "body[data-recording-studio-default-layout='true']", count: 1
+    assert_select "nav.flat-pack-page-nav", count: 1
+    assert_select "body[data-recording-studio-default-layout='true']", count: 0
     refute_includes response.body, "flat-pack-sidebar-layout"
   end
 

@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users,
+             skip: %i[sessions registrations passwords]
+
+  recording_studio_user_auth_for :users
 
   # RecordingStudio engine is data/API-focused and has no browser root route.
   # Keep legacy links working by redirecting the base path to the app home.
@@ -18,4 +21,6 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#index"
+
+  mount RecordingStudioUser::Engine => RecordingStudioUser.config.mount_path, as: :recording_studio_users
 end

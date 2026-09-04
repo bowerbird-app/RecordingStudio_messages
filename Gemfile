@@ -6,14 +6,16 @@ source "https://rubygems.org"
 gemspec
 
 # These gems are not published to RubyGems; resolve the gemspec pins from GitHub.
-# Flatpack PR #159 (0.1.135). Named themes rebind primary-wired tokens so
-# rounded CTAs are charcoal. Pin the verified PR HEAD, not a merge commit or tag.
-gem "flat_pack", "~> 0.1.135", github: "bowerbird-app/flatpack",
-                               ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23"
-gem "recording_studio", "~> 4.2", github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"
-gem "recording_studio_accessible", "~> 0.7.0", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"
-gem "recording_studio_attachable", "~> 0.4", github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"
-gem "recording_studio_notifications", "~> 0.2.5", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"
+gem "flat_pack", "~> 0.1.148", github: "bowerbird-app/flatpack", tag: "v0.1.148"
+gem "recording_studio", "~> 4.2", github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"
+gem "recording_studio_accessible", "~> 0.9.1",
+    github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"
+gem "recording_studio_admin", "~> 2.0.2", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.2"
+gem "recording_studio_attachable", "~> 0.5.1",
+    github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"
+gem "recording_studio_notifications", "~> 0.3.1",
+    github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"
+gem "recording_studio_user", "~> 0.8.2", github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"
 
 gem "devise"
 gem "puma"
@@ -21,6 +23,7 @@ gem "sprockets-rails"
 
 group :development, :test do
   gem "debug"
+  gem "minitest-mock", "~> 5.27"
   gem "simplecov", require: false
 end
 

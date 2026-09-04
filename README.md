@@ -31,22 +31,21 @@ Add the gem next to Recording Studio 4.2, Accessible, Attachable, Notifications,
 
 ```ruby
 # Gemfile
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.0"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.7.0"
-gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "0.4.0"
-gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.2.5"
-gem "flat_pack", github: "bowerbird-app/flatpack",
-    ref: "daceb04b76578b2d7adfa42a65e1f66f42d24f23" # PR #159 HEAD, 0.1.135
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"
+gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"
+gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.148"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
 
 ```ruby
 # gemspec / host Gemfile constraints
 gem "recording_studio", "~> 4.2"
-gem "recording_studio_accessible", "~> 0.7.0"
-gem "recording_studio_attachable", "~> 0.4"
-gem "recording_studio_notifications", "~> 0.2.5"
-gem "flat_pack", "~> 0.1.135"
+gem "recording_studio_accessible", "~> 0.9.1"
+gem "recording_studio_attachable", "~> 0.5.1"
+gem "recording_studio_notifications", "~> 0.3.1"
+gem "flat_pack", "~> 0.1.148"
 ```
 
 Then:
@@ -61,14 +60,17 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
-### Upgrading to 0.2.1
+### Upgrading to 0.3.0
 
-Cloud Agent boot files now live in this repo. Conversations, mounts, and screens
-are unchanged. No host or schema changes.
+Messages now follows the current Recording Studio family: Core `4.2.1`,
+Accessible `0.9.1`, Attachable `0.5.1`, Notifications `0.3.1`, Users `0.8.2`,
+and Flatpack `0.1.148`.
 
-1. Install Messages `0.2.1`. No new migration.
-2. Rebuild the Cloud Agent environment with Draft off so Build fetches the
-   skill pack.
+1. Install Messages `0.3.0`.
+2. Run `bin/rails generate recording_studio_accessible:migrations` and migrate
+   to add `depends_on_recording_id`.
+3. Update host Tailwind sources for current Flatpack and Recording Studio gem
+   views, then rebuild CSS.
 
 ## Enablement
 
@@ -140,7 +142,9 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Screens
 
-The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under `md`. Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Pin Flatpack [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`0.1.135`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). Core PageNav owns back and close. Chat::Header has no back. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
+The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use core `UsesDefaultLayout`. Put `data-theme="rounded"` on the `html` element — core often leaves it on body only, and body-only is not enough for named themes. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `0.1.148` supplies a fluid split from `sm` and the rounded theme tokens for charcoal Send buttons and mine bubbles. Core PageNav owns page back and close. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Square PageNav back is Flatpack, not a Messages restyle. Do not put Sign out or Root Switchable in the page slot.
+
+The desk fills the viewport under the host's page nav. `Chat::Layout` is `h-full`, so height lives on the wrapper (`h-[calc(100dvh-8.5rem)]`, matching core's layout padding plus page nav). The same wrapper is `w-full min-w-0` so the split can shrink inside core `main`. Messages scroll inside the panel and the composer stays on the bottom edge instead of sitting under the browser chrome. A host with different chrome passes `desk_height_class` to the partial. Do not set the height on `Chat::Layout` itself; its own `h-full` wins.
 
 Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Layout](https://flatpack.bowerbird.io/demo/chat/layout), [Chat::InboxRow](https://flatpack.bowerbird.io/demo/chat/inbox_row), [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel), and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
@@ -148,7 +152,7 @@ Composer uploads go through Attachable. Send replaces the thread in place over T
 
 `test/dummy/` is a host that proves the gem. It is not the product.
 
-Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Do not put Sign out or Root Switchable in that slot. Devise sign-in keeps `layouts/application` and still loads Flatpack CSS/JS plus Turbo.
+Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Do not put Sign out or Root Switchable in that slot. The Users gem owns `/users/sign_in` and renders its auth layout (`layouts/recording_studio_user/auth`), with Flatpack CSS/JS plus Turbo.
 
 | Field    | Value              |
 |----------|--------------------|
@@ -166,11 +170,12 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
-| `recording_studio` | `~> 4.2` | `v4.2.0` | `4.2.0` |
-| `recording_studio_accessible` | `~> 0.7.0` | `v0.7.0` | `0.7.0` |
-| `recording_studio_attachable` | `~> 0.4` | `0.4.0` | `0.4.0` |
-| `recording_studio_notifications` | `~> 0.2.5` | `v0.2.5` | `0.2.5` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.135` | PR `#159` HEAD `daceb04b76578b2d7adfa42a65e1f66f42d24f23` | `0.1.135` on that draft (no tag) |
+| `recording_studio` | `~> 4.2` | `v4.2.1` | `4.2.1` |
+| `recording_studio_accessible` | `~> 0.9.1` | `v0.9.1` | `0.9.1` |
+| `recording_studio_attachable` | `~> 0.5.1` | `v0.5.1` | `0.5.1` |
+| `recording_studio_notifications` | `~> 0.3.1` | `v0.3.1` | `0.3.1` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.148` | `0.1.148` |
+| `recording_studio_user` (dummy host only) | `~> 0.8.2` | `v0.8.2` | `0.8.2` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 

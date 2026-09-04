@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.3.0] - 2026-09-04
+
+The dummy host now uses Recording Studio Users for shared password auth, and
+Messages follows the current Recording Studio dependency family.
+
+### Added
+- Recording Studio Users `0.8.2` from
+  [v0.8.2](https://github.com/bowerbird-app/RecordingStudio_users/releases/tag/v0.8.2).
+- Users People, Profile, Identity, registration, confirmation, and optional OTP
+  migrations in the dummy host.
+- Accessible's `depends_on_recording_id` migration from `0.8.0`.
+
+### Changed
+- Dummy `/users/sign_in` and `/users/sign_up` use
+  `recording_studio_user_auth_for :users`. The copied Devise login view is gone;
+  Users `0.8.2` renders those screens in `layouts/recording_studio_user/auth`
+  (one full-viewport centered chrome). The host `application` layout is not
+  nested around them.
+- Dummy Propshaft rewrites Flatpack's logical CSS `@import` paths to digested
+  URLs so `variables`, `rich_text`, and `content_editor` load without 404s.
+- Chat desks fill the viewport under PageNav (`h-[calc(100dvh-8.5rem)]` on the
+  desk wrapper) so the composer sits on the bottom edge. The wrapper is also
+  `w-full min-w-0` so Flatpack's fluid split can shrink. Chat::Layout's stacked
+  Back to conversations stays visible; do not hide it and do not fork the split
+  CSS.
+- Dummy profile screens use core `recording_studio/default_layout`. Root
+  Switchable uses its own blank shell so PageNav is not stacked. Home Staff
+  desk and Inbox buttons use Flatpack `href` so they are real links.
+- Dummy Tailwind scans system gem paths so mounted engine utilities such as
+  `pt-16` are in the build.
+- Updated Core to `4.2.1`, Accessible to `0.9.1`, Attachable to `0.5.1`,
+  Notifications to `0.3.1`, Root Switchable to `0.5.1`, Admin to `2.0.2`,
+  Users to `0.8.2`, and Flatpack to `0.1.148`. Root and dummy lockfiles update
+  all dependencies.
+
+### Upgrade notes
+- Bump Messages to `0.3.0` and use the dependency versions above.
+- Pin Flatpack with `tag: "v0.1.148"`. Chat::Layout `:split` is fluid from
+  `sm` (`clamp(12rem, 30%, 16rem)` plus `minmax(0, 1fr)`). Do not restore a
+  `280px` grid in Messages CSS. Pass `split_breakpoint: :md` only if a host
+  must keep the old stacking point.
+- The desk wrapper is `w-full min-w-0` plus the existing height class. Keep
+  `min-w-0` on any flex or grid parent so the card can shrink.
+- Do not hide Chat::Layout's stacked Back to conversations. Below the split
+  breakpoint (`sm` by default), that control returns to the conversation list.
+  Core PageNav Back leaves the desk.
+- Pin Users with `tag: "v0.8.2"`. Auth screens use the gem auth layout; do not
+  wrap them in a second full-viewport host shell.
+- Run `bin/rails generate recording_studio_accessible:migrations`, then
+  `bin/rails db:migrate`, for `depends_on_recording_id`.
+- Hosts adopting Users should skip Devise sessions, registrations, and
+  passwords, call `recording_studio_user_auth_for :users`, mount the Users
+  engine, register People and Profile, run its migrations, and remove copied
+  Devise auth views. Add the OmniAuth callbacks controller only when the User
+  model is `:omniauthable`.
+
 ## [0.2.1] - 2026-09-02
 
 Cloud Agent Builds for this gem now match Billing 0.9.13. Conversations, mounts,
@@ -86,5 +142,6 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not enable Message types in this slice
 
 [0.2.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.1
+[0.3.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.1.0
