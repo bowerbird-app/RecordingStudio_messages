@@ -49,12 +49,14 @@ module RecordingStudioMessages
       def grant_owner!(group_recording)
         return unless defined?(RecordingStudioAccessible)
 
-        result = RecordingStudioAccessible.grant_access(
-          recording: group_recording,
-          actor: @actor,
-          role: :admin,
-          manager_actor: @actor
-        )
+        result = RecordingStudioMessages.allow_membership_change do
+          RecordingStudioAccessible.grant_access(
+            recording: group_recording,
+            actor: @actor,
+            role: :admin,
+            manager_actor: @actor
+          )
+        end
         return if result.success?
 
         raise RecordingStudioMessages::Error, result.error

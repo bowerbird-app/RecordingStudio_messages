@@ -7,28 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.1] - 2026-09-25
 
-Hosts can hide the Accessible **+ Access** / avatars control on the chat panel
-header without forking Flatpack `Chat::Header` or `Chat::Panel`.
+Hosts can lock membership on a Messages mount key so conversations under that
+desk cannot invite or manage Accessible grants from the chat UI or Accessible
+manage-access screens.
 
 ### Added
-- `show_access` local on the desk → panel_frame → panel render chain (default
-  `true`). Pass `show_access: false` to omit `recording_studio_accessible_avatars`
-  from the panel header. Grant routes and send auth are unchanged.
+- `membership_locked` option on `RecordingStudio::Capabilities::Messages.to`
+  (default unlocked). Pass key names or `true` for every key on that type.
+- When a mount key is locked: the panel hides **+ Access** / avatars, and
+  Messages wraps Accessible `access_management_authorizer` to deny
+  manage/grant/update/revoke for `MessageGroup`s under that mount.
+- `RecordingStudioMessages.allow_membership_change` for trusted paths
+  (`CreateGroup` owner grant; Support `sync_staff_grants` later).
 
 ### Upgrade notes
-- No required host changes. Default behavior is unchanged — group messaging
-  still shows the header access control and Accessible grants still work.
-- To hide header access UI when rendering the desk:
+- No required host changes. Default mounts stay unlocked.
+- To lock a mount key (for example Support tickets):
 
-```erb
-<%= render "recording_studio_messages/message_groups/desk",
-           ...,
-           show_access: false %>
+```ruby
+include RecordingStudio::Capabilities::Messages.to(
+  keys: [:support],
+  membership_locked: [:support]
+)
 ```
 
-- `show_access: false` is UI-only. It does not block Accessible manage-access
-  URLs or `grant_access`. For a security opt-out, also set Accessible
-  `access_management_authorizer` to refuse those recordings (see README).
+- Trusted grants under a locked mount must call
+  `RecordingStudioMessages.allow_membership_change { ... }`.
+  `create_group` already does this for the owner grant.
 
 ## [0.3.0] - 2026-09-04
 

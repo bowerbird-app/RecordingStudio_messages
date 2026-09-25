@@ -10,6 +10,7 @@ require "recording_studio_messages/version"
 require "recording_studio_messages/engine"
 require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
+require "recording_studio_messages/membership_lock"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
 require "recording_studio_messages/services/list_groups"
@@ -73,6 +74,19 @@ module RecordingStudioMessages
     def register_integration!
       register_messages_capability!
       register_message_received_type!
+      MembershipLock.install_authorizer_wrap!
+    end
+
+    def membership_locked?(mount_recording)
+      MembershipLock.membership_locked?(mount_recording)
+    end
+
+    def membership_locked_for_group?(group_recording)
+      MembershipLock.membership_locked_for_group?(group_recording)
+    end
+
+    def allow_membership_change(&block)
+      MembershipLock.allow_membership_change(&block)
     end
 
     def register_messages_capability!

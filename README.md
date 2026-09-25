@@ -92,6 +92,32 @@ class Mailbox < ApplicationRecord
 end
 ```
 
+Lock membership on a mount key when people must not invite others from the desk
+(for example a Support ticket conversation). Default is unlocked.
+
+```ruby
+include RecordingStudio::Capabilities::Messages.to(
+  keys: [:support],
+  membership_locked: [:support]
+)
+```
+
+`membership_locked: true` locks every key listed in `keys` for that type. When
+locked, the panel hides **+ Access** / avatars, and Accessible manage/grant/
+update/revoke for conversations under that mount is denied (including direct
+manage-access URLs). Conversation view and send auth are unchanged.
+
+Trusted paths that must still grant under a locked mount wrap the call:
+
+```ruby
+RecordingStudioMessages.allow_membership_change do
+  RecordingStudioAccessible.grant_access(...)
+end
+```
+
+`create_group` already uses that for the owner grant. Support `sync_staff_grants`
+will use the same helper when Support enables the lock.
+
 Register every type the dummy or host uses:
 
 ```ruby
@@ -138,32 +164,7 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
-Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. Pass `show_access: false` when rendering the desk (or panel / panel_frame) to omit the header access control without forking Flatpack `Chat::Header` or `Chat::Panel`. Default is `true`. Conversation view/send auth is unchanged.
-
-`show_access: false` is a **UI opt-out only**. It does not unmount Accessible grant routes or refuse `grant_access`. Anyone who knows the manage-access URL can still open it if Accessible authorizes them. For a real security opt-out (Support tickets, closed rooms), also deny Accessible access management for those recordings:
-
-```erb
-<%= render "recording_studio_messages/message_groups/desk",
-           group_recordings: group_recordings,
-           group_recording: group_recording,
-           message_recordings: message_recordings,
-           current_actor: current_actor,
-           show_access: false %>
-```
-
-```ruby
-# config/initializers/recording_studio_accessible.rb
-RecordingStudioAccessible.configure do |config|
-  config.access_management_authorizer = lambda do |recording:, actor:, **|
-    # Example: refuse invite/manage UI + grant APIs for MessageGroups on a closed desk.
-    return false if recording.recordable_type == "RecordingStudioMessages::MessageGroup"
-
-    RecordingStudioAccessible.authorized?(actor: actor, recording: recording, role: :admin)
-  end
-end
-```
-
-That authorizer gates the mounted access-management screens and grant/update/revoke services. Pair it with `show_access: false` so the header control is gone and the direct URL is refused.
+Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. On a `membership_locked` mount the header omits that control and Accessible refuses membership changes (see Enablement).
 
 ## Screens
 
