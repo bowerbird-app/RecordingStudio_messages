@@ -257,6 +257,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "docs/cursor-skills.md"
     assert_includes readme, "show_access: false"
     assert_includes readme, "recording_studio_messages/message_groups/desk"
+    assert_includes readme, "UI opt-out only"
+    assert_includes readme, "access_management_authorizer"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"

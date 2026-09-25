@@ -138,7 +138,9 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
-Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. Pass `show_access: false` when rendering the desk (or panel / panel_frame) to omit the header access control without forking Flatpack `Chat::Header` or `Chat::Panel`. Default is `true`. Grant routes and send auth stay as they are.
+Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. Pass `show_access: false` when rendering the desk (or panel / panel_frame) to omit the header access control without forking Flatpack `Chat::Header` or `Chat::Panel`. Default is `true`. Conversation view/send auth is unchanged.
+
+`show_access: false` is a **UI opt-out only**. It does not unmount Accessible grant routes or refuse `grant_access`. Anyone who knows the manage-access URL can still open it if Accessible authorizes them. For a real security opt-out (Support tickets, closed rooms), also deny Accessible access management for those recordings:
 
 ```erb
 <%= render "recording_studio_messages/message_groups/desk",
@@ -148,6 +150,20 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
            current_actor: current_actor,
            show_access: false %>
 ```
+
+```ruby
+# config/initializers/recording_studio_accessible.rb
+RecordingStudioAccessible.configure do |config|
+  config.access_management_authorizer = lambda do |recording:, actor:, **|
+    # Example: refuse invite/manage UI + grant APIs for MessageGroups on a closed desk.
+    return false if recording.recordable_type == "RecordingStudioMessages::MessageGroup"
+
+    RecordingStudioAccessible.authorized?(actor: actor, recording: recording, role: :admin)
+  end
+end
+```
+
+That authorizer gates the mounted access-management screens and grant/update/revoke services. Pair it with `show_access: false` so the header control is gone and the direct URL is refused.
 
 ## Screens
 

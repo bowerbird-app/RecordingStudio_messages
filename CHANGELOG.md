@@ -16,7 +16,8 @@ header without forking Flatpack `Chat::Header` or `Chat::Panel`.
   from the panel header. Grant routes and send auth are unchanged.
 
 ### Upgrade notes
-- No required host changes. Default behavior is unchanged.
+- No required host changes. Default behavior is unchanged — group messaging
+  still shows the header access control and Accessible grants still work.
 - To hide header access UI when rendering the desk:
 
 ```erb
@@ -24,6 +25,10 @@ header without forking Flatpack `Chat::Header` or `Chat::Panel`.
            ...,
            show_access: false %>
 ```
+
+- `show_access: false` is UI-only. It does not block Accessible manage-access
+  URLs or `grant_access`. For a security opt-out, also set Accessible
+  `access_management_authorizer` to refuse those recordings (see README).
 
 ## [0.3.0] - 2026-09-04
 
