@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.3.1] - 2026-09-25
+
+Hosts can hide the Accessible **+ Access** / avatars control on the chat panel
+header without forking Flatpack `Chat::Header` or `Chat::Panel`.
+
+### Added
+- `show_access` local on the desk → panel_frame → panel render chain (default
+  `true`). Pass `show_access: false` to omit `recording_studio_accessible_avatars`
+  from the panel header. Grant routes and send auth are unchanged.
+
+### Upgrade notes
+- No required host changes. Default behavior is unchanged.
+- To hide header access UI when rendering the desk:
+
+```erb
+<%= render "recording_studio_messages/message_groups/desk",
+           ...,
+           show_access: false %>
+```
+
 ## [0.3.0] - 2026-09-04
 
 The dummy host now uses Recording Studio Users for shared password auth, and

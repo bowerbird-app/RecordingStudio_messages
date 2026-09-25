@@ -25,7 +25,8 @@
                  message_recordings: message_recordings,
                  current_actor: current_actor,
                  form_url: local_assigns[:form_url],
-                 return_to: local_assigns[:return_to] %>
+                 return_to: local_assigns[:return_to],
+                 show_access: local_assigns.fetch(:show_access, true) %>
     <% end %>
   <% end %>
 </div>

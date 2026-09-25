@@ -138,7 +138,16 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
-Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty.
+Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. Pass `show_access: false` when rendering the desk (or panel / panel_frame) to omit the header access control without forking Flatpack `Chat::Header` or `Chat::Panel`. Default is `true`. Grant routes and send auth stay as they are.
+
+```erb
+<%= render "recording_studio_messages/message_groups/desk",
+           group_recordings: group_recordings,
+           group_recording: group_recording,
+           message_recordings: message_recordings,
+           current_actor: current_actor,
+           show_access: false %>
+```
 
 ## Screens
 

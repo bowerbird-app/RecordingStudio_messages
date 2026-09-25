@@ -1,8 +1,10 @@
+<% show_access = local_assigns.fetch(:show_access, true) %>
 <% if turbo_frame_request? %>
   <%= render "recording_studio_messages/message_groups/panel_frame",
              group_recording: @group_recording,
              message_recordings: @message_recordings,
-             current_actor: current_messages_actor %>
+             current_actor: current_messages_actor,
+             show_access: show_access %>
 <% else %>
   <% recording_studio_page_nav(title: @group_recording.recordable.title) %>
 
@@ -10,5 +12,6 @@
              group_recordings: @group_recordings,
              group_recording: @group_recording,
              message_recordings: @message_recordings,
-             current_actor: current_messages_actor %>
+             current_actor: current_messages_actor,
+             show_access: show_access %>
 <% end %>

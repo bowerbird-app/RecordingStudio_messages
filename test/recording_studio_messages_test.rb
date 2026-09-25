@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.3.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.3.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -122,7 +122,17 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "layout.panel"
     assert_includes desk, "messages_inbox_rows"
     assert_includes desk, "panel_frame"
+    assert_includes desk, "show_access: local_assigns.fetch(:show_access, true)"
     assert_includes panel_frame, "messages_desk_panel_id"
+    assert_includes panel_frame, "show_access: local_assigns.fetch(:show_access, true)"
+    assert_includes panel, "local_assigns.fetch(:show_access, true)"
+    assert_includes panel, "if show_access"
+    assert_includes panel, "recording_studio_accessible_avatars"
+    assert_includes show, "show_access: show_access"
+    index = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/index.html.erb", __dir__)
+    )
+    assert_includes index, "show_access: local_assigns.fetch(:show_access, true)"
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
@@ -245,6 +255,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "two mounts"
     assert_includes readme, "Do not add a Notifications → Messages dependency"
     assert_includes readme, "docs/cursor-skills.md"
+    assert_includes readme, "show_access: false"
+    assert_includes readme, "recording_studio_messages/message_groups/desk"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"
