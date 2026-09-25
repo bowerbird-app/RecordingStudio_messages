@@ -85,8 +85,8 @@ module RecordingStudioMessages
       MembershipLock.membership_locked_for_group?(group_recording)
     end
 
-    def allow_membership_change(&block)
-      MembershipLock.allow_membership_change(&block)
+    def allow_membership_change(&)
+      MembershipLock.allow_membership_change(&)
     end
 
     def register_messages_capability!

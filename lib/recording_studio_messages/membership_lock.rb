@@ -49,35 +49,17 @@ module RecordingStudioMessages
 
     def locked_keys_for(parent_type)
       options = RecordingStudio.capability_options(:messages, for: parent_type) || {}
-      locked = options[:membership_locked]
-      return [] if locked.blank? || locked == false
-
-      keys = Array(options[:keys] || options[:key]).map(&:to_s)
-      return keys if locked == true
-
-      Array(locked).map(&:to_s)
+      normalize_locked_keys(options[:membership_locked], mount_keys_from(options))
     end
 
     def install_authorizer_wrap!
       return unless defined?(RecordingStudioAccessible)
 
       config = RecordingStudioAccessible.configuration
-      current = config.access_management_authorizer
-      return if current.equal?(@membership_lock_authorizer)
+      return if config.access_management_authorizer.equal?(@membership_lock_authorizer)
 
-      @membership_lock_inner = current
-      @membership_lock_authorizer = lambda do |recording:, actor: nil, controller: nil, **|
-        if membership_management_blocked?(recording)
-          false
-        else
-          invoke_authorizer(
-            @membership_lock_inner,
-            recording: recording,
-            actor: actor,
-            controller: controller
-          )
-        end
-      end
+      @membership_lock_inner = config.access_management_authorizer
+      @membership_lock_authorizer = membership_lock_authorizer_proc
       config.access_management_authorizer = @membership_lock_authorizer
     end
 
@@ -85,8 +67,7 @@ module RecordingStudioMessages
       return false unless callable
 
       kwargs = { recording: recording, actor: actor, controller: controller }
-      result = call_with_compatible_kwargs(callable, kwargs)
-      !!result
+      !!call_with_compatible_kwargs(callable, kwargs)
     rescue StandardError
       false
     end
@@ -98,6 +79,30 @@ module RecordingStudioMessages
         callable.call(recording: kwargs[:recording], actor: kwargs[:actor])
       rescue ArgumentError
         callable.call(recording: kwargs[:recording])
+      end
+    end
+
+    def normalize_locked_keys(locked, mount_keys)
+      return [] if locked.blank? || locked == false
+      return mount_keys if locked == true
+
+      Array(locked).map(&:to_s)
+    end
+
+    def mount_keys_from(options)
+      Array(options[:keys] || options[:key]).map(&:to_s)
+    end
+
+    def membership_lock_authorizer_proc
+      lambda do |recording:, actor: nil, controller: nil, **|
+        next false if membership_management_blocked?(recording)
+
+        invoke_authorizer(
+          @membership_lock_inner,
+          recording: recording,
+          actor: actor,
+          controller: controller
+        )
       end
     end
   end
