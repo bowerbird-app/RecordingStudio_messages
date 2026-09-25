@@ -20,6 +20,8 @@ class ShowAccessTest < ActionDispatch::IntegrationTest
   end
 
   test "show_access false omits plus access and avatars from the panel header" do
+    Current.actor = @staff
+
     empty_group = DummyCatalog.empty_group_recording
     support_group = DummyCatalog.support_group_recording
 
@@ -31,7 +33,7 @@ class ShowAccessTest < ActionDispatch::IntegrationTest
     assert_includes empty_shown, "+ Access"
     refute_includes empty_hidden, "+ Access"
 
-    assert_match(/flat-pack--avatar|AvatarGroup|Manage access/i, support_shown)
+    assert_includes support_shown, "Manage access"
     refute_includes support_hidden, "+ Access"
     refute_includes support_hidden, "Manage access"
     refute_match(/flat-pack--avatar/i, support_hidden)
