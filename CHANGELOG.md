@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.3.1] - 2026-09-25
+
+Hosts can lock membership on a Messages mount key so conversations under that
+desk cannot invite or manage Accessible grants from the chat UI or Accessible
+manage-access screens.
+
+### Added
+- `membership_locked` option on `RecordingStudio::Capabilities::Messages.to`
+  (default unlocked). Pass key names or `true` for every key on that type.
+- When a mount key is locked: the panel hides **+ Access** / avatars, and
+  Messages wraps Accessible `access_management_authorizer` to deny
+  manage/grant/update/revoke for `MessageGroup`s under that mount.
+- `RecordingStudioMessages.allow_membership_change` for trusted paths
+  (`CreateGroup` owner grant; Support `sync_staff_grants` later).
+
+### Upgrade notes
+- No required host changes. Default mounts stay unlocked.
+- To lock a mount key (for example Support tickets):
+
+```ruby
+include RecordingStudio::Capabilities::Messages.to(
+  keys: [:support],
+  membership_locked: [:support]
+)
+```
+
+- Trusted grants under a locked mount must call
+  `RecordingStudioMessages.allow_membership_change { ... }`.
+  `create_group` already does this for the owner grant.
+
 ## [0.3.0] - 2026-09-04
 
 The dummy host now uses Recording Studio Users for shared password auth, and

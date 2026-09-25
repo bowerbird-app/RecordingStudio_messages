@@ -104,6 +104,10 @@ module RecordingStudioMessages
       app.config.after_initialize do
         RecordingStudioMessages.register_integration!
       end
+
+      config.to_prepare do
+        RecordingStudioMessages::MembershipLock.install_authorizer_wrap!
+      end
     end
 
     # Apply model extensions when models are loaded

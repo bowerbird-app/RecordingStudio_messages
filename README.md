@@ -92,6 +92,32 @@ class Mailbox < ApplicationRecord
 end
 ```
 
+Lock membership on a mount key when people must not invite others from the desk
+(for example a Support ticket conversation). Default is unlocked.
+
+```ruby
+include RecordingStudio::Capabilities::Messages.to(
+  keys: [:support],
+  membership_locked: [:support]
+)
+```
+
+`membership_locked: true` locks every key listed in `keys` for that type. When
+locked, the panel hides **+ Access** / avatars, and Accessible manage/grant/
+update/revoke for conversations under that mount is denied (including direct
+manage-access URLs). Conversation view and send auth are unchanged.
+
+Trusted paths that must still grant under a locked mount wrap the call:
+
+```ruby
+RecordingStudioMessages.allow_membership_change do
+  RecordingStudioAccessible.grant_access(...)
+end
+```
+
+`create_group` already uses that for the owner grant. Support `sync_staff_grants`
+will use the same helper when Support enables the lock.
+
 Register every type the dummy or host uses:
 
 ```ruby
@@ -138,7 +164,7 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
-Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty.
+Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. On a `membership_locked` mount the header omits that control and Accessible refuses membership changes (see Enablement).
 
 ## Screens
 

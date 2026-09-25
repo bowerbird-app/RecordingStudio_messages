@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.3.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.3.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -123,6 +123,17 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "messages_inbox_rows"
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
+    assert_includes panel, "membership_locked_for_group?"
+    assert_includes panel, "if membership_open"
+    assert_includes panel, "recording_studio_accessible_avatars"
+    refute_includes panel, "show_access:"
+    refute_includes desk, "show_access"
+    refute_includes panel_frame, "show_access"
+    refute_includes show, "show_access"
+    index = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/index.html.erb", __dir__)
+    )
+    refute_includes index, "show_access"
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
@@ -245,9 +256,29 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "two mounts"
     assert_includes readme, "Do not add a Notifications → Messages dependency"
     assert_includes readme, "docs/cursor-skills.md"
+    assert_includes readme, "membership_locked: [:support]"
+    assert_includes readme, "allow_membership_change"
+    refute_includes readme, "show_access"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"
     refute_includes readme, "0.1.84"
+  end
+
+  def test_membership_lock_module_is_wired
+    api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
+    lock = File.read(File.expand_path("../lib/recording_studio_messages/membership_lock.rb", __dir__))
+    create_group = File.read(
+      File.expand_path("../lib/recording_studio_messages/services/create_group.rb", __dir__)
+    )
+
+    assert_includes api, "membership_lock"
+    assert_includes api, "def membership_locked?"
+    assert_includes api, "def allow_membership_change"
+    assert_includes api, "MembershipLock.install_authorizer_wrap!"
+    assert_includes lock, "membership_locked"
+    assert_includes lock, "access_management_authorizer"
+    assert_includes lock, "allow_membership_change"
+    assert_includes create_group, "allow_membership_change"
   end
 
   def test_send_replaces_the_thread_over_turbo_without_action_cable
