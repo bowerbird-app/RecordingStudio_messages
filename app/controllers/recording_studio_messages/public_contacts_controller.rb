@@ -3,6 +3,7 @@
 module RecordingStudioMessages
   class PublicContactsController < ActionController::Base
     include PublicContactHelper
+
     helper PublicContactHelper
 
     protect_from_forgery with: :exception
@@ -14,39 +15,24 @@ module RecordingStudioMessages
     rescue_from RecordingStudioMessages::Error, with: :contact_error
 
     def show
-      @mount = find_mount
-      return missing_contact unless @mount && RecordingStudioMessages.public_contact_enabled?(@mount)
+      @mount = enabled_mount
+      missing_contact unless @mount
     end
 
     def create
-      @mount = find_mount
-      return missing_contact unless @mount && RecordingStudioMessages.public_contact_enabled?(@mount)
+      @mount = enabled_mount
+      return missing_contact unless @mount
 
-      outcome = RecordingStudioMessages.begin_public_contact(
-        mount_recording: @mount,
-        name: params[:name],
-        email: params[:email],
-        body: params[:body],
-        current_actor: public_contact_actor,
-        request: request,
-        session: session
-      )
-      if outcome.group_recording
-        remember_sent(outcome.group_recording)
-        redirect_to public_contact_sent_path
-      else
-        redirect_to public_contact_verify_path
-      end
+      redirect_for(start_contact)
     end
 
     def verify
       @intent = session_intent
       return missing_contact if @intent.expired?
+      return unless @intent.fulfilled?
 
-      if @intent.fulfilled?
-        remember_sent(@intent.group_recording)
-        redirect_to public_contact_sent_path
-      end
+      remember_sent(@intent.group_recording)
+      redirect_to public_contact_sent_path
     end
 
     def submit_verification
@@ -68,6 +54,32 @@ module RecordingStudioMessages
     end
 
     private
+
+    def enabled_mount
+      mount = find_mount
+      mount if mount && RecordingStudioMessages.public_contact_enabled?(mount)
+    end
+
+    def start_contact
+      RecordingStudioMessages.begin_public_contact(
+        mount_recording: @mount,
+        name: params[:name],
+        email: params[:email],
+        body: params[:body],
+        current_actor: public_contact_actor,
+        request: request,
+        session: session
+      )
+    end
+
+    def redirect_for(outcome)
+      if outcome.group_recording
+        remember_sent(outcome.group_recording)
+        redirect_to public_contact_sent_path
+      else
+        redirect_to public_contact_verify_path
+      end
+    end
 
     def find_mount
       return if params[:mount_id].blank?
