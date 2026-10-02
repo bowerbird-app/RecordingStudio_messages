@@ -272,6 +272,8 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
+Home also has a Contact button to that inbox's public form.
+
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |

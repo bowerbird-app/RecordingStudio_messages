@@ -35,6 +35,17 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Sign out"
   end
 
+  test "home links to the site inbox public contact form" do
+    load Rails.root.join("db/seeds.rb").to_s
+    sign_in User.find_by!(email: "admin@admin.com")
+
+    get root_path
+
+    mount = DummyCatalog.inbox_mount_recording
+    assert_response :success
+    assert_select "a[href=?]", recording_studio_messages.public_contact_path(mount_id: mount.id), text: "Contact"
+  end
+
   test "tailwind build includes Flatpack alert and page-nav utilities" do
     css = Rails.root.join("app/assets/builds/tailwind.css").read
 
