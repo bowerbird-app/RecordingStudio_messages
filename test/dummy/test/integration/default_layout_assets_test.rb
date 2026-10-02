@@ -91,14 +91,13 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "h2", text: "Welcome back"
     assert_select "input[type='email'][name='user[email]']"
-    assert_select "input[type='password'][name='user[password]']"
-    assert_select "button[type='submit']", text: "Sign in"
+    assert_select "button[type='submit']", text: "Continue with email"
     assert_includes response.body, "/assets/tailwind"
     assert_includes response.body, "@hotwired/turbo-rails"
     assert_includes response.body, "importmap"
     assert_select "link[href*='flat_pack/variables']"
     assert_select "link[href*='flat_pack/rich_text']"
-    assert_select "link[href*='flat_pack/application']", count: 0
+    assert_select "link[href*='flat_pack/application']"
     assert_select "form[action='/users/sign_in']"
     assert_select "main.min-h-dvh.items-center.justify-center", count: 1
     assert_select "main.max-w-md", count: 0

@@ -28,10 +28,14 @@ Signed-out people confirm an email code first, then the same send path runs once
   `public_contact_form` for a host page that wants the same form.
   A successful post redirects to `GET /public_contact/sent`. A refresh
   does not send again.
-- Signed-out registration uses Recording Studio Users OTP. A new or
-  unconfirmed OTP user gets a registration code. A confirmed user gets a
-  login code. The typed email is not trusted until `verify_otp!` succeeds.
-  Users is not a gemspec dependency.
+- Signed-out contact uses the Recording Studio Users public OTP API.
+  A new email, an existing unconfirmed user, and an existing confirmed
+  user can all send after that person proves the address. An unconfirmed
+  password account is reused and confirmed in place. The password and
+  `registered_with` stay as they were. The typed email is not trusted
+  until `verify_otp!` succeeds. A submitted name is stored as given.
+  A one-word name has no surname, and no time zone is invented. An
+  existing profile is left alone. Users is not a gemspec dependency.
 
 ### Upgrade notes
 - No change for hosts that do not set `public_contact`.

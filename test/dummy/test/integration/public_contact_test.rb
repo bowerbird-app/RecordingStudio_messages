@@ -5,6 +5,7 @@ require "devise/test/integration_helpers"
 
 class PublicContactTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActiveSupport::Testing::TimeHelpers
 
   setup do
     @otp_was = RecordingStudioUser.config.otp_enabled
@@ -63,9 +64,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_nil user.name
 
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    challenge = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id)
-    assert_equal "registration", challenge.purpose
-    code = challenge.decrypt_delivery_code!
+    assert_equal "registration", otp_purpose_for(intent)
+    code = otp_code_for(intent)
 
     follow_redirect!
     assert_includes response.body, "ada@example.com"
@@ -88,6 +88,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     profile = RecordingStudioUser.profile_for(user)
     assert_equal "Ada", profile.first_name
     assert_equal "Lovelace", profile.last_name
+    assert_nil profile.time_zone
     assert_equal "Ada Lovelace", Object.new.extend(RecordingStudioMessages::PanelHelper).message_sender_name(user)
 
     intent.reload
@@ -135,12 +136,11 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal notifications_before, message_received_count
 
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    challenge = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id)
-    assert_equal "login", challenge.purpose
+    assert_equal "login", otp_purpose_for(intent)
     assert_equal existing.id, intent.user_id
     assert_equal count, User.count
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: challenge.decrypt_delivery_code! }
+    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
 
     assert_redirected_to recording_studio_messages.public_contact_sent_path
     follow_redirect!
@@ -167,7 +167,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { name: "Ada Lovelace", email: "wrong@example.com", body: "Do not send." }
     follow_redirect!
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    real_code = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id).decrypt_delivery_code!
+    real_code = otp_code_for(intent)
     wrong = real_code == "000000" ? "111111" : "000000"
 
     post recording_studio_messages.public_contact_verify_path, params: { code: wrong }
@@ -188,7 +188,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     )
     sign_in visitor
 
-    assert_no_difference -> { RecordingStudioUser::OtpChallenge.count } do
+    assert_no_difference -> { otp_notification_count } do
       post contact_path, params: {
         name: "Not Me",
         email: "other@example.com",
@@ -260,7 +260,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   test "complete twice returns the same group and does not send again" do
     post contact_path, params: { name: "Ada Lovelace", email: "twice@example.com", body: "Once only." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    code = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id).decrypt_delivery_code!
+    code = otp_code_for(intent)
     post recording_studio_messages.public_contact_verify_path, params: { code: code }
 
     user = User.find_by!(email: "twice@example.com")
@@ -323,11 +323,11 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   test "expired code does not send" do
     post contact_path, params: { name: "Ada Lovelace", email: "expired-code@example.com", body: "Too late." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    challenge = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id)
-    code = challenge.decrypt_delivery_code!
-    challenge.update!(expires_at: 1.minute.ago)
+    code = otp_code_for(intent)
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: code }
+    travel 11.minutes do
+      post recording_studio_messages.public_contact_verify_path, params: { code: code }
+    end
 
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
     assert_equal 0, RecordingStudioMessages::Message.count
@@ -337,7 +337,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   test "expired intent does not send" do
     post contact_path, params: { name: "Ada Lovelace", email: "expired-intent@example.com", body: "Too late." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    code = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id).decrypt_delivery_code!
+    code = otp_code_for(intent)
     intent.update!(expires_at: 1.hour.ago)
 
     post recording_studio_messages.public_contact_verify_path, params: { code: code }
@@ -348,26 +348,105 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_nil intent.reload.message_group_id
   end
 
-  test "unconfirmed password user does not create a second user or a code" do
+  test "unconfirmed password user confirms the same account and keeps the password" do
     existing = User.create!(
       email: "password-user@example.com",
       password: "Password123!",
       password_confirmation: "Password123!",
+      registered_with: "password",
       confirmed_at: Time.current
     )
     existing.update_column(:confirmed_at, nil)
+    RecordingStudioUser.record_profile!(
+      existing,
+      actor: existing,
+      first_name: "Casey",
+      last_name: "Patron",
+      time_zone: "Eastern Time (US & Canada)"
+    )
     count = User.count
+    groups_before = RecordingStudioMessages::MessageGroup.count
 
     post contact_path, params: {
-      name: "Password User",
+      name: "Someone Else",
       email: "password-user@example.com",
       body: "I already signed up."
     }
 
+    assert_redirected_to recording_studio_messages.public_contact_verify_path
     assert_equal count, User.count
-    assert_equal 0, RecordingStudioUser::OtpChallenge.where(user_id: existing.id).count
-    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
-    assert_includes response.body, "That email already has an account. Try signing in."
+    assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal existing.id, intent.user_id
+    assert_equal "registration", otp_purpose_for(intent)
+
+    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    existing.reload
+    assert_equal existing.id, User.find_by!(email: "password-user@example.com").id
+    assert_equal count, User.count
+    assert existing.confirmed?
+    assert_equal "password", existing.registered_with
+    assert existing.valid_password?("Password123!")
+    profile = RecordingStudioUser.profile_for(existing)
+    assert_equal "Casey", profile.first_name
+    assert_equal "Patron", profile.last_name
+    assert_equal "Eastern Time (US & Canada)", profile.time_zone
+    assert_equal 1, RecordingStudioMessages::Message.where(body: "I already signed up.").count
+    message = RecordingStudioMessages::Message.find_by!(body: "I already signed up.")
+    sender = RecordingStudio::Recording.find_by!(recordable: message).events.where(action: "created").order(:created_at).first.actor
+    assert_equal existing.id, sender.id
+  end
+
+  test "unconfirmed otp user is reused and then confirmed" do
+    existing = RecordingStudioUser.create_unconfirmed_user!(email: "otp-existing@example.com")
+    count = User.count
+
+    post contact_path, params: {
+      name: "Ada Lovelace",
+      email: "otp-existing@example.com",
+      body: "Same account."
+    }
+
+    assert_redirected_to recording_studio_messages.public_contact_verify_path
+    assert_equal count, User.count
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal existing.id, intent.user_id
+    assert_equal "registration", otp_purpose_for(intent)
+    assert_equal 0, RecordingStudioMessages::Message.count
+
+    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+
+    existing.reload
+    assert_equal existing.id, User.find_by!(email: "otp-existing@example.com").id
+    assert_equal count, User.count
+    assert existing.confirmed?
+    assert_equal "otp", existing.registered_with
+    profile = RecordingStudioUser.profile_for(existing)
+    assert_equal "Ada", profile.first_name
+    assert_equal "Lovelace", profile.last_name
+    assert_equal 1, RecordingStudioMessages::Message.where(body: "Same account.").count
+  end
+
+  test "a single submitted name is stored without a surname or time zone" do
+    post contact_path, params: {
+      name: "Madonna",
+      email: "madonna@example.com",
+      body: "One name."
+    }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+
+    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+
+    user = User.find_by!(email: "madonna@example.com")
+    profile = RecordingStudioUser.profile_for(user)
+    assert_equal "Madonna", profile.first_name
+    assert_nil profile.last_name
+    assert_nil profile.time_zone
+    assert_nil user.name
+    assert_equal "Madonna", Object.new.extend(RecordingStudioMessages::PanelHelper).message_sender_name(user)
+    assert_equal 1, RecordingStudioMessages::Message.where(body: "One name.").count
   end
 
   test "resend uses a separate rate limit and a second resend asks for a minute" do
@@ -377,13 +456,13 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { name: "Ada Lovelace", email: "resend@example.com", body: "Need another code." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     first_challenge_id = intent.otp_challenge_id
-    first_purpose = RecordingStudioUser::OtpChallenge.find(first_challenge_id).purpose
+    first_purpose = otp_purpose_for(intent)
 
     post recording_studio_messages.public_contact_resend_path
     assert_redirected_to recording_studio_messages.public_contact_verify_path
     intent.reload
     assert_not_equal first_challenge_id, intent.otp_challenge_id
-    assert_equal first_purpose, RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id).purpose
+    assert_equal first_purpose, otp_purpose_for(intent)
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
 
     post recording_studio_messages.public_contact_resend_path
@@ -427,5 +506,17 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
   def message_received_count
     message_received_scope.count
+  end
+
+  def otp_purpose_for(intent)
+    RecordingStudioUser.otp_proof(intent.otp_challenge_id).purpose
+  end
+
+  def otp_code_for(intent)
+    RecordingStudioUser.otp_message(intent.otp_challenge_id).fetch(:body)[/\d{6}/]
+  end
+
+  def otp_notification_count
+    RecordingStudioNotifications::Notification.where(notification_type: %w[registration_otp login_otp]).count
   end
 end

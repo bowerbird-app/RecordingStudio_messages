@@ -54,7 +54,7 @@ module RecordingStudioMessages
       intent = PublicContactIntent.create!(
         mount_recording_id: mount_recording.id,
         user_id: user.id,
-        otp_challenge_id: issued.challenge.id,
+        otp_challenge_id: issued.challenge_id,
         email: normalized_email,
         submitted_name: submitted_name,
         body: text,
@@ -67,11 +67,13 @@ module RecordingStudioMessages
     def submit_code!(intent:, code:, session:)
       return finish(intent, session) if intent.fulfilled?
 
-      challenge = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id)
+      proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
+      raise Error, "That code did not match." if proof.nil?
+
       result = RecordingStudioUser.verify_otp!(
         challenge_id: intent.otp_challenge_id,
         code: code,
-        purpose: challenge.purpose,
+        purpose: proof.purpose,
         session: session
       )
       unless result.success?
@@ -92,15 +94,18 @@ module RecordingStudioMessages
         raise Error, "That contact form expired. Send it again." if intent.expired?
 
         user = RecordingStudioUser.config.user_class.find(intent.user_id)
-        challenge = RecordingStudioUser::OtpChallenge.find(intent.otp_challenge_id)
-        issued = issue_otp!(
-          user: user,
-          purpose: challenge.purpose,
-          request: request,
-          session: session,
-          rate_limit_scope: :resend
-        )
-        intent.update!(otp_challenge_id: issued.challenge.id)
+        proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
+        raise Error, "Confirm the email code first." if proof.nil?
+
+        issued = call_users_otp do
+          RecordingStudioUser.resend_otp!(
+            user: user,
+            purpose: proof.purpose,
+            request: request,
+            session: session
+          )
+        end
+        intent.update!(otp_challenge_id: issued.challenge_id)
       end
       intent
     end
@@ -111,8 +116,7 @@ module RecordingStudioMessages
         return intent.group_recording if intent.fulfilled?
         raise Error, "That contact form expired. Send it again." if intent.expired? || !intent.open?
 
-        challenge = consumed_challenge!(intent, actor)
-        provision_registration!(actor, intent, challenge) if registration_profile?(actor, challenge)
+        settle_identity!(actor, intent)
 
         mount = RecordingStudio::Recording.find(intent.mount_recording_id)
         group = fulfill!(
@@ -150,7 +154,7 @@ module RecordingStudioMessages
           end
         end
 
-        if !existing.confirmed? && existing.registered_with_otp?
+        unless existing.confirmed?
           require_otp!(:registration)
           return [existing, "registration"]
         end
@@ -164,26 +168,50 @@ module RecordingStudioMessages
       end
 
       def require_otp!(kind)
-        enabled = if kind == :login
-          RecordingStudioUser.config.otp_login_enabled?
-        else
-          RecordingStudioUser.config.otp_registration_enabled?
-        end
-        return if enabled
+        return if otp_kind_enabled?(kind)
 
         raise Error, USERS_REQUIRED
       end
 
+      def otp_kind_enabled?(kind)
+        if kind == :login
+          RecordingStudioUser.config.otp_login_enabled?
+        else
+          RecordingStudioUser.config.otp_registration_enabled?
+        end
+      end
+
       def issue_otp!(user:, purpose:, request:, session:, rate_limit_scope:)
-        RecordingStudioUser.issue_otp!(
-          user: user,
-          purpose: purpose,
-          request: request,
-          session: session,
-          rate_limit_scope: rate_limit_scope
-        )
-      rescue RecordingStudioUser::Services::OtpRateLimiter::RateLimited
+        call_users_otp do
+          RecordingStudioUser.issue_otp!(
+            user: user,
+            purpose: purpose,
+            request: request,
+            session: session,
+            rate_limit_scope: rate_limit_scope
+          )
+        end
+      end
+
+      def call_users_otp
+        yield
+      rescue RecordingStudioUser::RateLimited
         raise Error, RATE_LIMITED
+      end
+
+      def settle_identity!(actor, intent)
+        RecordingStudioUser.complete_email_proof!(
+          user: actor,
+          challenge_id: intent.otp_challenge_id,
+          profile_attributes: profile_attributes_for(intent)
+        )
+      rescue ArgumentError
+        raise Error, "Confirm the email code first."
+      end
+
+      def profile_attributes_for(intent)
+        first_name, last_name = intent.submitted_name.to_s.strip.split(/\s+/, 2)
+        { first_name: first_name, last_name: last_name }
       end
 
       def fulfill!(mount:, contact:, title:, body:, recipients:)
@@ -245,38 +273,6 @@ module RecordingStudioMessages
         return if result.success?
 
         raise Error, result.error.to_s
-      end
-
-      def consumed_challenge!(intent, actor)
-        challenge = RecordingStudioUser::OtpChallenge.find_by(id: intent.otp_challenge_id)
-        usable = challenge&.consumed? &&
-                 !challenge.revoked? &&
-                 challenge.user_id.to_s == actor.id.to_s &&
-                 (challenge.registration? || challenge.login?)
-        raise Error, "Confirm the email code first." unless usable
-
-        challenge
-      end
-
-      def registration_profile?(actor, challenge)
-        !actor.confirmed? && actor.registered_with_otp? && challenge.registration?
-      end
-
-      def provision_registration!(actor, intent, challenge)
-        RecordingStudioUser.complete_registration!(user: actor, challenge: challenge)
-        first_name, last_name = split_name(intent.submitted_name)
-        RecordingStudioUser.record_profile!(
-          actor,
-          actor: actor,
-          first_name: first_name,
-          last_name: last_name,
-          time_zone: "UTC"
-        )
-      end
-
-      def split_name(submitted_name)
-        first_name, last_name = submitted_name.to_s.strip.split(/\s+/, 2)
-        [first_name.presence || "Member", last_name.presence || "Member"]
       end
 
       def actor_matches?(intent, actor)

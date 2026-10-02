@@ -15,7 +15,7 @@ gem "recording_studio_attachable", "~> 0.5.1",
     github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"
 gem "recording_studio_notifications", "~> 0.3.1",
     github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"
-gem "recording_studio_user", "~> 0.8.2", github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"
+gem "recording_studio_user", "~> 0.12.3", github: "bowerbird-app/RecordingStudio_users", branch: "cursor/public-email-proof-5114"
 
 gem "devise"
 gem "puma"

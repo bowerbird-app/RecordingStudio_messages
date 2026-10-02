@@ -190,7 +190,11 @@ Include `RecordingStudioMessages::PublicContactHelper` on the host controller th
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 
-Signed-out contact needs Recording Studio Users with `otp_enabled`. Users is not a dependency of this gem. The host mounts Users, turns OTP on, and registers the notification channels those codes use. Registration defaults to email. Login defaults to email and push. A new email, or an unconfirmed OTP user, gets a registration code. A confirmed active user gets a login code. Any other existing account is refused, and this gem does not create a second user. The address typed in the form is stored for the pending row, and it is not trusted until `verify_otp!` succeeds.
+Signed-out contact needs Recording Studio Users with `otp_enabled`. Users is not a dependency of this gem. The host mounts Users, turns OTP on, and registers the notification channels those codes use. Registration defaults to email. Login defaults to email and push.
+
+A signed-out send proves the typed address before anything is delivered. A new email gets a registration code and a new user. An existing unconfirmed user, whether that account was created with a password or with a code, is reused and gets a registration code. An existing confirmed user who can sign in gets a login code. This gem does not create a second user for an address that already exists. The address on the pending row is not trusted until `verify_otp!` succeeds.
+
+Users confirms the account. A new OTP registration stores the submitted name on the profile. "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a surname or a time zone, and it does not revise a profile that already exists. `registered_with` stays the way the account was created, so a password still signs in after the code confirms the email.
 
 ```ruby
 outcome = RecordingStudioMessages.begin_public_contact(
@@ -231,7 +235,7 @@ form
 └── pending intent, body stored for 24 hours
     └── email code
         └── verify_otp!
-            └── confirmed user, profile written only for a new OTP registration
+            └── confirmed user, profile written from the submitted name when none exists
                 └── create_group as the admin recipient
                     └── :edit grants
                         └── send_message
