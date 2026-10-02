@@ -296,15 +296,15 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", recording_studio_messages.public_contact_resend_path
   end
 
-  test "signed-in form has no editable email and shows the actor" do
+  test "signed-in form shows the actor name as a badge and hides the email" do
     sign_in @staff
     get contact_path
 
     assert_response :success
     assert_select "input[name=email]", count: 0
     assert_select "input[type=email]", count: 0
-    assert_includes response.body, "Ada Staff"
-    assert_includes response.body, "admin@admin.com"
+    assert_select "span.rounded-full", text: "Ada Staff"
+    refute_includes response.body, "admin@admin.com"
     assert_select "textarea[name=body]"
   end
 

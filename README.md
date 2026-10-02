@@ -177,7 +177,7 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees the message field and their identity as read-only text. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. Refreshing that page does not send again.
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. Refreshing that page does not send again.
 
 `public_contact_form` renders that same form on a host page.
 

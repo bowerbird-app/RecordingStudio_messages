@@ -12,8 +12,9 @@
 <%= form_with url: public_contact_submit_path(mount), method: :post, local: true do %>
   <div class="space-y-4">
     <% if actor %>
-      <p><%= actor.respond_to?(:name) ? actor.name.presence : nil %></p>
-      <p><%= actor.email %></p>
+      <% if actor.respond_to?(:name) && actor.name.present? %>
+        <%= render FlatPack::Badge::Component.new(text: actor.name, size: :sm) %>
+      <% end %>
     <% else %>
       <%= render FlatPack::TextInput::Component.new(name: "name", label: "Name", required: true, maxlength: 120, autocomplete: "name") %>
       <%= render FlatPack::EmailInput::Component.new(name: "email", label: "Email", required: true, autocomplete: "email") %>
