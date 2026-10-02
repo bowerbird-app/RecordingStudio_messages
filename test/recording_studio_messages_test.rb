@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.4.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.4.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -36,10 +36,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.198"'
     assert_equal "~> 0.9.1", gemfile_constraint(gemfile, "recording_studio_accessible")
     assert_equal "~> 0.3.1", gemfile_constraint(gemfile, "recording_studio_notifications")
-    assert_equal "~> 0.1.148", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal "~> 0.1.198", gemfile_constraint(gemfile, "flat_pack")
   end
 
   def test_dummy_gemfile_pins_verified_family_github_tags
@@ -52,11 +52,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.198"'
     refute_includes gemfile, "recording_studio/v3.0.0"
     refute_includes gemfile, 'tag: "v0.1.134"'
     refute_includes gemfile, 'tag: "0.3.1"'
     refute_includes gemfile, 'tag: "v0.1.84"'
+    refute_includes gemfile, 'tag: "v0.1.148"'
   end
 
   def test_does_not_ship_copied_core_hooks_or_template_leftovers

@@ -52,7 +52,11 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, "alert-success-background-color"
     assert_includes css, "alert-danger-background-color"
     assert_includes css, "button-secondary-background-color"
-    assert_includes css, "button-ghost-background-color"
+
+    # Ghost button chrome lives in Flatpack application CSS (not Tailwind
+    # arbitrary classes) as of flat_pack v0.1.196+.
+    flatpack_css = Rails.application.assets.load_path.find("flat_pack/application.css").compiled_content
+    assert_includes flatpack_css, "--button-ghost-background-color"
   end
 
   test "tailwind build includes utilities that only mounted engine screens use" do

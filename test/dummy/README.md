@@ -55,7 +55,7 @@ second back button. That layout still loads:
 
 The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement` because core default layout leaves `<html>` bare. The dummy also copies the attribute onto the `html` tag in the response so the named theme is present without JavaScript. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
-Flatpack is pinned to `v0.1.148`. Rounded on the live kit is monochrome charcoal,
+Flatpack is pinned to `v0.1.198`. Rounded on the live kit is monochrome charcoal,
 not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
