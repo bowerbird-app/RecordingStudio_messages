@@ -27,7 +27,10 @@ Signed-out people confirm an email code first, then the same send path runs once
 - Gem routes and a signed-out layout for `/public_contact`, plus
   `public_contact_form` for a host page that wants the same form.
   A successful post redirects to `GET /public_contact/sent`. A refresh
-  does not send again.
+  does not send again. The sent screen centers the copy and shows a
+  hero icon above the title. `public_contact_sent_icon` defaults to
+  `rocket-launch`. Set it to another heroicon name, or to `nil`, to
+  change that slot.
 - Signed-out contact uses the Recording Studio Users public OTP API.
   A new email, an existing unconfirmed user, and an existing confirmed
   user can all send after that person proves the address. An unconfirmed

@@ -18,6 +18,10 @@ module RecordingStudioMessages
       warden.user(:user)
     end
 
+    def public_contact_sent_icon
+      RecordingStudioMessages.configuration.public_contact_sent_icon.presence
+    end
+
     def public_contact_submit_path(mount)
       routes = respond_to?(:public_contact_path) ? self : recording_studio_messages
       routes.public_contact_path(mount_id: mount.id)

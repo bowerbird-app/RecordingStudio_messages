@@ -200,6 +200,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Message sent"
+    assert_select ".text-center h1.text-3xl", text: "Message sent"
+    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
     assert_includes response.body, "View conversation"
     assert_nil User.find_by(email: "other@example.com")
     assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
@@ -207,6 +209,26 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     message_recording = RecordingStudio::Recording.find_by!(recordable: message)
     sender = message_recording.events.where(action: "created").order(:created_at).first.actor
     assert_equal visitor.id, sender.id
+  end
+
+  test "sent screen icon slot follows configuration" do
+    sign_in @staff
+    post contact_path, params: { body: "Show the rocket." }
+    follow_redirect!
+
+    assert_select ".text-center h1.text-3xl", text: "Message sent"
+    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "paper-airplane"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = nil
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "svg[data-controller='flat-pack--icon']", count: 0
+    assert_select ".text-center h1.text-3xl", text: "Message sent"
+  ensure
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end
 
   test "support mount without public contact does not open a conversation" do

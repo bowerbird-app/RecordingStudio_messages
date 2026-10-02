@@ -177,7 +177,7 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. Refreshing that page does not send again.
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent". The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
 
 `public_contact_form` renders that same form on a host page.
 
@@ -225,6 +225,7 @@ RecordingStudioMessages.configure do |config|
   config.public_contact_recipient_resolver = lambda { |mount_recording:, actor:|
     [User.find_by(email: "admin@admin.com")].compact
   }
+  config.public_contact_sent_icon = "rocket-launch"
 end
 ```
 
