@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.4.0] - 2026-10-02
+
+A mount can accept a public contact form. Signed-in people send immediately.
+Signed-out people confirm an email code first, then the same send path runs once.
+
+### Added
+- `public_contact` option on `RecordingStudio::Capabilities::Messages.to`.
+  Default off. `true` opts in every key. An array opts in those keys.
+- `RecordingStudioMessages.public_contact_enabled?`, `begin_public_contact`,
+  and `complete_public_contact`.
+- `RecordingStudioMessages::PublicContact` for the code form. `submit_code!`
+  and `resend!` stay on that module. The host facade does not publish them.
+- `public_contact_recipient_resolver`. The first actor who is already an
+  admin on the mount path calls `create_group`. Other recipients and the
+  sender get an `:edit` grant, unless that grant would replace `:admin`.
+- Pending rows in `recording_studio_messages_public_contact_intents`. The row
+  exists only while a code is outstanding. `message_group_id` marks it sent.
+  The body is cleared in that same write. A second complete returns the same
+  conversation.
+- Gem routes and a signed-out layout for `/public_contact`, plus
+  `public_contact_form` for a host page that wants the same form.
+  A successful post redirects to `GET /public_contact/sent`. A refresh
+  does not send again.
+- Signed-out registration uses Recording Studio Users OTP. A new or
+  unconfirmed OTP user gets a registration code. A confirmed user gets a
+  login code. The typed email is not trusted until `verify_otp!` succeeds.
+  Users is not a gemspec dependency.
+
+### Upgrade notes
+- No change for hosts that do not set `public_contact`.
+- To turn it on, list the mount key and set the recipient resolver.
+
+```ruby
+include RecordingStudio::Capabilities::Messages.to(
+  keys: [:inbox],
+  public_contact: [:inbox]
+)
+
+RecordingStudioMessages.configure do |config|
+  config.public_contact_recipient_resolver = lambda { |mount_recording:, actor:|
+    [User.find_by(email: "admin@admin.com")].compact
+  }
+end
+```
+
+- Mount Recording Studio Users and set `otp_enabled` before signed-out
+  visitors can send. Run `bin/rails generate recording_studio_messages:migrations`
+  and migrate.
+
 ## [0.3.1] - 2026-09-25
 
 Hosts can lock membership on a Messages mount key so conversations under that

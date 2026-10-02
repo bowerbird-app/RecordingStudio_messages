@@ -10,7 +10,9 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "layout-assets@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     post user_session_path, params: {
       user: { email: user.email, password: "Password123!" }
@@ -54,7 +56,9 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "profile-layout@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
     Current.actor = user
     RecordingStudioUser.record_profile!(user, first_name: "Pat", last_name: "Profile", time_zone: "UTC")
 

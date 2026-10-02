@@ -43,14 +43,18 @@ end
 staff = User.find_or_create_by!(email: "admin@admin.com") do |user|
   user.password = "Password"
   user.password_confirmation = "Password"
+  user.confirmed_at = Time.current if user.class.column_names.include?("confirmed_at")
 end
 staff.update!(name: "Ada Staff") if staff.name != "Ada Staff"
+staff.update_column(:confirmed_at, Time.current) if staff.class.column_names.include?("confirmed_at") && staff.confirmed_at.nil?
 
 customer = User.find_or_create_by!(email: "casey@example.com") do |user|
   user.password = "Password"
   user.password_confirmation = "Password"
+  user.confirmed_at = Time.current if user.class.column_names.include?("confirmed_at")
 end
 customer.update!(name: "Casey Patron") if customer.name != "Casey Patron"
+customer.update_column(:confirmed_at, Time.current) if customer.class.column_names.include?("confirmed_at") && customer.confirmed_at.nil?
 
 agent = Agent.find_or_create_by!(name: "Relay")
 

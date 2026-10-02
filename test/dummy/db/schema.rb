@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_040847) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_02_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -125,6 +125,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_040847) do
   create_table "recording_studio_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
+  end
+
+  create_table "recording_studio_messages_public_contact_intents", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.uuid "message_group_id"
+    t.uuid "mount_recording_id", null: false
+    t.uuid "otp_challenge_id", null: false
+    t.string "submitted_name", null: false
+    t.uuid "user_id", null: false
+    t.index ["message_group_id"], name: "index_public_contact_intents_on_message_group", unique: true, where: "(message_group_id IS NOT NULL)"
+    t.check_constraint "message_group_id IS NULL AND body IS NOT NULL AND char_length(body) >= 1 AND char_length(body) <= 10000 OR message_group_id IS NOT NULL AND body IS NULL", name: "contact_intent_state"
   end
 
   create_table "recording_studio_notifications_deliveries", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -282,7 +296,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_040847) do
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-    t.check_constraint "registered_with::text = ANY (ARRAY['password'::character varying, 'otp'::character varying]::text[])", name: "users_registered_with_check"
+    t.check_constraint "registered_with::text = ANY (ARRAY['password'::character varying::text, 'otp'::character varying::text])", name: "users_registered_with_check"
   end
 
   create_table "workspaces", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

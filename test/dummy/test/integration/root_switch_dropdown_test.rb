@@ -29,7 +29,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "root-switch-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     sign_in user
 
@@ -55,7 +57,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "root-switch-page-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     sign_in user
 
@@ -74,7 +78,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "root-switch-redirect-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     sign_in user
 
@@ -98,7 +104,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "root-switch-fallback-test@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     sign_in user
 

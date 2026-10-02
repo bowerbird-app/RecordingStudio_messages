@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html data-theme="rounded">
+  <head>
+    <title><%= content_for(:title) || "Contact" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "flat_pack/variables", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "flat_pack/rich_text", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="bg-[var(--surface-page-background-color)] text-[var(--surface-content-color)]">
+    <main class="flex min-h-dvh items-center justify-center p-6">
+      <div class="w-full max-w-sm space-y-4">
+        <% if flash[:notice].present? %>
+          <%= render FlatPack::Alert::Component.new(description: flash[:notice], style: :success) %>
+        <% end %>
+        <% if flash[:alert].present? %>
+          <%= render FlatPack::Alert::Component.new(description: flash[:alert], style: :danger) %>
+        <% end %>
+        <%= yield %>
+      </div>
+    </main>
+  </body>
+</html>

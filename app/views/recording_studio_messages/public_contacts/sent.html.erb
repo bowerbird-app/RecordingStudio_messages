@@ -1,0 +1,5 @@
+<h1 class="text-xl font-semibold">Message sent</h1>
+<p>Your message has been sent.</p>
+<% if public_contact_actor && @group_recording %>
+  <%= link_to "View conversation", message_group_path(@group_recording) %>
+<% end %>
