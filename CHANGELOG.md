@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [0.4.1] - 2026-10-02
+
+The dummy host mounts Site Settings and Terms. The Messages API is the same as 0.4.0.
+
+### Added
+- Dummy host gems: Site Settings `v0.1.0`, Terms and Conditions `v0.7.3`, and Publishable `v0.3.1`.
+- An Admin root at `/admin`, with Site and Terms sections. Site settings follow the current Workspace.
+- Dummy Flatpack pin `v0.1.196`, which Terms requires. The messages gemspec stays `~> 0.1.148`.
+
+### Upgrade notes
+- Hosts that only use Messages do not take a new dependency. Site Settings, Terms, Publishable, and Admin stay off the messages gemspec.
+- No published terms are seeded, so the acceptance gate stays quiet until a live version exists.
+
 ## [0.4.0] - 2026-10-02
 
 A mount can accept a public contact form. Signed-in people send immediately.
@@ -227,6 +240,9 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
+[0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
+[0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0
+[0.3.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.1
 [0.2.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.1
 [0.3.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.2.0

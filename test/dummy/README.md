@@ -15,7 +15,9 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
-- Mounted Messages, Users, Accessible, Attachable, and Recording Studio engines
+- Mounted Messages, Users, Accessible, Attachable, Admin, Site Settings, Terms and Conditions, Publishable, and Recording Studio engines
+- Site settings live on the current Workspace. Admin is a separate root. Staff (`admin@admin.com`) can open Admin from home
+- Terms and Conditions redirects signed-in people to Agree only after a live version exists. Seeds do not publish one
 
 ## Quick Start
 
@@ -55,7 +57,8 @@ second back button. That layout still loads:
 
 The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement` because core default layout leaves `<html>` bare. The dummy also copies the attribute onto the `html` tag in the response so the named theme is present without JavaScript. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
-Flatpack is pinned to `v0.1.148`. Rounded on the live kit is monochrome charcoal,
+Flatpack is pinned to `v0.1.196` so Terms and Conditions can install (`>= 0.1.196`).
+The messages gemspec stays `~> 0.1.148`. Rounded on the live kit is monochrome charcoal,
 not blue buttons.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
@@ -80,6 +83,10 @@ Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.b
 - `/` - dummy host home page
 - `/staff/desk` - support mount conversation list (Studio help and Launch notes)
 - `/inbox` - inbox mount conversation list
+- `/admin` - Site settings section (name, logos, tab icon) for the current workspace
+- `/admin/sections/terms` - Terms and Conditions
+- `/recording_studio_site_settings` - site name and logos form
+- `/recording_studio_terms_and_conditions` - Agree, once a live version exists
 - `/recording_studio_messages/message_groups?mount_id=` - engine list for a mount
 - `/recording_studio_messages/message_groups/:id` - mounted panel for any conversation
 - `/recording_studio` - redirects to `/` while the mounted Recording Studio engine stays available under that prefix for non-root routes

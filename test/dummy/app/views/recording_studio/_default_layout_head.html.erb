@@ -1,4 +1,5 @@
 <%= stylesheet_link_tag "flat_pack/application", "data-turbo-track": "reload" %>
+<%= recording_studio_site_favicon(current_root_recording) if respond_to?(:current_root_recording) %>
 <%= javascript_tag do %>
   document.documentElement.setAttribute("data-theme", "rounded");
 <% end %>

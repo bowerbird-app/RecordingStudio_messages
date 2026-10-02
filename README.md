@@ -273,7 +273,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin mounts Site Settings (`v0.1.0`) and Terms and Conditions (`v0.7.3`). Publishable (`v0.3.1`) serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Terms requires Flatpack `>= 0.1.196`, so the dummy pins `v0.1.196`. The messages gemspec stays `~> 0.1.148`.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -290,7 +290,7 @@ There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [git
 
 ## Out of this version
 
-Realtime, typing, read receipts, email as a notice channel, Admin, and Support-specific copy.
+Realtime, typing, read receipts, email as a notice channel, and Support-specific copy. The dummy host mounts Admin for Site Settings and Terms. Messages itself does not ship an admin screen.
 
 ## Documentation
 

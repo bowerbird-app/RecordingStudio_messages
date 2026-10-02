@@ -6,11 +6,15 @@ RecordingStudio.configure do |config|
     "Folder",
     "Page",
     "Mailbox",
+    "AdminRoot",
     "RecordingStudioUser::People",
     "RecordingStudioUser::Profile",
     "RecordingStudioMessages::MessageMount",
     "RecordingStudioMessages::MessageGroup",
     "RecordingStudioMessages::Message",
+    "RecordingStudioSiteSettings::SiteSetting",
+    "RecordingStudioTermsAndConditions::Terms",
+    "RecordingStudioPublishable::Publishable",
     "RecordingStudioAttachable::Attachment"
   ]
 
