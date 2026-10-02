@@ -204,7 +204,7 @@ outcome = RecordingStudioMessages.begin_public_contact(
 )
 
 if outcome.awaiting_verification?
-  # outcome.intent is the pending row. The controller asks for the code.
+  intent = outcome.intent
 else
   group = outcome.group_recording
 end
