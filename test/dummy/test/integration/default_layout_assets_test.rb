@@ -10,7 +10,9 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "layout-assets@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
 
     post user_session_path, params: {
       user: { email: user.email, password: "Password123!" }
@@ -31,6 +33,17 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "@hotwired/turbo-rails"
     refute_includes response.body, "dummy_page_nav"
     refute_includes response.body, "Sign out"
+  end
+
+  test "home links to the site inbox public contact form" do
+    load Rails.root.join("db/seeds.rb").to_s
+    sign_in User.find_by!(email: "admin@admin.com")
+
+    get root_path
+
+    mount = DummyCatalog.inbox_mount_recording
+    assert_response :success
+    assert_select "a[href=?]", recording_studio_messages.public_contact_path(mount_id: mount.id), text: "Contact"
   end
 
   test "tailwind build includes Flatpack alert and page-nav utilities" do
@@ -54,7 +67,9 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     user = User.find_or_create_by!(email: "profile-layout@example.com") do |record|
       record.password = "Password123!"
       record.password_confirmation = "Password123!"
+      record.confirmed_at = Time.current
     end
+    user.update_column(:confirmed_at, Time.current) if user.confirmed_at.nil?
     Current.actor = user
     RecordingStudioUser.record_profile!(user, first_name: "Pat", last_name: "Profile", time_zone: "UTC")
 
@@ -87,14 +102,13 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "h2", text: "Welcome back"
     assert_select "input[type='email'][name='user[email]']"
-    assert_select "input[type='password'][name='user[password]']"
-    assert_select "button[type='submit']", text: "Sign in"
+    assert_select "button[type='submit']", text: "Continue with email"
     assert_includes response.body, "/assets/tailwind"
     assert_includes response.body, "@hotwired/turbo-rails"
     assert_includes response.body, "importmap"
     assert_select "link[href*='flat_pack/variables']"
     assert_select "link[href*='flat_pack/rich_text']"
-    assert_select "link[href*='flat_pack/application']", count: 0
+    assert_select "link[href*='flat_pack/application']"
     assert_select "form[action='/users/sign_in']"
     assert_select "main.min-h-dvh.items-center.justify-center", count: 1
     assert_select "main.max-w-md", count: 0

@@ -42,6 +42,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal "env-token", configuration.api_key
     assert_equal false, configuration.enable_feature_x
     assert_equal 5, configuration.timeout
+    assert_equal "rocket-launch", configuration.public_contact_sent_icon
     assert_instance_of RecordingStudio::Hooks, configuration.hooks
   ensure
     ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] = previous_value

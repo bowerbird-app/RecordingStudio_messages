@@ -87,7 +87,8 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
       email: "stranger-#{SecureRandom.hex(4)}@example.com",
       password: "Password123!",
       password_confirmation: "Password123!",
-      name: "Pat Stranger"
+      name: "Pat Stranger",
+      confirmed_at: Time.current
     )
 
     sign_in stranger

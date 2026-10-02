@@ -34,7 +34,17 @@ module RecordingStudioMessages
     def message_sender_name(actor)
       return "Someone" if actor.blank?
 
-      named_actor(actor) || emailed_actor(actor) || actor.class.name.demodulize
+      named_actor(actor) || profile_actor_name(actor) || emailed_actor(actor) || actor.class.name.demodulize
+    end
+
+    def profile_actor_name(actor)
+      return unless defined?(RecordingStudioUser)
+      return unless RecordingStudioUser.respond_to?(:profile_for)
+
+      profile = RecordingStudioUser.profile_for(actor)
+      return if profile.blank?
+
+      [profile.first_name, profile.last_name].compact_blank.join(" ").presence
     end
 
     def named_actor(actor)

@@ -11,6 +11,7 @@ require "recording_studio_messages/engine"
 require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
 require "recording_studio_messages/membership_lock"
+require "recording_studio_messages/public_contact"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
 require "recording_studio_messages/services/list_groups"
@@ -75,6 +76,18 @@ module RecordingStudioMessages
       register_messages_capability!
       register_message_received_type!
       MembershipLock.install_authorizer_wrap!
+    end
+
+    def public_contact_enabled?(mount_recording)
+      PublicContact.enabled?(mount_recording)
+    end
+
+    def begin_public_contact(...)
+      PublicContact.begin(...)
+    end
+
+    def complete_public_contact(intent:, actor:)
+      PublicContact.complete(intent: intent, actor: actor)
     end
 
     def membership_locked?(mount_recording)

@@ -1,0 +1,25 @@
+<% mount = local_assigns.fetch(:mount) %>
+<% title = local_assigns[:title].presence || "Contact" %>
+<% introduction = local_assigns[:introduction] %>
+<% submit_label = local_assigns[:submit_label].presence || "Send message" %>
+<% actor = public_contact_actor %>
+
+<h1 class="text-xl font-semibold"><%= title %></h1>
+<% if introduction.present? %>
+  <p><%= introduction %></p>
+<% end %>
+
+<%= form_with url: public_contact_submit_path(mount), method: :post, local: true do %>
+  <div class="space-y-4">
+    <% if actor %>
+      <% if actor.respond_to?(:name) && actor.name.present? %>
+        <%= render FlatPack::Badge::Component.new(text: actor.name, size: :sm) %>
+      <% end %>
+    <% else %>
+      <%= render FlatPack::TextInput::Component.new(name: "name", label: "Name", required: true, maxlength: 120, autocomplete: "name") %>
+      <%= render FlatPack::EmailInput::Component.new(name: "email", label: "Email", required: true, autocomplete: "email") %>
+    <% end %>
+    <%= render FlatPack::TextArea::Component.new(name: "body", label: "Message", required: true, rows: 5) %>
+    <%= render FlatPack::Button::Component.new(text: submit_label, style: :primary, size: :md, type: "submit", class: "w-full") %>
+  </div>
+<% end %>

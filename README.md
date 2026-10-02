@@ -164,6 +164,87 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
+## Public contact
+
+Public contact is off until a host opts in. Pass `public_contact` to `Messages.to` on the recordable that owns the mount. `true` opts in every key in `keys`. An array opts in those keys. A missing value, `false`, or `[]` leaves the mount off.
+
+```ruby
+class Mailbox < ApplicationRecord
+  include RecordingStudio::Capabilities::Messages.to(
+    keys: [:inbox],
+    public_contact: [:inbox]
+  )
+end
+```
+
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent". The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
+
+`public_contact_form` renders that same form on a host page.
+
+```erb
+<%= public_contact_form(mount) %>
+<%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
+```
+
+Include `RecordingStudioMessages::PublicContactHelper` on the host controller that embeds it. The defaults are title "Contact", no introduction, and submit label "Send message".
+
+Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
+
+Signed-out contact needs Recording Studio Users with `otp_enabled`. Users is not a dependency of this gem. The host mounts Users, turns OTP on, and registers the notification channels those codes use. Registration defaults to email. Login defaults to email and push.
+
+A signed-out send proves the typed address before anything is delivered. A new email gets a registration code and a new user. An existing unconfirmed user, whether that account was created with a password or with a code, is reused and gets a registration code. An existing confirmed user who can sign in gets a login code. This gem does not create a second user for an address that already exists. The address on the pending row is not trusted until `verify_otp!` succeeds.
+
+Users confirms the account through `complete_email_proof!`. That call stores the submitted name when the person has no profile yet. "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a surname or a time zone, and it does not revise a profile that already exists. `registered_with` stays the way the account was created, so a password still signs in after the code confirms the email.
+
+```ruby
+outcome = RecordingStudioMessages.begin_public_contact(
+  mount_recording: mount,
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+  body: "The quieter crop is in.",
+  current_actor: current_actor,
+  request: request,
+  session: session
+)
+
+if outcome.awaiting_verification?
+  intent = outcome.intent
+else
+  group = outcome.group_recording
+end
+
+group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: verified_user)
+```
+
+`complete_public_contact` is the host call after the code has been verified. Calling it again returns the same conversation and does not send a second message. The code form calls `RecordingStudioMessages::PublicContact.submit_code!` and `resend!` itself. Those two methods are not on the host facade.
+
+Set `public_contact_recipient_resolver` to a callable. `begin` and `complete` call it with `mount_recording:` and `actor:`. A value that does not respond to `call` is ignored. The first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist. There is no file field on this form.
+
+```ruby
+RecordingStudioMessages.configure do |config|
+  config.public_contact_recipient_resolver = lambda { |mount_recording:, actor:|
+    [User.find_by(email: "admin@admin.com")].compact
+  }
+  config.public_contact_sent_icon = "rocket-launch"
+end
+```
+
+If nobody in that list is already an admin on the mount path, `begin` raises `RecordingStudioMessages::Error` with "Nobody can receive this message." and does not send a code.
+
+```text
+form
+└── pending intent, body stored for 24 hours
+    └── email code
+        └── verify_otp!
+            └── confirmed user, profile written from the submitted name when none exists
+                └── create_group as the admin recipient
+                    └── :edit grants
+                        └── send_message
+                            └── intent fulfilled, body cleared
+```
+
+The pending row expires 24 hours after `begin`. An expired row does not send. Once the conversation exists, the body is cleared and `message_group_id` is set in the same write as the group, the grants, and the message. A retry of that intent returns the conversation. It cannot send twice. The form does not accept attachments.
+
 Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. On a `membership_locked` mount the header omits that control and Accessible refuses membership changes (see Enablement).
 
 ## Screens
@@ -191,6 +272,8 @@ The dummy proves two mounts at once:
 
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
+
+Home also has a Contact button to that inbox's public form.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 

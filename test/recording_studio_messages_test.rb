@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.3.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.4.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -33,7 +33,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
+    assert_includes gemfile, 'gem "recording_studio_user", "~> 0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
     assert_equal "~> 0.9.1", gemfile_constraint(gemfile, "recording_studio_accessible")
@@ -49,7 +50,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.8.2"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
     refute_includes gemfile, "recording_studio/v3.0.0"
@@ -298,6 +299,31 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes stream, "turbo_stream.replace messages_panel_composer_id"
     refute_includes controller, "ActionCable"
     refute File.exist?(File.expand_path("../app/channels", __dir__))
+  end
+
+  def test_public_contact_does_not_reference_users_otp_internals
+    roots = [
+      File.expand_path("../lib", __dir__),
+      File.expand_path("../app", __dir__),
+      File.expand_path("../README.md", __dir__),
+      File.expand_path("../CHANGELOG.md", __dir__)
+    ]
+    offenders = []
+    roots.each do |root|
+      paths = File.directory?(root) ? Dir.glob(File.join(root, "**/*.{rb,md,erb}")) : [root]
+      paths.each do |path|
+        text = File.read(path)
+        next unless text.include?("OtpChallenge") || text.include?("OtpRateLimiter")
+
+        offenders << path
+      end
+    end
+    contact_test = File.read(File.expand_path("dummy/test/integration/public_contact_test.rb", __dir__))
+
+    assert_empty offenders
+    refute_includes contact_test, "OtpChallenge"
+    refute_includes contact_test, "OtpRateLimiter"
+    refute_includes contact_test, "Member"
   end
 
   def test_engine_does_not_ship_a_home_view
