@@ -11,7 +11,12 @@ Rails.application.routes.draw do
   mount RecordingStudioRootSwitchable::Engine, at: "/recording_studio_root_switchable"
   mount RecordingStudioMessages::Engine, at: "/recording_studio_messages"
   mount RecordingStudioAccessible::Engine, at: "/recording_studio_accessible"
+  mount RecordingStudioAccessible::Engine, at: "/admin/access", as: :recording_studio_admin_access
   mount RecordingStudioAttachable::Engine, at: "/recording_studio_attachable"
+  mount RecordingStudioSiteSettings::Engine, at: "/recording_studio_site_settings"
+  mount RecordingStudioTermsAndConditions::Engine, at: "/recording_studio_terms_and_conditions"
+  mount RecordingStudioPublishable::Engine, at: "/", as: :recording_studio_publishable
+  recording_studio_admin_for :admin, at: "/admin", root_section: :site_settings
 
   namespace :staff do
     resource :desk, only: :show

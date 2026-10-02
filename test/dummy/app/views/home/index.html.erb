@@ -20,6 +20,12 @@
       style: :secondary,
       size: :md
     ) %>
+    <%= render FlatPack::Button::Component.new(
+      text: "Admin",
+      href: recording_studio_admin_admin.root_path,
+      style: :secondary,
+      size: :md
+    ) %>
     <% if @public_contact_mount %>
       <%= render FlatPack::Button::Component.new(
         text: "Contact",

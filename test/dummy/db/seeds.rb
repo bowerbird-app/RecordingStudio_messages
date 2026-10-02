@@ -64,6 +64,7 @@ private_workspace = Workspace.find_or_create_by!(name: "Private Workspace")
 folder = Folder.find_or_create_by!(name: "Product Docs")
 page = Page.find_or_create_by!(title: "Getting Started")
 mailbox = Mailbox.find_or_create_by!(name: "Site mailbox")
+admin_root = AdminRoot.find_or_create_by!(name: "Admin")
 
 previous_actor = Current.actor
 Current.actor = staff
@@ -72,12 +73,18 @@ begin
   root_recording = RecordingStudio.root_recording_for(workspace)
   accessible_root_recording = RecordingStudio.root_recording_for(accessible_workspace)
   private_root_recording = RecordingStudio.root_recording_for(private_workspace)
+  admin_root_recording = RecordingStudio.root_recording_for(admin_root)
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
   find_or_record_child.call(page, root_recording, folder_recording)
   mailbox_recording = find_or_record_child.call(mailbox, root_recording, root_recording)
 
   find_or_grant.call(root_recording, staff, :admin, staff)
+  find_or_grant.call(admin_root_recording, staff, :admin, staff)
+
+  if RecordingStudioSiteSettings.recording_for(root_recording).blank?
+    RecordingStudioSiteSettings.update!(root_recording, name: workspace.name, actor: staff)
+  end
 
   support_mount = root_recording.ensure_message_mount(DummyCatalog::SUPPORT_KEY, actor: staff)
   inbox_mount = mailbox_recording.ensure_message_mount(DummyCatalog::INBOX_KEY, actor: staff)
@@ -210,3 +217,4 @@ puts "Seeded: Folder '#{folder.name}' and page '#{page.title}'"
 puts "Seeded: Mailbox '#{mailbox.name}'"
 puts "Seeded: support mount (Studio help, Launch notes) and inbox mount with conversations"
 puts "Seeded: empty conversation '#{empty_group.recordable.title}'"
+puts "Seeded: Admin root '#{admin_root.name}'"
