@@ -49,8 +49,8 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_users.git
-  revision: 3259899f2985f62de7688012e7b15ef5c9c2897e
-  branch: cursor/public-email-proof-5114
+  revision: 7e74e9569ecbe85f4157a09e3123ac4a1243dc01
+  tag: v0.12.3
   specs:
     recording_studio_user (0.12.3)
       devise (~> 5.0)
@@ -467,7 +467,7 @@ DEPENDENCIES
   recording_studio_attachable (~> 0.5.1)!
   recording_studio_messages!
   recording_studio_notifications (~> 0.3.1)!
-  recording_studio_user!
+  recording_studio_user (~> 0.12.3)!
   rubocop
   rubocop-rails
   simplecov

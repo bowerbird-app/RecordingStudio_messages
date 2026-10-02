@@ -194,7 +194,7 @@ Signed-out contact needs Recording Studio Users with `otp_enabled`. Users is not
 
 A signed-out send proves the typed address before anything is delivered. A new email gets a registration code and a new user. An existing unconfirmed user, whether that account was created with a password or with a code, is reused and gets a registration code. An existing confirmed user who can sign in gets a login code. This gem does not create a second user for an address that already exists. The address on the pending row is not trusted until `verify_otp!` succeeds.
 
-Users confirms the account. A new OTP registration stores the submitted name on the profile. "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a surname or a time zone, and it does not revise a profile that already exists. `registered_with` stays the way the account was created, so a password still signs in after the code confirms the email.
+Users confirms the account through `complete_email_proof!`. That call stores the submitted name when the person has no profile yet. "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a surname or a time zone, and it does not revise a profile that already exists. `registered_with` stays the way the account was created, so a password still signs in after the code confirms the email.
 
 ```ruby
 outcome = RecordingStudioMessages.begin_public_contact(

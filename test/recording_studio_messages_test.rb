@@ -33,7 +33,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", branch: "cursor/public-email-proof-5114"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
@@ -50,7 +50,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", branch: "cursor/public-email-proof-5114"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
     refute_includes gemfile, "recording_studio/v3.0.0"
