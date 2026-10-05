@@ -103,6 +103,15 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Welcome back"
     assert_select "input[type='email'][name='user[email]']"
     assert_select "button[type='submit']", text: "Continue with email"
+    if dummy_master_key_available?
+      assert_select "button[type='submit']", text: "Continue with Google"
+    else
+      refute_includes response.body, "Continue with Google"
+    end
+    refute_includes response.body, "Continue with Microsoft"
+    refute_includes response.body, "Continue with Apple"
+    refute_includes response.body, "Continue with LinkedIn"
+    refute_includes response.body, "Continue with Instagram"
     assert_includes response.body, "/assets/tailwind"
     assert_includes response.body, "@hotwired/turbo-rails"
     assert_includes response.body, "importmap"
@@ -115,5 +124,11 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "max-w-sm"
     refute_includes response.body, "Default: admin@admin.com / Password"
     refute_includes response.body, "FlatPack::Card::Component"
+  end
+
+  private
+
+  def dummy_master_key_available?
+    ENV["RAILS_MASTER_KEY"].to_s.strip.present? || File.exist?(Rails.root.join("config/master.key"))
   end
 end

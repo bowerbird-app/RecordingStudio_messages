@@ -13,6 +13,14 @@ class CredentialsTest < ActiveSupport::TestCase
     assert_equal "dev_placeholder", credentials.dig(:smtp, :password)
     assert_equal "dev_placeholder", credentials.dig(:aws, :access_key_id)
     assert_equal "dev_placeholder", credentials.dig(:aws, :secret_access_key)
+    assert_equal "dev_placeholder", credentials.dig(:omniauth, :google_oauth2, :client_id)
+    assert_equal "dev_placeholder", credentials.dig(:omniauth, :google_oauth2, :client_secret)
+    omniauth_names = credentials[:omniauth].to_h.keys.map(&:to_sym)
+    assert_equal [:google_oauth2], omniauth_names
+    refute_includes omniauth_names, :microsoft_graph
+    refute_includes omniauth_names, :apple
+    refute_includes omniauth_names, :linkedin
+    refute_includes omniauth_names, :instagram
   end
 
   private
