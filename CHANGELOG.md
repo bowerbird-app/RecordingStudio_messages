@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).
 
+## [Unreleased]
+
+Development and dummy pins climb the Recording Studio family through layer 2. Core stays on `v4.2.2`. Flatpack stays on the current pins. This gem's version is unchanged.
+
+### Changed
+- Accessible tag `v0.11.1` (gem `VERSION` `0.11.0`), Attachable tag `v0.7.1` (`0.7.0`), Notifications tag `v0.3.4` (`0.3.2`), Users tag `v0.12.5` (`0.12.3`), Admin tag `v2.0.4` (`2.0.2`), Root Switchable tag `v0.5.3` (`0.5.1`), and Site Settings tag `v0.1.3` (`0.1.0`). Bundler matches those `VERSION` constants; the git tags are newer than the constants.
+- Dummy Accessible schema now includes access invitations and stores roles as strings (`view`, `edit`, `admin`). Dummy Attachable also stores `root_recording_id` plus caption, credit, and alt text.
+- Gemspec widens Accessible to `~> 0.11` and Attachable to `~> 0.7` so those tags resolve.
+
+### Upgrade notes
+- Run `bin/rails generate recording_studio_accessible:migrations` and migrate. Hosts need Accessible's 0.8–0.11 migrations: `depends_on_recording_id` if missing, the access invitations table, and `recording_studio_accesses.role` as a string.
+- Grant through Accessible's public services. `RecordingStudio::Access` is readonly.
+- Publishable stays on `v0.3.1` in the dummy because Terms `v0.7.3` still requires `recording_studio_publishable ~> 0.3`.
+- API is not a Messages dependency and is not pinned here.
+
 ## [0.4.1] - 2026-10-02
 
 The dummy host mounts Site Settings and Terms. The Messages API is the same as 0.4.0.
@@ -240,6 +255,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.1...HEAD
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
 [0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0
 [0.3.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.1
