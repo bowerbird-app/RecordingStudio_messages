@@ -259,6 +259,8 @@ Composer uploads go through Attachable. Send replaces the thread in place over T
 
 `test/dummy/` is a host that proves the gem. It is not the product.
 
+Dummy credentials (`test/dummy/config/credentials.yml.enc`) are encrypted with the shared RecordingStudio_* development master key. Set `RAILS_MASTER_KEY` or put that key in `test/dummy/config/master.key` (gitignored). Keep the encrypted file; do not generate a per-repo dummy key.
+
 Authenticated dummy pages use Recording Studio's shared default layout (`UsesDefaultLayout` / `recording_studio/default_layout`) so back/close chrome and Flatpack alerts come from core. Do not put Sign out or Root Switchable in that slot. The Users gem owns `/users/sign_in` and renders its auth layout (`layouts/recording_studio_user/auth`), with Flatpack CSS/JS plus Turbo.
 
 | Field    | Value              |
@@ -301,6 +303,8 @@ Engine internals stay in `docs/gem_template/` as architectural reference. The RE
 Cloud Agent Builds run `.cursor/install.sh`, then `.cursor/fetch-skills.sh`.
 The install hook provisions a cold image. On a warm snapshot it skips apt,
 ruby-build, db:prepare, and tailwind when Ruby, bundle, and Postgres are
-already usable. Fetch-skills always runs last. `.cursor/start.sh` starts
+already usable. If `RAILS_MASTER_KEY` is set, it writes gitignored
+`test/dummy/config/master.key` so dummy credentials decrypt. Fetch-skills
+always runs last. `.cursor/start.sh` starts
 PostgreSQL on each boot. Rebuild with Draft off to load a new pack. See
 [Cursor skills in Cloud Agents](docs/cursor-skills.md).
