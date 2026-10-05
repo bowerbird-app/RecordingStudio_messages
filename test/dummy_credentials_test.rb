@@ -50,6 +50,14 @@ class DummyCredentialsTest < Minitest::Test
     assert_equal PLACEHOLDER, parsed.dig("smtp", "password")
     assert_equal PLACEHOLDER, parsed.dig("aws", "access_key_id")
     assert_equal PLACEHOLDER, parsed.dig("aws", "secret_access_key")
+    assert_equal PLACEHOLDER, parsed.dig("omniauth", "google_oauth2", "client_id")
+    assert_equal PLACEHOLDER, parsed.dig("omniauth", "google_oauth2", "client_secret")
+    omniauth = parsed.fetch("omniauth")
+    assert_equal ["google_oauth2"], omniauth.keys
+    refute omniauth.key?("microsoft_graph")
+    refute omniauth.key?("apple")
+    refute omniauth.key?("linkedin")
+    refute omniauth.key?("instagram")
   end
 
   private
