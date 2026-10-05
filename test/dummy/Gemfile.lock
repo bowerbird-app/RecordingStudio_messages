@@ -130,7 +130,7 @@ GIT
 PATH
   remote: ../..
   specs:
-    recording_studio_messages (0.4.1)
+    recording_studio_messages (0.4.2)
       flat_pack (~> 0.1.148)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
@@ -799,7 +799,7 @@ CHECKSUMS
   recording_studio_accessible (0.11.0)
   recording_studio_admin (2.0.2)
   recording_studio_attachable (0.7.0)
-  recording_studio_messages (0.4.1)
+  recording_studio_messages (0.4.2)
   recording_studio_notifications (0.3.2)
   recording_studio_publishable (0.3.1)
   recording_studio_root_switchable (0.5.1)

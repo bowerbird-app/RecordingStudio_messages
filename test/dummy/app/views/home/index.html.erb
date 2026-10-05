@@ -27,12 +27,7 @@
       size: :md
     ) %>
     <% if @public_contact_mount %>
-      <%= render FlatPack::Button::Component.new(
-        text: "Contact",
-        href: recording_studio_messages.public_contact_path(mount_id: @public_contact_mount.id),
-        style: :secondary,
-        size: :md
-      ) %>
+      <%= public_contact_modal(@public_contact_mount) %>
     <% end %>
   </div>
 </div>

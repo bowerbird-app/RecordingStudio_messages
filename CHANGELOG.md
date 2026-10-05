@@ -20,6 +20,19 @@ Development and dummy pins climb the Recording Studio family through layer 2. Co
 - Publishable stays on `v0.3.1` in the dummy because Terms `v0.7.3` still requires `recording_studio_publishable ~> 0.3`.
 - API is not a Messages dependency and is not pinned here.
 
+## [0.4.2] - 2026-10-05
+
+A host can open public contact in a modal. The full page stays the default.
+
+### Added
+- `public_contact_modal(mount)` renders a Flatpack modal and a button that opens it. Compose, the email code, resend, errors, and "Message sent" replace the dialog body. A signed-in person still skips the code. Closing on the code step and opening again shows that same step. After "Message sent", opening again starts a new note.
+- `presentation=modal` on the public contact URL. A normal visit still uses the centered page. A Turbo Frame request for `public_contact` renders only that step.
+
+### Upgrade notes
+- Hosts that do not call `public_contact_modal` keep the full page. No migration.
+- Include `RecordingStudioMessages::PublicContactHelper` on the host controller. The dialog needs Turbo on that page.
+- One dialog per page. The frame id is `public_contact`.
+
 ## [0.4.1] - 2026-10-02
 
 The dummy host mounts Site Settings and Terms. The Messages API is the same as 0.4.0.
@@ -255,7 +268,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
 [0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0
 [0.3.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.1

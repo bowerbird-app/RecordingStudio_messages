@@ -1,4 +1,6 @@
 class HomeController < ApplicationController
+  helper RecordingStudioMessages::PublicContactHelper
+
   def index
     @public_contact_mount = inbox_public_contact_mount
   end

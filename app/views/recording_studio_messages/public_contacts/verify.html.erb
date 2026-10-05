@@ -1,20 +1,24 @@
-<h1 class="text-xl font-semibold">Check your email</h1>
-<p>We sent a 6-digit code to <%= @intent.email %>.</p>
+<%= render layout: "recording_studio_messages/public_contacts/step" do %>
+  <h1 class="text-xl font-semibold">Check your email</h1>
+  <p>We sent a 6-digit code to <%= @intent.email %>.</p>
 
-<%= form_with url: public_contact_verify_path, method: :post, local: true do %>
-  <div class="space-y-4">
-    <%= render FlatPack::TextInput::Component.new(
-      name: "code",
-      label: "Verification code",
-      required: true,
-      inputmode: "numeric",
-      autocomplete: "one-time-code",
-      maxlength: 6
-    ) %>
-    <%= render FlatPack::Button::Component.new(text: "Confirm & send", style: :primary, size: :md, type: "submit", class: "w-full") %>
-  </div>
-<% end %>
+  <%= form_with url: public_contact_verify_path, method: :post, **public_contact_form_options do %>
+    <%= public_contact_modal_fields %>
+    <div class="space-y-4">
+      <%= render FlatPack::TextInput::Component.new(
+        name: "code",
+        label: "Verification code",
+        required: true,
+        inputmode: "numeric",
+        autocomplete: "one-time-code",
+        maxlength: 6
+      ) %>
+      <%= render FlatPack::Button::Component.new(text: "Confirm & send", style: :primary, size: :md, type: "submit", class: "w-full") %>
+    </div>
+  <% end %>
 
-<%= form_with url: public_contact_resend_path, method: :post, local: true do %>
-  <%= render FlatPack::Button::Component.new(text: "Resend code", style: :secondary, size: :md, type: "submit", class: "w-full") %>
+  <%= form_with url: public_contact_resend_path, method: :post, **public_contact_form_options do %>
+    <%= public_contact_modal_fields %>
+    <%= render FlatPack::Button::Component.new(text: "Resend code", style: :secondary, size: :md, type: "submit", class: "w-full") %>
+  <% end %>
 <% end %>

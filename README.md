@@ -179,14 +179,23 @@ end
 
 The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent". The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
 
-`public_contact_form` renders that same form on a host page.
+`public_contact_form` renders that same form on a host page. The post still leaves for the full-page code step or the sent screen.
 
 ```erb
 <%= public_contact_form(mount) %>
 <%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
 ```
 
-Include `RecordingStudioMessages::PublicContactHelper` on the host controller that embeds it. The defaults are title "Contact", no introduction, and submit label "Send message".
+`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. The dialog stays open. A signed-in person still skips the code. "View conversation" leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
+
+```erb
+<%= public_contact_modal(mount) %>
+<%= public_contact_modal(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
+```
+
+One dialog per page. A normal visit to `public_contact_path`, including `presentation=modal` without the frame header, still uses the centered page. The page posts are full document posts. Coming back to the host page does not restore an open dialog.
+
+Include `RecordingStudioMessages::PublicContactHelper` on the host controller that embeds either helper. The defaults are title "Contact", no introduction, and submit label "Send message". The dialog needs Turbo on that page.
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 

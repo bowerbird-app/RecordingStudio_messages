@@ -42,8 +42,12 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     get root_path
 
     mount = DummyCatalog.inbox_mount_recording
+    modal_href = recording_studio_messages.public_contact_path(mount_id: mount.id, presentation: "modal")
     assert_response :success
-    assert_select "a[href=?]", recording_studio_messages.public_contact_path(mount_id: mount.id), text: "Contact"
+    assert_select "a[href=?][data-turbo-frame=?]", modal_href, "public_contact", text: "Contact"
+    assert_select "[id=?][data-controller=?]", "public-contact-#{mount.id}", "flat-pack--modal"
+    assert_includes response.body, "turbo:before-cache"
+    assert_select "turbo-frame#public_contact"
   end
 
   test "tailwind build includes Flatpack alert and page-nav utilities" do

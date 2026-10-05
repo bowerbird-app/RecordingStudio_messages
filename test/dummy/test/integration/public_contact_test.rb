@@ -495,6 +495,212 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     Rails.cache = previous_cache
   end
 
+  test "modal frame renders the signed-out form without the page shell" do
+    get contact_path(presentation: "modal"), headers: modal_headers
+
+    assert_response :success
+    assert_select "turbo-frame#public_contact"
+    assert_select "input[name=name]"
+    assert_select "input[name=email]"
+    assert_select "textarea[name=body]"
+    assert_select "h1", count: 0
+    assert_select "input[name=presentation][value=modal]"
+    assert_select "form[data-turbo-frame=?]", "public_contact"
+    refute_includes response.body, "min-h-dvh"
+    refute_includes response.body, "<html"
+  end
+
+  test "modal keeps the code step, errors, resend, and sent screen in the frame" do
+    post contact_path, params: modal_message, headers: modal_headers
+
+    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    get response.location, headers: modal_headers
+
+    assert_response :success
+    assert_select "turbo-frame#public_contact h1", text: "Check your email"
+    assert_includes response.body, "ada@example.com"
+    refute_includes response.body, "min-h-dvh"
+
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    wrong = otp_code_for(intent) == "000000" ? "111111" : "000000"
+    post recording_studio_messages.public_contact_verify_path,
+         params: { code: wrong, presentation: "modal" },
+         headers: modal_headers
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "That code did not match."
+    assert_select "turbo-frame#public_contact input[name=code]"
+    assert_equal 0, RecordingStudioMessages::Message.count
+
+    post recording_studio_messages.public_contact_resend_path,
+         params: { presentation: "modal" },
+         headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    get response.location, headers: modal_headers
+    assert_includes response.body, "Fresh code on the way."
+
+    post recording_studio_messages.public_contact_verify_path,
+         params: { code: otp_code_for(intent.reload), presentation: "modal" },
+         headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+    get response.location, headers: modal_headers
+
+    assert_select "turbo-frame#public_contact h1", text: "Message sent"
+    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "a", text: "View conversation", count: 0
+    assert_equal 1, RecordingStudioMessages::Message.count
+
+    get contact_path(presentation: "modal"), headers: modal_headers
+    assert_select "input[name=name]"
+    assert_select "h1", text: "Message sent", count: 0
+  end
+
+  test "opening the modal again resumes the code step without a new code" do
+    post contact_path, params: modal_message(email: "resume@example.com"), headers: modal_headers
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    challenge_id = intent.otp_challenge_id
+    codes_before = otp_notification_count
+
+    get contact_path(presentation: "modal"), headers: modal_headers
+
+    assert_select "turbo-frame#public_contact h1", text: "Check your email"
+    assert_equal challenge_id, intent.reload.otp_challenge_id
+    assert_equal codes_before, otp_notification_count
+
+    get contact_path
+    assert_response :success
+    assert_select "input[name=name]"
+    assert_includes response.body, "min-h-dvh"
+  end
+
+  test "signed-in modal skips the code step" do
+    sign_in @staff
+
+    get contact_path(presentation: "modal"), headers: modal_headers
+    assert_select "span.rounded-full", text: "Ada Staff"
+    assert_select "input[name=email]", count: 0
+    assert_select "h1", count: 0
+
+    post contact_path, params: { body: "From the dialog.", presentation: "modal" }, headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+    get response.location, headers: modal_headers
+    assert_select "h1", text: "Message sent"
+    assert_select "a[data-turbo-frame=_top]", text: "View conversation"
+  end
+
+  test "expired modal offers a fresh form and the page stays a 404" do
+    post contact_path, params: modal_message(email: "expired-modal@example.com"), headers: modal_headers
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    intent.update!(expires_at: 1.hour.ago)
+
+    get recording_studio_messages.public_contact_verify_path(presentation: "modal"), headers: modal_headers
+    assert_response :unprocessable_entity
+    assert_includes response.body, "That contact form expired. Send it again."
+    assert_select "a[href=?]", contact_path(presentation: "modal"), text: "Send it again"
+    assert_equal 0, RecordingStudioMessages::Message.count
+
+    get recording_studio_messages.public_contact_verify_path
+    assert_response :not_found
+
+    get recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    assert_response :not_found
+
+    post recording_studio_messages.public_contact_verify_path,
+         params: { code: otp_code_for(intent), presentation: "modal" },
+         headers: modal_headers
+    assert_response :unprocessable_entity
+    assert_select "a", text: "Send it again"
+    assert_select "input[name=code]", count: 0
+    assert_equal 0, RecordingStudioMessages::Message.count
+
+    post contact_path, params: { name: "Ada Lovelace", email: "expired-page@example.com", body: "Too late." }
+    page_intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    page_intent.update!(expires_at: 1.hour.ago)
+    post recording_studio_messages.public_contact_verify_path,
+         params: { code: otp_code_for(page_intent), presentation: "modal" }
+    assert_response :unprocessable_entity
+    assert_includes response.body, "That contact form expired. Send it again."
+    assert_includes response.body, "min-h-dvh"
+    assert_select "input[name=code]"
+    assert_equal 0, RecordingStudioMessages::Message.count
+  end
+
+  test "a signed-in modal does not resume a signed-out code" do
+    post contact_path, params: modal_message(email: "before-signin@example.com"), headers: modal_headers
+    sign_in @staff
+
+    get contact_path(presentation: "modal"), headers: modal_headers
+
+    assert_select "span.rounded-full", text: "Ada Staff"
+    assert_select "input[name=code]", count: 0
+
+    sign_out @staff
+    get contact_path(presentation: "modal"), headers: modal_headers
+    assert_select "h1", text: "Check your email"
+  end
+
+  test "modal frame keeps a custom introduction and submit label" do
+    get contact_path(presentation: "modal", introduction: "We reply by email.", submit_label: "Send note"),
+        headers: modal_headers
+
+    assert_includes response.body, "We reply by email."
+    assert_select "button", text: "Send note"
+    assert_select "input[name=introduction][value=?]", "We reply by email."
+    assert_select "input[name=submit_label][value=?]", "Send note"
+
+    post contact_path,
+         params: modal_message(email: "note@example.com").merge(
+           introduction: "We reply by email.",
+           submit_label: "Send note"
+         ),
+         headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_verify_path(
+      presentation: "modal",
+      introduction: "We reply by email.",
+      submit_label: "Send note"
+    )
+    verify_path = response.location
+    get verify_path, headers: modal_headers
+    assert_select "input[name=introduction][value=?]", "We reply by email."
+    assert_select "input[name=submit_label][value=?]", "Send note"
+
+    RecordingStudioMessages::PublicContactIntent.order(:created_at).last.update!(expires_at: 1.hour.ago)
+    get verify_path, headers: modal_headers
+    assert_select "a[href=?]",
+                  contact_path(presentation: "modal", introduction: "We reply by email.", submit_label: "Send note"),
+                  text: "Send it again"
+  end
+
+  test "modal validation keeps the typed email in the frame" do
+    post contact_path,
+         params: { presentation: "modal", name: "", email: "ada@example.com", body: "Hi there." },
+         headers: modal_headers
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Enter your name."
+    assert_select "turbo-frame#public_contact input[name=email][value=?]", "ada@example.com"
+    assert_equal 0, RecordingStudioMessages::Message.count
+  end
+
+  test "presentation modal without the frame header still renders the page" do
+    post contact_path, params: modal_message(email: "page-visit@example.com"), headers: modal_headers
+
+    get contact_path(presentation: "modal")
+
+    assert_response :success
+    assert_select "h1", text: "Contact"
+    assert_select "input[name=name]"
+    assert_select "input[name=code]", count: 0
+    assert_includes response.body, "min-h-dvh"
+    assert_select "form[data-turbo=false]"
+
+    get contact_path(presentation: "drawer")
+    assert_select "h1", text: "Contact"
+    assert_select "input[name=presentation]", count: 0
+    assert_select "form[data-turbo=false]"
+  end
+
   test "duplicate normalized email does not create two users" do
     post contact_path, params: { name: "Ada Lovelace", email: "Ada@Example.com", body: "First try." }
     assert_equal 1, User.where(email: "ada@example.com").count
@@ -518,8 +724,16 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudioNotifications.register_channel(:push, adapter)
   end
 
-  def contact_path
-    recording_studio_messages.public_contact_path(mount_id: @mount.id)
+  def contact_path(**extra)
+    recording_studio_messages.public_contact_path({ mount_id: @mount.id }.merge(extra))
+  end
+
+  def modal_headers
+    { "Turbo-Frame" => RecordingStudioMessages::PublicContactHelper::FRAME_ID }
+  end
+
+  def modal_message(email: "Ada@Example.com")
+    { presentation: "modal", name: "Ada Lovelace", email: email, body: "Please send the quieter crop." }
   end
 
   def message_received_scope

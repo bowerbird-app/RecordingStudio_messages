@@ -1,0 +1,41 @@
+<% mount = local_assigns.fetch(:mount) %>
+<% title = local_assigns.fetch(:title) %>
+<% introduction = local_assigns[:introduction] %>
+<% submit_label = local_assigns.fetch(:submit_label) %>
+<% modal_id = "public-contact-#{mount.id}" %>
+
+<%= render FlatPack::Button::Component.new(
+  text: title,
+  href: public_contact_modal_src(mount, introduction: introduction, submit_label: submit_label),
+  style: :secondary,
+  size: :md,
+  data: { modal_id: modal_id, turbo_frame: public_contact_frame_id }
+) %>
+<%= render FlatPack::Modal::Component.new(id: modal_id, title: title, size: :sm) do |modal| %>
+  <% modal.body do %>
+    <%= turbo_frame_tag public_contact_frame_id %>
+  <% end %>
+<% end %>
+<%= javascript_tag nonce: true do %>
+  if (!document.documentElement.dataset.recordingStudioMessagesPublicContact) {
+    document.documentElement.dataset.recordingStudioMessagesPublicContact = "true"
+    document.addEventListener("turbo:before-cache", function () {
+      document.querySelectorAll("[data-controller='flat-pack--modal'][id^='public-contact-']").forEach(function (modal) {
+        if (modal.classList.contains("hidden")) return
+
+        modal.classList.add("hidden")
+        modal.classList.remove("flex")
+        modal.setAttribute("aria-hidden", "true")
+        modal.style.opacity = ""
+        var dialog = modal.querySelector("[data-flat-pack--modal-target='dialog']")
+        if (dialog) {
+          dialog.style.opacity = ""
+          dialog.style.transform = ""
+        }
+        document.body.style.overflow = ""
+        document.body.style.paddingRight = ""
+        delete document.body.dataset.flatPackModalLockCount
+      })
+    })
+  }
+<% end %>

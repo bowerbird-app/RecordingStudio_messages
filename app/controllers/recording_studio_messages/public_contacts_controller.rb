@@ -3,20 +3,21 @@
 module RecordingStudioMessages
   class PublicContactsController < ActionController::Base
     include PublicContactHelper
+    include PublicContactFlow
 
     helper PublicContactHelper
 
     protect_from_forgery with: :exception
-    layout "recording_studio_messages/public_contact"
-
-    GROUP_SESSION_KEY = :recording_studio_messages_public_contact_group_id
+    layout :public_contact_layout
 
     rescue_from ActiveRecord::RecordNotFound, with: :missing_contact
     rescue_from RecordingStudioMessages::Error, with: :contact_error
 
     def show
       @mount = enabled_mount
-      missing_contact unless @mount
+      return missing_contact unless @mount
+
+      render :verify if resume_verification?
     end
 
     def create
@@ -28,21 +29,21 @@ module RecordingStudioMessages
 
     def verify
       @intent = session_intent
-      return missing_contact if @intent.expired?
+      return expired_contact if @intent.expired?
       return unless @intent.fulfilled?
 
       remember_sent(@intent.group_recording)
-      redirect_to public_contact_sent_path
+      redirect_to_sent
     end
 
     def submit_verification
       @intent = session_intent
       remember_sent(PublicContact.submit_code!(intent: @intent, code: params[:code], session: session))
-      redirect_to public_contact_sent_path
+      redirect_to_sent
     end
 
     def sent
-      return missing_contact if session[GROUP_SESSION_KEY].blank?
+      return missing_contact if session[PublicContactFlow::GROUP_SESSION_KEY].blank?
 
       @group_recording = sent_group
     end
@@ -50,69 +51,7 @@ module RecordingStudioMessages
     def resend
       @intent = session_intent
       PublicContact.resend!(intent: @intent, request: request, session: session)
-      redirect_to public_contact_verify_path, notice: "Fresh code on the way."
-    end
-
-    private
-
-    def enabled_mount
-      mount = find_mount
-      mount if mount && RecordingStudioMessages.public_contact_enabled?(mount)
-    end
-
-    def start_contact
-      RecordingStudioMessages.begin_public_contact(
-        mount_recording: @mount,
-        name: params[:name],
-        email: params[:email],
-        body: params[:body],
-        current_actor: public_contact_actor,
-        request: request,
-        session: session
-      )
-    end
-
-    def redirect_for(outcome)
-      if outcome.group_recording
-        remember_sent(outcome.group_recording)
-        redirect_to public_contact_sent_path
-      else
-        redirect_to public_contact_verify_path
-      end
-    end
-
-    def find_mount
-      return if params[:mount_id].blank?
-
-      recording = RecordingStudio::Recording.find_by(id: params[:mount_id])
-      return unless recording&.recordable_type == MESSAGE_MOUNT_TYPE
-
-      recording
-    end
-
-    def session_intent
-      PublicContactIntent.find(session[PublicContact::SESSION_KEY])
-    end
-
-    def remember_sent(group)
-      session[GROUP_SESSION_KEY] = group&.id
-    end
-
-    def sent_group
-      recording = RecordingStudio::Recording.find_by(id: session[GROUP_SESSION_KEY])
-      return unless recording&.recordable_type == MESSAGE_GROUP_TYPE
-
-      recording
-    end
-
-    def missing_contact(_error = nil)
-      head :not_found
-    end
-
-    def contact_error(error)
-      flash.now[:alert] = error.message
-      template = %w[verify submit_verification resend].include?(action_name) ? :verify : :show
-      render template, status: :unprocessable_entity
+      redirect_to public_contact_verify_path(presentation_params), notice: "Fresh code on the way."
     end
   end
 end
