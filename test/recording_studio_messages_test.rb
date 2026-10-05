@@ -15,8 +15,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
 
     assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
-    assert_equal "~> 0.9.1", gemspec_constraint(gemspec, "recording_studio_accessible")
-    assert_equal "~> 0.5.1", gemspec_constraint(gemspec, "recording_studio_attachable")
+    assert_equal "~> 0.11", gemspec_constraint(gemspec, "recording_studio_accessible")
+    assert_equal "~> 0.7", gemspec_constraint(gemspec, "recording_studio_attachable")
     assert_equal "~> 0.3.1", gemspec_constraint(gemspec, "recording_studio_notifications")
     assert_equal "~> 0.1.148", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
@@ -30,14 +30,14 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.4"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.5"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.12.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.148"'
-    assert_equal "~> 0.9.1", gemfile_constraint(gemfile, "recording_studio_accessible")
+    assert_equal "~> 0.11", gemfile_constraint(gemfile, "recording_studio_accessible")
     assert_equal "~> 0.3.1", gemfile_constraint(gemfile, "recording_studio_notifications")
     assert_equal "~> 0.1.148", gemfile_constraint(gemfile, "flat_pack")
   end
@@ -46,13 +46,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.4"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.12.5"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.3.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.1.3"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.7.3"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.196"'
