@@ -29,7 +29,7 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_root_gemfile_resolves_the_same_family_tags
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
@@ -45,7 +45,7 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_dummy_gemfile_pins_verified_family_github_tags
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.9.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.3.1"'
