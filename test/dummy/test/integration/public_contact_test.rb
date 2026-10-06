@@ -315,10 +315,15 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_response :success
-    assert_includes response.body, "Check your email"
+    assert_includes response.body, "Verify it's you"
     assert_includes response.body, "We sent a 6-digit code to ada@example.com."
+    refute_includes response.body, "Check your email"
+    refute_includes response.body, "Confirm & send"
+    assert_select "[data-public-contact-step=verify].flex.flex-col"
+    assert_includes response.body, "gap-[var(--stack-gap-lg)]"
     assert_select "input[name=code][maxlength='6'][inputmode=numeric][autocomplete=one-time-code]"
-    assert_select "button", text: "Confirm & send"
+    assert_select "button", text: "Next"
+    assert_select "title", text: "Verify it's you"
     assert_select "form[action=?]", recording_studio_messages.public_contact_resend_path
   end
 
@@ -521,7 +526,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get response.location, headers: modal_headers
 
     assert_response :success
-    assert_select "turbo-frame#public_contact h1", text: "Check your email"
+    assert_select "turbo-frame#public_contact h1", text: "Verify it's you"
+    assert_select "[data-public-contact-step=verify]"
+    assert_select "button", text: "Next"
     assert_includes response.body, "ada@example.com"
     refute_includes response.body, "min-h-dvh"
 
@@ -570,7 +577,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     get contact_path(presentation: "modal"), headers: modal_headers
 
-    assert_select "turbo-frame#public_contact h1", text: "Check your email"
+    assert_select "turbo-frame#public_contact h1", text: "Verify it's you"
+    assert_select "[data-public-contact-step=verify]"
+    assert_select "button", text: "Next"
     assert_equal challenge_id, intent.reload.otp_challenge_id
     assert_equal codes_before, otp_notification_count
 
@@ -649,7 +658,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     sign_out @staff
     get contact_path(presentation: "modal"), headers: modal_headers
-    assert_select "h1", text: "Check your email"
+    assert_select "h1", text: "Verify it's you"
   end
 
   test "modal frame keeps a custom introduction and submit label" do

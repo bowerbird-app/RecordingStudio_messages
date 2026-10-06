@@ -49,7 +49,9 @@
       var heading = title && title.querySelector("h2")
       if (!heading) return
 
-      heading.hidden = Boolean(event.target.querySelector("[data-public-contact-step='sent']"))
+      heading.hidden = Boolean(
+        event.target.querySelector("[data-public-contact-step='sent'], [data-public-contact-step='verify']")
+      )
     })
   }
 <% end %>

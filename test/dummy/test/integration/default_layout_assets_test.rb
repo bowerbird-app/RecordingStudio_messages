@@ -48,6 +48,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "[id=?][data-controller=?]", "public-contact-#{mount.id}", "flat-pack--modal"
     assert_includes response.body, "turbo:before-cache"
     assert_includes response.body, "turbo:frame-load"
+    assert_includes response.body, "data-public-contact-step='verify'"
     assert_select "turbo-frame#public_contact"
   end
 
@@ -66,6 +67,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, ".pt-16"
     assert_includes css, "height:calc(100dvh - 8.5rem)"
     assert_includes css, ".min-h-dvh"
+    assert_includes css, ".gap-\\[var\\(--stack-gap-lg\\)\\]{gap:var(--stack-gap-lg)}"
   end
 
   test "Users profile screens render in the core default layout" do

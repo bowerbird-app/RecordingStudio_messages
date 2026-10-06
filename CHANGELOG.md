@@ -29,6 +29,7 @@ A host can open public contact in a modal. The full page stays the default.
 
 ### Changed
 - The sent screen says "Powered by" the site name. "View conversation" is a primary button. In the dialog, the Contact title is hidden on that step.
+- The email code screen says "Verify it's you". The button says "Next". In the dialog, the Contact title is hidden on that step. The code, the field, and the buttons have space between them.
 - The public contact page loads Flatpack's application stylesheet so primary buttons use the theme colors.
 - `presentation=modal` on the public contact URL. A normal visit still uses the centered page. A Turbo Frame request for `public_contact` renders only that step.
 
@@ -37,6 +38,7 @@ A host can open public contact in a modal. The full page stays the default.
 - Include `RecordingStudioMessages::PublicContactHelper` on the host controller. The dialog needs Turbo on that page.
 - One dialog per page. The frame id is `public_contact`.
 - The sent screen no longer says "Your message has been sent." It says "Powered by" the site name. Site Settings supplies that name when the host has the gem.
+- The email code screen no longer says "Check your email" or "Confirm & send". It says "Verify it's you", and the button says "Next".
 - The standalone contact page includes `flat_pack/application`. Primary buttons, including "View conversation", use the theme colors.
 
 ## [0.4.1] - 2026-10-02
