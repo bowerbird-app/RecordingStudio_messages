@@ -20,6 +20,29 @@ Development and dummy pins climb the Recording Studio family through layer 2. Co
 - Publishable stays on `v0.3.1` in the dummy because Terms `v0.7.3` still requires `recording_studio_publishable ~> 0.3`.
 - API is not a Messages dependency and is not pinned here.
 
+## [0.4.5] - 2026-10-06
+
+A host can open public contact in a modal. The full page stays the default.
+
+### Added
+- `public_contact_modal(mount)` renders a Flatpack modal and a button that opens it. Compose, the email code, resend, errors, and "Message sent" replace the dialog body. A signed-in person still skips the code. Closing on the code step and opening again shows that same step. After "Message sent", opening again starts a new note.
+
+### Changed
+- The sent screen says "Powered by" the site name. "View conversation" is a primary button. In the dialog, the Contact title is hidden on that step.
+- The email code screen says "Verify it's you". The button says "Next". "Resend code" is a link. In the dialog, the Contact title is hidden on that step. The code, the field, and the actions have space between them.
+- A notice or error in the contact dialog has space under it.
+- The public contact page loads Flatpack's application stylesheet so primary buttons use the theme colors.
+- `presentation=modal` on the public contact URL. A normal visit still uses the centered page. A Turbo Frame request for `public_contact` renders only that step.
+
+### Upgrade notes
+- Hosts that do not call `public_contact_modal` keep the full page. No migration.
+- Include `RecordingStudioMessages::PublicContactHelper` on the host controller. The dialog needs Turbo on that page.
+- One dialog per page. The frame id is `public_contact`.
+- The sent screen no longer says "Your message has been sent." It says "Powered by" the site name. Site Settings supplies that name when the host has the gem.
+- The email code screen no longer says "Check your email" or "Confirm & send". It says "Verify it's you", the button says "Next", and "Resend code" is a link.
+- Notices and errors in the contact dialog have space under them.
+- The standalone contact page includes `flat_pack/application`. Primary buttons, including "View conversation", use the theme colors.
+
 ## [0.4.1] - 2026-10-02
 
 The dummy host mounts Site Settings and Terms. The Messages API is the same as 0.4.0.
@@ -255,7 +278,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.4...v0.4.5
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
 [0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0
 [0.3.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.1

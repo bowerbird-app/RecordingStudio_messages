@@ -1,20 +1,37 @@
-<h1 class="text-xl font-semibold">Check your email</h1>
-<p>We sent a 6-digit code to <%= @intent.email %>.</p>
+<% content_for :title, "Verify it's you" %>
+<%= render layout: "recording_studio_messages/public_contacts/step" do %>
+  <div class="flex flex-col gap-[var(--stack-gap-lg)]" data-public-contact-step="verify">
+    <div class="flex flex-col gap-[var(--stack-gap-sm)]">
+      <h1 class="text-xl font-semibold">Verify it's you</h1>
+      <p>We sent a 6-digit code to <%= @intent.email %>.</p>
+    </div>
 
-<%= form_with url: public_contact_verify_path, method: :post, local: true do %>
-  <div class="space-y-4">
-    <%= render FlatPack::TextInput::Component.new(
-      name: "code",
-      label: "Verification code",
-      required: true,
-      inputmode: "numeric",
-      autocomplete: "one-time-code",
-      maxlength: 6
-    ) %>
-    <%= render FlatPack::Button::Component.new(text: "Confirm & send", style: :primary, size: :md, type: "submit", class: "w-full") %>
+    <%= form_with url: public_contact_verify_path, method: :post, class: "flex flex-col gap-[var(--stack-gap-lg)]", **public_contact_form_options do %>
+      <%= public_contact_modal_fields %>
+      <%= render FlatPack::TextInput::Component.new(
+        name: "code",
+        label: "Verification code",
+        required: true,
+        inputmode: "numeric",
+        autocomplete: "one-time-code",
+        maxlength: 6
+      ) %>
+      <%= render FlatPack::Button::Component.new(text: "Next", style: :primary, size: :md, type: "submit", class: "w-full") %>
+    <% end %>
+
+    <% resend_query = {} %>
+    <% if modal_presentation? %>
+      <% resend_query = { presentation: "modal" }.merge(modal_display_params(params[:introduction], params[:submit_label])) %>
+    <% end %>
+    <%= render FlatPack::Link::Component.new(
+      href: public_contact_resend_path(resend_query),
+      class: "self-center underline",
+      data: {
+        turbo_method: :post,
+        turbo_frame: modal_frame_request? ? public_contact_frame_id : "_top"
+      }
+    ) do %>
+      Resend code
+    <% end %>
   </div>
-<% end %>
-
-<%= form_with url: public_contact_resend_path, method: :post, local: true do %>
-  <%= render FlatPack::Button::Component.new(text: "Resend code", style: :secondary, size: :md, type: "submit", class: "w-full") %>
 <% end %>

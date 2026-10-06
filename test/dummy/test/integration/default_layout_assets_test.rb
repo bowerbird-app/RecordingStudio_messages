@@ -42,8 +42,14 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     get root_path
 
     mount = DummyCatalog.inbox_mount_recording
+    modal_href = recording_studio_messages.public_contact_path(mount_id: mount.id, presentation: "modal")
     assert_response :success
-    assert_select "a[href=?]", recording_studio_messages.public_contact_path(mount_id: mount.id), text: "Contact"
+    assert_select "a[href=?][data-turbo-frame=?]", modal_href, "public_contact", text: "Contact"
+    assert_select "[id=?][data-controller=?]", "public-contact-#{mount.id}", "flat-pack--modal"
+    assert_includes response.body, "turbo:before-cache"
+    assert_includes response.body, "turbo:frame-load"
+    assert_includes response.body, "data-public-contact-step='verify'"
+    assert_select "turbo-frame#public_contact"
   end
 
   test "tailwind build includes Flatpack alert and page-nav utilities" do
@@ -61,6 +67,8 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, ".pt-16"
     assert_includes css, "height:calc(100dvh - 8.5rem)"
     assert_includes css, ".min-h-dvh"
+    assert_includes css, ".gap-\\[var\\(--stack-gap-lg\\)\\]{gap:var(--stack-gap-lg)}"
+    assert_includes css, ".mb-\\[var\\(--stack-gap-lg\\)\\]{margin-bottom:var(--stack-gap-lg)}"
   end
 
   test "Users profile screens render in the core default layout" do
