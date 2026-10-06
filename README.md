@@ -177,7 +177,7 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent". The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent" and "Powered by" the site name. The site name comes from Site Settings on that root when the host has it, otherwise the root's name. "View conversation" is a primary button and leaves the dialog. In the dialog, the Contact title is hidden on this step. The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
 
 `public_contact_form` renders that same form on a host page. The post still leaves for the full-page code step or the sent screen.
 
@@ -186,7 +186,7 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 <%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
 ```
 
-`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. The dialog stays open. A signed-in person still skips the code. "View conversation" leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
+`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. On "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. "View conversation" is a primary button and leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
 
 ```erb
 <%= public_contact_modal(mount) %>

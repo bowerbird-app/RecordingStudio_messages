@@ -47,6 +47,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?][data-turbo-frame=?]", modal_href, "public_contact", text: "Contact"
     assert_select "[id=?][data-controller=?]", "public-contact-#{mount.id}", "flat-pack--modal"
     assert_includes response.body, "turbo:before-cache"
+    assert_includes response.body, "turbo:frame-load"
     assert_select "turbo-frame#public_contact"
   end
 

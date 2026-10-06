@@ -57,6 +57,7 @@ module RecordingStudioMessages
   end
 end
 
+require_relative "public_contact/site_name"
 require_relative "public_contact/accounts"
 require_relative "public_contact/delivery"
 require_relative "public_contact/verification"

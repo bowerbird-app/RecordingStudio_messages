@@ -78,6 +78,10 @@ module RecordingStudioMessages
       RecordingStudioMessages.configuration.public_contact_sent_icon.presence
     end
 
+    def public_contact_powered_by(recording)
+      PublicContact::SiteName.powered_by(recording)
+    end
+
     def public_contact_submit_path(mount)
       contact_routes.public_contact_path(mount_id: mount.id)
     end

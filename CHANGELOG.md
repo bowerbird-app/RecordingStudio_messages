@@ -26,12 +26,16 @@ A host can open public contact in a modal. The full page stays the default.
 
 ### Added
 - `public_contact_modal(mount)` renders a Flatpack modal and a button that opens it. Compose, the email code, resend, errors, and "Message sent" replace the dialog body. A signed-in person still skips the code. Closing on the code step and opening again shows that same step. After "Message sent", opening again starts a new note.
+
+### Changed
+- The sent screen says "Powered by" the site name. "View conversation" is a primary button. In the dialog, the Contact title is hidden on that step.
 - `presentation=modal` on the public contact URL. A normal visit still uses the centered page. A Turbo Frame request for `public_contact` renders only that step.
 
 ### Upgrade notes
 - Hosts that do not call `public_contact_modal` keep the full page. No migration.
 - Include `RecordingStudioMessages::PublicContactHelper` on the host controller. The dialog needs Turbo on that page.
 - One dialog per page. The frame id is `public_contact`.
+- The sent screen no longer says "Your message has been sent." It says "Powered by" the site name. Site Settings supplies that name when the host has the gem.
 
 ## [0.4.1] - 2026-10-02
 

@@ -202,7 +202,10 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Message sent"
     assert_select ".text-center h1.text-3xl", text: "Message sent"
     assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
-    assert_includes response.body, "View conversation"
+    assert_includes response.body, "Powered by #{@workspace.name}"
+    refute_includes response.body, "Your message has been sent."
+    assert_select "a[data-turbo-frame=_top][data-fp-style=primary]", text: "View conversation"
+    assert_select "title", text: "Message sent"
     assert_nil User.find_by(email: "other@example.com")
     assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
     message = RecordingStudioMessages::Message.find_by!(body: "Sent while signed in.")
@@ -547,6 +550,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     assert_select "turbo-frame#public_contact h1", text: "Message sent"
     assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "[data-public-contact-step=sent]"
+    assert_includes response.body, "Powered by #{@workspace.name}"
+    refute_includes response.body, "Your message has been sent."
     assert_select "a", text: "View conversation", count: 0
     assert_equal 1, RecordingStudioMessages::Message.count
 
@@ -584,9 +590,14 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { body: "From the dialog.", presentation: "modal" }, headers: modal_headers
     assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
     assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+    RecordingStudioSiteSettings.update!(@root, name: "Quiet Crop", actor: @staff)
     get response.location, headers: modal_headers
     assert_select "h1", text: "Message sent"
-    assert_select "a[data-turbo-frame=_top]", text: "View conversation"
+    assert_select "[data-public-contact-step=sent]"
+    assert_includes response.body, "Powered by Quiet Crop"
+    refute_includes response.body, "Your message has been sent."
+    refute_includes response.body, ">Contact<"
+    assert_select "a[data-turbo-frame=_top][data-fp-style=primary]", text: "View conversation"
   end
 
   test "expired modal offers a fresh form and the page stays a 404" do

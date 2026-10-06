@@ -1,5 +1,6 @@
+<% content_for :title, "Message sent" %>
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
-  <div class="flex flex-col items-center gap-3 text-center">
+  <div class="flex flex-col items-center gap-3 text-center" data-public-contact-step="sent">
     <% if public_contact_sent_icon %>
       <%= render FlatPack::Shared::IconComponent.new(
         name: public_contact_sent_icon,
@@ -8,9 +9,19 @@
       ) %>
     <% end %>
     <h1 class="text-3xl font-semibold">Message sent</h1>
-    <p>Your message has been sent.</p>
+    <% credit = public_contact_powered_by(@group_recording) %>
+    <% if credit.present? %>
+      <p><%= credit %></p>
+    <% end %>
     <% if public_contact_actor && @group_recording %>
-      <%= link_to "View conversation", message_group_path(@group_recording), data: { turbo_frame: "_top" } %>
+      <%= render FlatPack::Button::Component.new(
+        text: "View conversation",
+        href: message_group_path(@group_recording),
+        style: :primary,
+        size: :md,
+        class: "w-full",
+        data: { turbo_frame: "_top" }
+      ) %>
     <% end %>
   </div>
 <% end %>

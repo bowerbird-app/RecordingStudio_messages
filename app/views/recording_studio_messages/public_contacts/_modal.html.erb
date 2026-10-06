@@ -32,10 +32,24 @@
           dialog.style.opacity = ""
           dialog.style.transform = ""
         }
+        var title = modal.querySelector("h2")
+        if (title) title.hidden = false
         document.body.style.overflow = ""
         document.body.style.paddingRight = ""
         delete document.body.dataset.flatPackModalLockCount
       })
+    })
+    document.addEventListener("turbo:frame-load", function (event) {
+      if (!event.target || event.target.id !== "public_contact") return
+
+      var modal = event.target.closest("[data-controller='flat-pack--modal']")
+      if (!modal) return
+
+      var title = document.getElementById(modal.id + "-title")
+      var heading = title && title.querySelector("h2")
+      if (!heading) return
+
+      heading.hidden = Boolean(event.target.querySelector("[data-public-contact-step='sent']"))
     })
   }
 <% end %>
