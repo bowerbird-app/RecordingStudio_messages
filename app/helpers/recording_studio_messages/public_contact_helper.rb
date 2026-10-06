@@ -96,6 +96,12 @@ module RecordingStudioMessages
       options
     end
 
+    def modal_display_params(introduction, submit_label)
+      label = submit_label.presence
+      label = nil if label == DEFAULT_SUBMIT
+      { introduction: introduction.presence, submit_label: label }.compact
+    end
+
     private
 
     def contact_routes
@@ -104,12 +110,6 @@ module RecordingStudioMessages
 
     def show_public_contact_heading?
       !modal_frame_request?
-    end
-
-    def modal_display_params(introduction, submit_label)
-      label = submit_label.presence
-      label = nil if label == DEFAULT_SUBMIT
-      { introduction: introduction.presence, submit_label: label }.compact
     end
 
     def hidden_introduction(introduction)

@@ -323,8 +323,11 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "gap-[var(--stack-gap-lg)]"
     assert_select "input[name=code][maxlength='6'][inputmode=numeric][autocomplete=one-time-code]"
     assert_select "button", text: "Next"
+    assert_select "a.flat-pack-link.underline.self-center[data-turbo-method=post][data-turbo-frame=_top][href=?]",
+                  recording_studio_messages.public_contact_resend_path,
+                  text: "Resend code"
+    assert_select "button", text: "Resend code", count: 0
     assert_select "title", text: "Verify it's you"
-    assert_select "form[action=?]", recording_studio_messages.public_contact_resend_path
   end
 
   test "signed-in form shows the actor name as a badge and hides the email" do
@@ -529,6 +532,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#public_contact h1", text: "Verify it's you"
     assert_select "[data-public-contact-step=verify]"
     assert_select "button", text: "Next"
+    assert_select "a.flat-pack-link.underline.self-center[data-turbo-method=post][data-turbo-frame=public_contact]", text: "Resend code"
+    assert_select "button", text: "Resend code", count: 0
     assert_includes response.body, "ada@example.com"
     refute_includes response.body, "min-h-dvh"
 
@@ -685,6 +690,13 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get verify_path, headers: modal_headers
     assert_select "input[name=introduction][value=?]", "We reply by email."
     assert_select "input[name=submit_label][value=?]", "Send note"
+    assert_select "a[data-turbo-method=post][href=?]",
+                  recording_studio_messages.public_contact_resend_path(
+                    presentation: "modal",
+                    introduction: "We reply by email.",
+                    submit_label: "Send note"
+                  ),
+                  text: "Resend code"
 
     RecordingStudioMessages::PublicContactIntent.order(:created_at).last.update!(expires_at: 1.hour.ago)
     get verify_path, headers: modal_headers

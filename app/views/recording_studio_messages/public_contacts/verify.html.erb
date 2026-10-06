@@ -19,9 +19,19 @@
       <%= render FlatPack::Button::Component.new(text: "Next", style: :primary, size: :md, type: "submit", class: "w-full") %>
     <% end %>
 
-    <%= form_with url: public_contact_resend_path, method: :post, **public_contact_form_options do %>
-      <%= public_contact_modal_fields %>
-      <%= render FlatPack::Button::Component.new(text: "Resend code", style: :secondary, size: :md, type: "submit", class: "w-full") %>
+    <% resend_query = {} %>
+    <% if modal_presentation? %>
+      <% resend_query = { presentation: "modal" }.merge(modal_display_params(params[:introduction], params[:submit_label])) %>
+    <% end %>
+    <%= render FlatPack::Link::Component.new(
+      href: public_contact_resend_path(resend_query),
+      class: "self-center underline",
+      data: {
+        turbo_method: :post,
+        turbo_frame: modal_frame_request? ? public_contact_frame_id : "_top"
+      }
+    ) do %>
+      Resend code
     <% end %>
   </div>
 <% end %>
