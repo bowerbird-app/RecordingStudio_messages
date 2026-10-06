@@ -545,6 +545,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "That code did not match."
+    assert_select "[role=alert][class*='mb-[var(--stack-gap-lg)]']", text: "That code did not match."
     assert_select "turbo-frame#public_contact input[name=code]"
     assert_equal 0, RecordingStudioMessages::Message.count
 
@@ -554,6 +555,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
     get response.location, headers: modal_headers
     assert_includes response.body, "Fresh code on the way."
+    assert_select "[role=alert][class*='mb-[var(--stack-gap-lg)]']", text: "Fresh code on the way."
 
     post recording_studio_messages.public_contact_verify_path,
          params: { code: otp_code_for(intent.reload), presentation: "modal" },

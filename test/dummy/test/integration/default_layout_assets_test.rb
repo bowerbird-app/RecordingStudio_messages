@@ -68,6 +68,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, "height:calc(100dvh - 8.5rem)"
     assert_includes css, ".min-h-dvh"
     assert_includes css, ".gap-\\[var\\(--stack-gap-lg\\)\\]{gap:var(--stack-gap-lg)}"
+    assert_includes css, ".mb-\\[var\\(--stack-gap-lg\\)\\]{margin-bottom:var(--stack-gap-lg)}"
   end
 
   test "Users profile screens render in the core default layout" do
