@@ -334,6 +334,15 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes contact_test, "Member"
   end
 
+  def test_public_contact_page_loads_flatpack_application_styles
+    layout = File.read(
+      File.expand_path("../app/views/layouts/recording_studio_messages/public_contact.html.erb", __dir__)
+    )
+
+    assert_includes layout, 'stylesheet_link_tag "flat_pack/application"'
+    assert_includes layout, 'stylesheet_link_tag "flat_pack/variables"'
+  end
+
   def test_engine_does_not_ship_a_home_view
     view_path = File.expand_path("../app/views/recording_studio_messages/home/index.html.erb", __dir__)
 

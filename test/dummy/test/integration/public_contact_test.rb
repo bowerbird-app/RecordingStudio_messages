@@ -205,6 +205,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."
     assert_select "a[data-turbo-frame=_top][data-fp-style=primary]", text: "View conversation"
+    assert_select "link[href*='flat_pack/application']"
     assert_select "title", text: "Message sent"
     assert_nil User.find_by(email: "other@example.com")
     assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
