@@ -20,7 +20,7 @@ Development and dummy pins climb the Recording Studio family through layer 2. Co
 - Publishable stays on `v0.3.1` in the dummy because Terms `v0.7.3` still requires `recording_studio_publishable ~> 0.3`.
 - API is not a Messages dependency and is not pinned here.
 
-## [0.4.2] - 2026-10-05
+## [0.4.5] - 2026-10-06
 
 A host can open public contact in a modal. The full page stays the default.
 
@@ -278,8 +278,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.2...HEAD
-[0.4.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.1...v0.4.2
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.4...v0.4.5
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
 [0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0
 [0.3.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.3.1
