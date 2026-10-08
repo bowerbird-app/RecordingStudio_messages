@@ -17,11 +17,11 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_admin.git
-  revision: 2d94e2f1f17cde64bfde756ac9df5dddefbe64ca
-  tag: v2.0.4
+  revision: e1398281da7932bdec891a2b873b7d531191be35
+  tag: v2.0.6
   specs:
     recording_studio_admin (2.0.2)
-      flat_pack (~> 0.1.129)
+      flat_pack (~> 0.1.207)
       rails (~> 8.1.0)
       recording_studio_accessible (~> 0.6)
 
@@ -70,10 +70,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: 20a17d7dcb76686ea5e5964dd6483a455b2a32d6
-  tag: v0.1.198
+  revision: 7490c10b4ec59c7df81aa4f6a46d8f9ef83de8bc
+  tag: v0.1.207
   specs:
-    flat_pack (0.1.198)
+    flat_pack (0.1.207)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (~> 0.13)
@@ -507,7 +507,7 @@ CHECKSUMS
   faraday (2.14.4) sha256=9bb4408c44621b0dbaaaa39e5dbfc4dbe58cc6751b6eb94d16ae9e1f2f2fab6e
   faraday-follow_redirects (0.5.0) sha256=5cde93c894b30943a5d2b93c2fe9284216a6b756f7af406a1e55f211d97d10ad
   faraday-net_http (3.4.4) sha256=0e78af151747ed1b00f33e25973b4bc220d7f16c00c39676817c8b12331eb588
-  flat_pack (0.1.198)
+  flat_pack (0.1.207)
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
   hashie (5.1.0) sha256=c266471896f323c446ea8207f8ffac985d2718df0a0ba98651a3057096ca3870
   i18n (1.15.2) sha256=00f9eb62412fe593b2a65a97daa75300d37abb8f7202ec748e94b6d46a9dd1b5
