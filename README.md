@@ -31,7 +31,7 @@ Add the gem next to Recording Studio 4.2, Accessible, Attachable, Notifications,
 
 ```ruby
 # Gemfile
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.2.2"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.3.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.4.0"
@@ -292,7 +292,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
-| `recording_studio` | `~> 4.2` | `v4.2.2` | `4.2.2` |
+| `recording_studio` | `~> 4.2` | `v4.3.0` | `4.3.0` |
 | `recording_studio_accessible` | `~> 0.11` | `v0.11.1` | `0.11.0` |
 | `recording_studio_attachable` | `~> 0.7` | `v0.7.1` | `0.7.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.4.0` | `0.4.0` |
