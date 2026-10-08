@@ -7,6 +7,15 @@ GIT
       rails (>= 8.1.0)
 
 GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_Internationalization.git
+  revision: 554ddebae26e9a6ecfbf9e7f17ac2e2c66359613
+  tag: v0.1.2
+  specs:
+    recording_studio_internationalization (0.1.2)
+      rails (~> 8.1.0)
+      recording_studio (~> 4.2)
+
+GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_accessible.git
   revision: fe2d86aa2d96b843bc05651dc25023fd4546ab37
   tag: v0.11.1
@@ -118,10 +127,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: 20a17d7dcb76686ea5e5964dd6483a455b2a32d6
-  tag: v0.1.198
+  revision: 9a5246aab9b11af979b868358bd4de3cf5098a3b
+  tag: v0.1.206
   specs:
-    flat_pack (0.1.198)
+    flat_pack (0.1.206)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (~> 0.13)
@@ -130,7 +139,7 @@ GIT
 PATH
   remote: ../..
   specs:
-    recording_studio_messages (0.4.5)
+    recording_studio_messages (0.5.0)
       flat_pack (~> 0.1.148)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
@@ -641,6 +650,7 @@ DEPENDENCIES
   recording_studio_accessible!
   recording_studio_admin!
   recording_studio_attachable!
+  recording_studio_internationalization!
   recording_studio_messages!
   recording_studio_notifications!
   recording_studio_publishable!
@@ -711,7 +721,7 @@ CHECKSUMS
   ffi (1.17.4-x86_64-darwin) sha256=aa70390523cf3235096cf64962b709b4cfbd5c082a2cb2ae714eb0fe2ccda496
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   ffi (1.17.4-x86_64-linux-musl) sha256=3fdf9888483de005f8ef8d1cf2d3b20d86626af206cbf780f6a6a12439a9c49e
-  flat_pack (0.1.198)
+  flat_pack (0.1.206)
   fugit (1.13.0) sha256=a4f093fce740da52f216740a5041e2a594ea763cdb89e8b2754ca4399634ab18
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
   hashie (5.1.0) sha256=c266471896f323c446ea8207f8ffac985d2718df0a0ba98651a3057096ca3870
@@ -799,7 +809,8 @@ CHECKSUMS
   recording_studio_accessible (0.11.0)
   recording_studio_admin (2.0.2)
   recording_studio_attachable (0.7.0)
-  recording_studio_messages (0.4.5)
+  recording_studio_internationalization (0.1.2)
+  recording_studio_messages (0.5.0)
   recording_studio_notifications (0.3.2)
   recording_studio_publishable (0.3.1)
   recording_studio_root_switchable (0.5.1)
