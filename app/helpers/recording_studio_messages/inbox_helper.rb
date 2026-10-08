@@ -2,12 +2,14 @@
 
 module RecordingStudioMessages
   module InboxHelper
+    include CopyHelper
+
     def messages_inbox_title(mount_recording)
       parent = mount_recording&.parent_recording&.recordable
       return parent.name if parent.respond_to?(:name) && parent.name.present?
       return parent.title if parent.respond_to?(:title) && parent.title.present?
 
-      "Conversations"
+      Copy.t("inbox.title")
     end
 
     def messages_inbox_rows(group_recordings, selected: nil)

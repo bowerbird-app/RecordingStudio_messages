@@ -8,7 +8,7 @@
                return_to: local_assigns[:return_to] %>
   <% else %>
     <%= render FlatPack::Chat::SystemMessage::Component.new do %>
-      Nothing here yet.
+      <%= messages_t("inbox.empty_panel") %>
     <% end %>
   <% end %>
 <% end %>

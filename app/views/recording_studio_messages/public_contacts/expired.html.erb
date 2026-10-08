@@ -1,8 +1,8 @@
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
-  <h1 class="text-xl font-semibold">Check your email</h1>
-  <p>That contact form expired. Send it again.</p>
+  <h1 class="text-xl font-semibold"><%= messages_t("contact.expired_title") %></h1>
+  <p><%= messages_t("contact.expired_body") %></p>
   <%= render FlatPack::Button::Component.new(
-    text: "Send it again",
+    text: messages_t("contact.send_again"),
     href: public_contact_restart_path(@intent.mount_recording_id),
     style: :primary,
     size: :md,

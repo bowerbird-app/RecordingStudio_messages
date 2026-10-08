@@ -1,4 +1,4 @@
-<% content_for :title, "Message sent" %>
+<% content_for :title, messages_t("contact.sent_title") %>
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
   <div class="flex flex-col items-center gap-3 text-center" data-public-contact-step="sent">
     <% if public_contact_sent_icon %>
@@ -8,14 +8,14 @@
         class: "text-[var(--surface-muted-content-color)]"
       ) %>
     <% end %>
-    <h1 class="text-3xl font-semibold">Message sent</h1>
+    <h1 class="text-3xl font-semibold"><%= messages_t("contact.sent_title") %></h1>
     <% credit = public_contact_powered_by(@group_recording) %>
     <% if credit.present? %>
       <p><%= credit %></p>
     <% end %>
     <% if public_contact_actor && @group_recording %>
       <%= render FlatPack::Button::Component.new(
-        text: "View conversation",
+        text: messages_t("contact.view_conversation"),
         href: message_group_path(@group_recording),
         style: :primary,
         size: :md,

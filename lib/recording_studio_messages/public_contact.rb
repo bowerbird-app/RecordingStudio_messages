@@ -27,7 +27,7 @@ module RecordingStudioMessages
     end
 
     def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:)
-      raise Error, "Public contact is not enabled on this mount." unless enabled?(mount_recording)
+      raise Error, Copy.t("errors.not_enabled") unless enabled?(mount_recording)
 
       text = normalize_body(body)
       return send_now(mount_recording, current_actor, text) if current_actor.present?

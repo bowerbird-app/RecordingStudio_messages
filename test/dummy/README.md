@@ -14,6 +14,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Home includes a Contact button that opens the Site mailbox public form in a modal. The full page remains `GET /recording_studio_messages/public_contact?mount_id=`
 - Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply
+- Dummy-only Recording Studio Internationalization (`en` + `fr`) with a compact language selector in PageNav, left of any host actions
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
 - Mounted Messages, Users, Accessible, Attachable, Admin, Site Settings, Terms and Conditions, Publishable, and Recording Studio engines
 - Site settings live on the current Workspace. Admin is a separate root. Staff (`admin@admin.com`) can open Admin from home
@@ -92,6 +93,7 @@ Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.b
 - `/recording_studio_messages/message_groups?mount_id=` - engine list for a mount
 - `/recording_studio_messages/message_groups/:id` - mounted panel for any conversation
 - `/recording_studio` - redirects to `/` while the mounted Recording Studio engine stays available under that prefix for non-root routes
+- `/recording_studio_internationalization` - dummy language switch (en / fr)
 - `/users/sign_in` - Recording Studio Users sign-in page
 - `/users/sign_up` - Recording Studio Users sign-up page
 - `/up` - Rails health check

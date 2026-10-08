@@ -5,7 +5,7 @@ module Staff
     def show
       @mount_recording = DummyCatalog.support_mount_recording
       @group_recordings = viewable_groups_on_mount
-      return redirect_to root_path, alert: "You cannot open this conversation" if @group_recordings.blank?
+      return redirect_to root_path, alert: RecordingStudioMessages::Copy.t("flashes.cannot_open") if @group_recordings.blank?
 
       load_selected_conversation
     end

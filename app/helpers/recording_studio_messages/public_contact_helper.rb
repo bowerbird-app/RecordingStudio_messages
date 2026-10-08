@@ -2,6 +2,8 @@
 
 module RecordingStudioMessages
   module PublicContactHelper
+    include CopyHelper
+
     FRAME_ID = "public_contact"
     MODAL = "modal"
     DEFAULT_TITLE = "Contact"
@@ -10,18 +12,18 @@ module RecordingStudioMessages
     def public_contact_form(mount, title: nil, introduction: nil, submit_label: nil, heading: nil)
       render "recording_studio_messages/public_contacts/form",
              mount: mount,
-             title: title.presence || DEFAULT_TITLE,
+             title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence || params[:introduction].presence,
-             submit_label: submit_label.presence || params[:submit_label].presence || DEFAULT_SUBMIT,
+             submit_label: submit_label.presence || params[:submit_label].presence || Copy.t("contact.submit"),
              heading: heading.nil? ? show_public_contact_heading? : heading
     end
 
     def public_contact_modal(mount, title: nil, introduction: nil, submit_label: nil)
       render "recording_studio_messages/public_contacts/modal",
              mount: mount,
-             title: title.presence || DEFAULT_TITLE,
+             title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence,
-             submit_label: submit_label.presence || DEFAULT_SUBMIT
+             submit_label: submit_label.presence || Copy.t("contact.submit")
     end
 
     def public_contact_frame_id
@@ -96,9 +98,31 @@ module RecordingStudioMessages
       options
     end
 
+    def public_contact_document_attributes
+      attributes = { "data-theme" => "rounded", lang: I18n.locale.to_s }
+      attributes.merge!(recording_studio_locale_attributes) if respond_to?(:recording_studio_locale_attributes)
+      if respond_to?(:flat_pack_copy_data)
+        attributes[:data] = (attributes[:data] || {}).merge(flat_pack_copy_data)
+      end
+      attributes
+    end
+
+    def public_contact_language_selector
+      return unless respond_to?(:recording_studio_language_selector)
+
+      recording_studio_language_selector(
+        class: "public-contact-language-selector flex shrink-0 items-center gap-1.5 [&_label]:sr-only [&_.flat-pack-input-wrapper]:mb-0 [&_.flat-pack-select]:min-h-8 [&_.flat-pack-select]:min-w-28 [&_.flat-pack-select]:py-1 [&_.flat-pack-select]:text-sm",
+        data: { turbo: false }
+      )
+    end
+
+    def default_contact_submit?(label)
+      label.blank? || label == DEFAULT_SUBMIT || label == Copy.t("contact.submit")
+    end
+
     def modal_display_params(introduction, submit_label)
       label = submit_label.presence
-      label = nil if label == DEFAULT_SUBMIT
+      label = nil if default_contact_submit?(label)
       { introduction: introduction.presence, submit_label: label }.compact
     end
 
@@ -119,7 +143,7 @@ module RecordingStudioMessages
     end
 
     def hidden_submit_label(submit_label)
-      return if submit_label.blank? || submit_label == DEFAULT_SUBMIT
+      return if default_contact_submit?(submit_label)
 
       hidden_field_tag(:submit_label, submit_label)
     end

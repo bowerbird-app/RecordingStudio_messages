@@ -12,7 +12,7 @@ module RecordingStudioMessages
           profile_attributes: profile_attributes_for(intent)
         )
       rescue ArgumentError
-        raise Error, "Confirm the email code first."
+        raise Error, Copy.t("errors.confirm_code")
       end
 
       def profile_attributes_for(intent)
@@ -40,23 +40,23 @@ module RecordingStudioMessages
 
       def normalize_body(body)
         text = body.to_s.strip
-        raise Error, "Write a message." if text.blank?
-        raise Error, "That message is too long." if text.length > 10_000
+        raise Error, Copy.t("errors.write_message") if text.blank?
+        raise Error, Copy.t("errors.message_too_long") if text.length > 10_000
 
         text
       end
 
       def normalize_name(name)
         submitted = name.to_s.strip
-        raise Error, "Enter your name." if submitted.blank?
-        raise Error, "That name is too long." if submitted.length > 120
+        raise Error, Copy.t("errors.enter_name") if submitted.blank?
+        raise Error, Copy.t("errors.name_too_long") if submitted.length > 120
 
         submitted
       end
 
       def normalize_email(email)
         normalized = email.to_s.strip.downcase
-        raise Error, "Enter an email address." unless email_shaped?(normalized)
+        raise Error, Copy.t("errors.enter_email") unless email_shaped?(normalized)
 
         normalized
       end

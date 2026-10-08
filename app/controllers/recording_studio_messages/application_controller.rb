@@ -5,6 +5,7 @@ module RecordingStudioMessages
     include RecordingStudio::UsesDefaultLayout
 
     helper RecordingStudioAccessible::AvatarsHelper if defined?(RecordingStudioAccessible::AvatarsHelper)
+    helper RecordingStudioMessages::CopyHelper
     helper RecordingStudioMessages::PanelHelper
     helper RecordingStudioMessages::InboxHelper
 
@@ -35,11 +36,11 @@ module RecordingStudioMessages
         role: role
       )
 
-      raise RecordingStudioMessages::NotAuthorized, "You cannot open this conversation"
+      raise RecordingStudioMessages::NotAuthorized, Copy.t("flashes.cannot_open")
     end
 
     def handle_not_authorized
-      redirect_back_or_to(main_app.root_path, alert: "You cannot open this conversation")
+      redirect_back_or_to(main_app.root_path, alert: Copy.t("flashes.cannot_open"))
     end
   end
 end

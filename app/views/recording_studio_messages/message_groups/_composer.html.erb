@@ -24,12 +24,12 @@
         show_chevron: false,
         placement: :top_left,
         trigger_attributes: {
-          aria: { label: "Add a file" },
-          title: "Add a file"
+          aria: { label: messages_t("composer.add_file") },
+          title: messages_t("composer.add_file")
         }
       ) do |dropdown| %>
         <% dropdown.menu_item(
-          text: "Upload files or images",
+          text: messages_t("composer.upload"),
           icon: "file",
           type: "button",
           data: { action: "click->flat-pack--chat-sender#openFilePicker" }
@@ -42,7 +42,7 @@
         rows: 1,
         autogrow: true,
         submit_on_enter: true,
-        placeholder: "Write a message",
+        placeholder: messages_t("composer.placeholder"),
         class: "min-h-[var(--chat-composer-control-height)] max-h-32 rounded-lg border-[var(--chat-input-border-color)] bg-[var(--chat-input-background-color)] px-4 py-[var(--chat-composer-control-padding-y)] text-sm leading-5 text-[var(--chat-input-text-color)] placeholder:text-[var(--chat-input-placeholder-color)] focus:ring-[var(--chat-input-focus-ring-color)]"
       ) %>
     <% end %>

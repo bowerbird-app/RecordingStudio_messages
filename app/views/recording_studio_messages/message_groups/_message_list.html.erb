@@ -8,11 +8,11 @@
 ) do %>
   <% if message_recordings.empty? %>
     <%= render FlatPack::Chat::SystemMessage::Component.new do %>
-      Nothing here yet. Write the first line.
+      <%= messages_t("inbox.empty_thread") %>
     <% end %>
   <% else %>
     <% message_recordings.group_by { |recording| message_timestamp(recording).to_date }.each do |day, recordings| %>
-      <%= render FlatPack::Chat::DateDivider::Component.new(label: day.strftime("%-d %b %Y")) %>
+      <%= render FlatPack::Chat::DateDivider::Component.new(label: message_day_label(day)) %>
       <% recordings.each do |message_recording| %>
         <%= render "recording_studio_messages/message_groups/message",
                    message_recording: message_recording,

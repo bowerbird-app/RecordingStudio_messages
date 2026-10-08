@@ -5,6 +5,7 @@ module RecordingStudioMessages
     include PublicContactHelper
     include PublicContactFlow
 
+    helper CopyHelper
     helper PublicContactHelper
 
     protect_from_forgery with: :exception
@@ -51,7 +52,7 @@ module RecordingStudioMessages
     def resend
       @intent = session_intent
       PublicContact.resend!(intent: @intent, request: request, session: session)
-      redirect_to public_contact_verify_path(presentation_params), notice: "Fresh code on the way."
+      redirect_to public_contact_verify_path(presentation_params), notice: Copy.t("flashes.code_resent")
     end
   end
 end

@@ -44,6 +44,12 @@
 @source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 @source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
 
+/* Recording Studio Internationalization language selector */
+@source "../../../vendor/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../vendor/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";
 

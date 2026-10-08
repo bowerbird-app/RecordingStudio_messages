@@ -11,14 +11,14 @@ module RecordingStudioMessages
         return registration_account(existing) unless existing.confirmed?
         return login_account(existing) if existing.active_for_authentication?
 
-        raise Error, TAKEN_EMAIL
+        raise Error, Copy.t("errors.taken_email")
       end
 
       def new_registration_account(email)
         require_otp!(:registration)
         [RecordingStudioUser.create_unconfirmed_user!(email: email), "registration"]
       rescue ActiveRecord::RecordNotUnique
-        raise Error, TAKEN_EMAIL
+        raise Error, Copy.t("errors.taken_email")
       end
 
       def registration_account(user)
@@ -34,7 +34,7 @@ module RecordingStudioMessages
       def require_otp!(kind)
         return if otp_kind_enabled?(kind)
 
-        raise Error, USERS_REQUIRED
+        raise Error, Copy.t("errors.users_required")
       end
 
       def otp_kind_enabled?(kind)
@@ -58,7 +58,7 @@ module RecordingStudioMessages
       def call_users_otp
         yield
       rescue RecordingStudioUser::RateLimited
-        raise Error, RATE_LIMITED
+        raise Error, Copy.t("errors.rate_limited")
       end
     end
   end
