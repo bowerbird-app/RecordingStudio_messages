@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-10-08
+
+Allow Notifications 0.4.
+
+### Changed
+- Gemspec accepts `recording_studio_notifications >= 0.3.1, < 1` so hosts can install Notifications 0.4
+- Dummy and development pins move to Notifications `v0.4.0`
+
+### Upgrade notes
+- Bump to **0.5.2**. No migration
+- Hosts that stay on Notifications 0.3.x do not need to change
+- To use Notifications 0.4 (translated customer notification screens), pin `recording_studio_notifications` at `v0.4.0` in the host Gemfile
+
 ## [0.5.0] - 2026-10-08
 
 Customer-facing Messages copy now lives under `recording_studio.messages.*` so hosts can translate contact forms, conversation chrome, flashes, and related screens.
@@ -296,7 +309,9 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.6...v0.5.0
 [0.4.5]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.4...v0.4.5
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
