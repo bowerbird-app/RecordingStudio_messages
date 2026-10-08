@@ -158,3 +158,124 @@ fr:
       dismiss: Fermer
     button:
       loading: Chargement
+
+  # Users gem French copy lives on the host from Users 0.14+.
+  recording_studio_user:
+    profile:
+      unnamed_user: Utilisateur
+      my_profile: Mon profil
+      edit_profile: Modifier le profil
+      close: Fermer
+      edit: Modifier
+      sign_in_methods: Moyens de connexion
+      language: Langue
+      first_name: Prénom
+      last_name: Nom
+      time_zone: Fuseau horaire
+      update: Enregistrer le profil
+      cancel: Annuler
+      use_site_default: "Par défaut (%{language})"
+      updated: Profil enregistré.
+      subtitle_with_language: Changez votre nom, fuseau horaire, langue ou photo.
+      subtitle: Changez votre nom, fuseau horaire ou photo.
+      document_title: "%{page} | Recording Studio User"
+      errors:
+        prevented_save:
+          one: "%{count} erreur a empêché l'enregistrement de votre profil"
+          other: "%{count} erreurs ont empêché l'enregistrement de votre profil"
+    auth:
+      login_title: Heureux de vous revoir
+      sign_in: Connexion
+      sign_up: Inscription
+      log_in: Se connecter
+      continue_with_email: "Continuer avec l'e-mail"
+      email: E-mail
+      email_placeholder: vous@entreprise.com
+      password: Mot de passe
+      password_confirmation: Confirmation du mot de passe
+      new_password: Nouveau mot de passe
+      confirm_new_password: Confirmer le nouveau mot de passe
+      forgot_password: Mot de passe oublié ?
+      forgot_password_subtitle: Nous vous enverrons un lien pour en choisir un nouveau.
+      send_reset_link: Envoyer le lien
+      remembered_it: Vous vous en souvenez ?
+      back_to_sign_in: Retour à la connexion
+      no_account: Pas encore de compte ?
+      already_have_one: Déjà un compte ?
+      choose_new_password: Choisir un nouveau mot de passe
+      choose_new_password_subtitle: Choisissez-en un dont vous vous souviendrez.
+      save_password: Enregistrer le mot de passe
+      resend_confirmation: Renvoyer la confirmation
+      resend_confirmation_subtitle: Nous enverrons un nouveau lien dans votre boîte de réception.
+      password_minimum:
+        one: "%{count} caractère minimum"
+        other: "%{count} caractères minimum"
+      logo: Logo
+      enter_email: Entrez votre e-mail pour continuer.
+      start_with_email: Commencez par votre e-mail.
+      email_or_password_mismatch: E-mail ou mot de passe incorrect.
+      otp_account_password: Ce compte se connecte avec un code par e-mail.
+      otp_account_reset: Ce compte se connecte avec un code par e-mail. Utilisez le code e-mail sur la page de connexion.
+      eligible_code_sent: Si un compte admissible existe, nous avons envoyé un code.
+      that_code_did_not_work: "Ce code n'a pas fonctionné."
+      email_taken: Cet e-mail a déjà un compte. Essayez de vous connecter.
+      fresh_code: Nouveau code en route.
+      wait_for_code: Patientez un peu avant de demander un autre code.
+      give_it_a_minute: Attendez une minute, puis réessayez.
+      signup_did_not_save: "Cette inscription n'a pas été enregistrée"
+      password_did_not_save: "Ce mot de passe n'a pas été enregistré"
+      could_not_send_link: "Nous n'avons pas pu envoyer ce lien"
+      verify:
+        invalid_code: Ce code n'a pas fonctionné. Réessayez.
+        expired: Ce code a expiré. Demandez-en un nouveau.
+        consumed: Ce code a déjà été utilisé.
+        revoked: Ce code n'est plus valable.
+        too_many_attempts: Trop d'essais. Demandez un nouveau code.
+        session_mismatch: Recommencez avec un nouveau code.
+    sessions:
+      enter_code: Entrez votre code
+      sign_in_code: Code de connexion
+      resend_code: Renvoyer le code
+      email_sign_in_code: Code de connexion par e-mail
+      email_sign_in_code_subtitle: Nous enverrons un code si votre compte est admissible.
+      send_code: Envoyer le code
+    registrations:
+      check_email: Vérifiez vos e-mails
+      check_email_subtitle: Entrez le code à six chiffres que nous vous avons envoyé.
+      verification_code: Code de vérification
+      verify_and_continue: Vérifier et continuer
+      resend_code: Renvoyer le code
+      sign_up_with_email: S'inscrire par e-mail
+      sign_up_with_email_subtitle: Nous vous enverrons un code à six chiffres.
+      send_code: Envoyer le code
+    otp:
+      your_sign_in_code: Votre code de connexion
+      verify_your_email: Vérifiez votre e-mail
+      use_this_code: Utilisez ce code pour terminer la connexion.
+      no_longer_valid: Ce code n'est plus valable
+      request_fresh: Demandez un nouveau code depuis la page de connexion.
+      expires_in: Expire dans environ %{time}.
+      registration_body: "%{code} est votre code de vérification. Il expire dans %{minutes} minutes."
+      login_body: "%{code} est votre code de connexion. Il expire dans %{minutes} minutes."
+      registration_label: Code d'inscription
+      login_label: Code de connexion
+    omniauth:
+      or: Ou
+      continue_with: Continuer avec %{provider}
+      connected: "%{provider} est connecté."
+      missing_email: "%{provider} n'a pas renvoyé d'adresse e-mail."
+      unverified_email: "%{provider} n'a pas vérifié cette adresse e-mail."
+      confirm_email: Confirmez votre e-mail avant de lier ce moyen de connexion.
+      account_creation_disabled: Aucun compte n'existe pour cet e-mail %{provider}, et la création de comptes est désactivée.
+      connect: Connecter
+      disconnect: Déconnecter
+      disconnect_confirm: Déconnecter %{provider} ?
+      disconnected: Moyen de connexion déconnecté.
+      not_connected: Ce moyen de connexion n'est pas lié.
+      last_method: Liez un autre moyen de connexion ou définissez un mot de passe avant de déconnecter
+      taken_other: Ce compte %{provider} est déjà lié à une autre personne
+      taken_this: Un compte %{provider} est déjà lié à ce compte
+      existing_unconfirmed: L'e-mail existant n'est pas confirmé
+      creation_disabled: La création de compte depuis ce fournisseur est désactivée
+      email_required: L'e-mail est obligatoire de la part du fournisseur
+      email_not_verified: L'e-mail n'a pas été vérifié par le fournisseur

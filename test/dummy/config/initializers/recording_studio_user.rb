@@ -9,9 +9,10 @@ RecordingStudioUser.configure do |config|
   # Profile and sign-in-method screens are product pages, so they use core's
   # default layout. The gem's auth screens keep their own centered layout.
   config.layout = "recording_studio/default_layout"
-  config.additional_profile_attributes = []
+  # Leave additional_profile_attributes at the gem default so :locale stays
+  # allowlisted for Recording Studio Internationalization.
   config.require_password_confirmation = false
-  # Devise login page heading (host sessions#new). Default "Welcome back".
+  # Devise login page heading (host sessions#new). Leave unset to follow I18n.
   # config.login_title = "Welcome back"
   # OmniAuth. Leave this empty: Continue-with buttons appear only for providers
   # whose secrets are present in Rails credentials (`omniauth:`). Commented or
