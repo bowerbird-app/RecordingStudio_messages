@@ -1,7 +1,8 @@
 @import "tailwindcss" source(none);
 
-/* Include dummy app views for Tailwind CSS */
+/* Include dummy app views and helpers for Tailwind CSS */
 @source "../../views/**/*.erb";
+@source "../../helpers/**/*.rb";
 
 /* Include RecordingStudio engine views for Tailwind CSS */
 @source "../../../vendor/bundle/**/recording_studio/app/views/**/*.erb";
@@ -44,9 +45,25 @@
 @source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/RecordingStudio*/app/views/**/*.erb";
 @source "../../../../../../usr/local/lib/ruby/gems/*/bundler/gems/flatpack-*/app/components/**/*.{rb,erb}";
 
+/* Recording Studio Internationalization language selector */
+@source "../../../vendor/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../vendor/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/bundle/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+@source "../../../../../../usr/local/lib/ruby/gems/**/bundler/gems/recording_studio_internationalization-*/app/views/**/*.erb";
+
 /* Include the engine's views in the Tailwind build */
 @source "../../../../../app/views/**/*.erb";
 
 /* Accessible's blank layout uses pt-16. Keep the utility even if a gem glob misses. */
 @source inline("pt-16");
 @source inline("min-h-dvh");
+
+/* Compact dummy language selector in PageNav (classes live in DummyLayoutHelper). */
+@source inline("dummy-language-selector");
+@source inline("[&_label]:sr-only");
+@source inline("[&_button]:sr-only");
+@source inline("[&_.flat-pack-input-wrapper]:mb-0");
+@source inline("[&_.flat-pack-select]:min-h-8");
+@source inline("[&_.flat-pack-select]:min-w-28");
+@source inline("[&_.flat-pack-select]:py-1");
+@source inline("[&_.flat-pack-select]:text-sm");

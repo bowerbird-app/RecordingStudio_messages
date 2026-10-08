@@ -6,7 +6,7 @@ module RecordingStudioMessages
       private
 
       def queue_verification(mount:, name:, email:, text:, request:, session:)
-        raise Error, USERS_REQUIRED unless users_otp_ready?
+        raise Error, Copy.t("errors.users_required") unless users_otp_ready?
 
         normalized_email = normalize_email(email)
         user, purpose = account_for(normalized_email)
@@ -20,7 +20,7 @@ module RecordingStudioMessages
       end
 
       def ensure_recipient!(mount, user)
-        raise Error, NO_RECIPIENT if opener_among(mount, recipients_for(mount, user)).nil?
+        raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user)).nil?
       end
 
       def store_intent(mount:, user:, purpose:, name:, email:, text:, request:, session:)
@@ -41,12 +41,12 @@ module RecordingStudioMessages
         return result.user if result.success?
 
         intent.reload
-        raise Error, "That code did not match." unless intent.fulfilled?
+        raise Error, Copy.t("errors.code_mismatch") unless intent.fulfilled?
       end
 
       def verify_submitted_code(intent, code, session)
         proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
-        raise Error, "That code did not match." if proof.nil?
+        raise Error, Copy.t("errors.code_mismatch") if proof.nil?
 
         RecordingStudioUser.verify_otp!(
           challenge_id: intent.otp_challenge_id, code: code, purpose: proof.purpose, session: session
@@ -60,8 +60,8 @@ module RecordingStudioMessages
       end
 
       def refresh_code!(intent, request, session)
-        raise Error, "That message was already sent." if intent.fulfilled?
-        raise Error, "That contact form expired. Send it again." if intent.expired?
+        raise Error, Copy.t("errors.already_sent") if intent.fulfilled?
+        raise Error, Copy.t("errors.expired") if intent.expired?
 
         issued = resend_live_code(intent, request, session)
         intent.update!(otp_challenge_id: issued.challenge_id)
@@ -70,7 +70,7 @@ module RecordingStudioMessages
       def resend_live_code(intent, request, session)
         user = RecordingStudioUser.config.user_class.find(intent.user_id)
         proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
-        raise Error, "Confirm the email code first." if proof.nil?
+        raise Error, Copy.t("errors.confirm_code") if proof.nil?
 
         call_users_otp do
           RecordingStudioUser.resend_otp!(user: user, purpose: proof.purpose, request: request, session: session)
@@ -78,9 +78,9 @@ module RecordingStudioMessages
       end
 
       def complete_locked(intent, actor)
-        raise NotAuthorized, "You cannot send this message." unless actor_matches?(intent, actor)
+        raise NotAuthorized, Copy.t("errors.cannot_send") unless actor_matches?(intent, actor)
         return intent.group_recording if intent.fulfilled?
-        raise Error, "That contact form expired. Send it again." unless intent_open?(intent)
+        raise Error, Copy.t("errors.expired") unless intent_open?(intent)
 
         settle_identity!(actor, intent)
         publish_intent!(intent, actor)

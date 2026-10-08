@@ -1,27 +1,27 @@
-<% recording_studio_page_nav(title: "Dummy host") %>
+<% recording_studio_page_nav(title: t("dummy.home.title")) %>
 
 <div class="flex w-full flex-col gap-6">
   <%= render FlatPack::PageTitle::Component.new(
-    title: "Dummy host",
-    subtitle: "Two message desks on one gem. This host is not the product.",
+    title: t("dummy.home.title"),
+    subtitle: t("dummy.home.subtitle"),
     variant: :h1
   ) %>
 
   <div class="flex flex-wrap gap-3">
     <%= render FlatPack::Button::Component.new(
-      text: "Staff desk",
+      text: t("dummy.home.staff_desk"),
       href: staff_desk_path,
       style: :primary,
       size: :md
     ) %>
     <%= render FlatPack::Button::Component.new(
-      text: "Inbox",
+      text: t("dummy.home.inbox"),
       href: inbox_path,
       style: :secondary,
       size: :md
     ) %>
     <%= render FlatPack::Button::Component.new(
-      text: "Admin",
+      text: t("dummy.home.admin"),
       href: recording_studio_admin_admin.root_path,
       style: :secondary,
       size: :md

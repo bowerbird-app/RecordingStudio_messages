@@ -32,7 +32,7 @@ module RecordingStudioMessages
     def respond_after_send
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_to after_send_path, notice: "Sent." }
+        format.html { redirect_to after_send_path, notice: Copy.t("flashes.sent") }
       end
     end
 

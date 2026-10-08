@@ -8,7 +8,7 @@ module RecordingStudioMessages
           name = for_recording(recording)
           return if name.blank?
 
-          "Powered by #{name}"
+          Copy.t("contact.powered_by", name: name)
         end
 
         private

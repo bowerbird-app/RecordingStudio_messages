@@ -1,7 +1,7 @@
 <% mount = local_assigns.fetch(:mount) %>
-<% title = local_assigns[:title].presence || "Contact" %>
+<% title = local_assigns[:title].presence || messages_t("contact.title") %>
 <% introduction = local_assigns[:introduction] %>
-<% submit_label = local_assigns[:submit_label].presence || "Send message" %>
+<% submit_label = local_assigns[:submit_label].presence || messages_t("contact.submit") %>
 <% heading = local_assigns.fetch(:heading, true) %>
 <% actor = public_contact_actor %>
 
@@ -21,14 +21,14 @@
       <% end %>
     <% else %>
       <%= render FlatPack::TextInput::Component.new(
-        **public_contact_input(:name, name: "name", label: "Name", required: true, maxlength: 120, autocomplete: "name")
+        **public_contact_input(:name, name: "name", label: messages_t("contact.name"), required: true, maxlength: 120, autocomplete: "name")
       ) %>
       <%= render FlatPack::EmailInput::Component.new(
-        **public_contact_input(:email, name: "email", label: "Email", required: true, autocomplete: "email")
+        **public_contact_input(:email, name: "email", label: messages_t("contact.email"), required: true, autocomplete: "email")
       ) %>
     <% end %>
     <%= render FlatPack::TextArea::Component.new(
-      **public_contact_input(:body, name: "body", label: "Message", required: true, rows: 5)
+      **public_contact_input(:body, name: "body", label: messages_t("contact.body"), required: true, rows: 5)
     ) %>
     <%= render FlatPack::Button::Component.new(text: submit_label, style: :primary, size: :md, type: "submit", class: "w-full") %>
   </div>

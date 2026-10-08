@@ -1,0 +1,54 @@
+en:
+  recording_studio:
+    messages:
+      contact:
+        title: Contact
+        submit: Send message
+        name: Name
+        email: Email
+        body: Message
+        verify_title: Verify it's you
+        verify_intro: "We sent a 6-digit code to %{email}."
+        code: Verification code
+        next: Next
+        resend: Resend code
+        sent_title: Message sent
+        view_conversation: View conversation
+        expired_title: Check your email
+        expired_body: That contact form expired. Send it again.
+        send_again: Send it again
+        powered_by: "Powered by %{name}"
+      composer:
+        add_file: Add a file
+        upload: Upload files or images
+        placeholder: Write a message
+      inbox:
+        title: Conversations
+        empty_thread: Nothing here yet. Write the first line.
+        empty_panel: Nothing here yet.
+      panel:
+        someone: Someone
+      flashes:
+        sent: Sent.
+        code_resent: Fresh code on the way.
+        cannot_open: You cannot open this conversation
+      errors:
+        write_message: Write a message.
+        message_too_long: That message is too long.
+        enter_name: Enter your name.
+        name_too_long: That name is too long.
+        enter_email: Enter an email address.
+        code_mismatch: That code did not match.
+        already_sent: That message was already sent.
+        expired: That contact form expired. Send it again.
+        confirm_code: Confirm the email code first.
+        cannot_send: You cannot send this message.
+        taken_email: That email already has an account. Try signing in.
+        rate_limited: Give it a minute, then try again.
+        users_required: Public contact needs Recording Studio Users email codes.
+        no_recipient: Nobody can receive this message.
+        not_enabled: Public contact is not enabled on this mount.
+        write_or_attach: Write something or add a file
+        cannot_send_conversation: You cannot send to this conversation
+        attach_failed: Could not attach that file
+        not_a_conversation: Messages must be sent in a conversation

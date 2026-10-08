@@ -18,7 +18,7 @@ module RecordingStudioMessages
 
       def fulfill!(mount:, contact:, title:, body:, recipients:)
         opener = opener_among(mount, recipients)
-        raise Error, NO_RECIPIENT if opener.nil?
+        raise Error, Copy.t("errors.no_recipient") if opener.nil?
 
         ActiveRecord::Base.transaction do
           group = open_contact_group(mount, opener, contact, title, recipients)

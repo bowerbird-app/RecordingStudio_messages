@@ -31,10 +31,10 @@ module RecordingStudioMessages
       def validate!
         raise ArgumentError, "group recording is required" if @group_recording.blank?
         raise ArgumentError, "actor is required" if @actor.blank?
-        raise RecordingStudioMessages::Error, "Messages must be sent in a conversation" unless group_recordable?
+        raise RecordingStudioMessages::Error, Copy.t("errors.not_a_conversation") unless group_recordable?
         return if @body.present? || @files.any?
 
-        raise RecordingStudioMessages::Error, "Write something or add a file"
+        raise RecordingStudioMessages::Error, Copy.t("errors.write_or_attach")
       end
 
       def authorize!
@@ -44,7 +44,7 @@ module RecordingStudioMessages
           role: :edit
         )
 
-        raise RecordingStudioMessages::NotAuthorized, "You cannot send to this conversation"
+        raise RecordingStudioMessages::NotAuthorized, Copy.t("errors.cannot_send_conversation")
       end
 
       def group_recordable?
@@ -77,7 +77,7 @@ module RecordingStudioMessages
         )
         return if result.present?
 
-        raise RecordingStudioMessages::Error, "Could not attach that file"
+        raise RecordingStudioMessages::Error, Copy.t("errors.attach_failed")
       end
 
       def notify_recipients!(message_recording)

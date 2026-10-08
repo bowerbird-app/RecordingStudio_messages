@@ -1,0 +1,160 @@
+# Dummy-only host translations. The engine ships English defaults; other
+# languages belong to the host. This file covers every engine
+# recording_studio.messages key plus dummy chrome and Flatpack kit copy.
+fr:
+  date:
+    abbr_month_names:
+      - ~
+      - janv.
+      - févr.
+      - mars
+      - avr.
+      - mai
+      - juin
+      - juil.
+      - août
+      - sept.
+      - oct.
+      - nov.
+      - déc.
+    month_names:
+      - ~
+      - janvier
+      - février
+      - mars
+      - avril
+      - mai
+      - juin
+      - juillet
+      - août
+      - septembre
+      - octobre
+      - novembre
+      - décembre
+  recording_studio:
+    internationalization:
+      selector:
+        label: Langue
+        submit: Changer de langue
+    messages:
+      contact:
+        title: Contact
+        submit: Envoyer
+        name: Nom
+        email: E-mail
+        body: Message
+        verify_title: Vérifiez que c’est vous
+        verify_intro: "Nous avons envoyé un code à 6 chiffres à %{email}."
+        code: Code de vérification
+        next: Suivant
+        resend: Renvoyer le code
+        sent_title: Message envoyé
+        view_conversation: Voir la conversation
+        expired_title: Consultez vos e-mails
+        expired_body: Ce formulaire a expiré. Envoyez-le à nouveau.
+        send_again: Envoyer à nouveau
+        powered_by: "Propulsé par %{name}"
+      composer:
+        add_file: Ajouter un fichier
+        upload: Envoyer des fichiers ou des images
+        placeholder: Écrire un message
+      inbox:
+        title: Conversations
+        empty_thread: Rien ici pour l’instant. Écrivez la première ligne.
+        empty_panel: Rien ici pour l’instant.
+      panel:
+        someone: Quelqu’un
+      flashes:
+        sent: Envoyé.
+        code_resent: Nouveau code en route.
+        cannot_open: Vous ne pouvez pas ouvrir cette conversation
+      errors:
+        write_message: Écrivez un message.
+        message_too_long: Ce message est trop long.
+        enter_name: Entrez votre nom.
+        name_too_long: Ce nom est trop long.
+        enter_email: Entrez une adresse e-mail.
+        code_mismatch: Ce code ne correspond pas.
+        already_sent: Ce message a déjà été envoyé.
+        expired: Ce formulaire a expiré. Envoyez-le à nouveau.
+        confirm_code: Confirmez d’abord le code e-mail.
+        cannot_send: Vous ne pouvez pas envoyer ce message.
+        taken_email: Cette adresse a déjà un compte. Essayez de vous connecter.
+        rate_limited: Attendez une minute, puis réessayez.
+        users_required: Le contact public a besoin des codes e-mail Recording Studio Users.
+        no_recipient: Personne ne peut recevoir ce message.
+        not_enabled: Le contact public n’est pas activé sur ce bureau.
+        write_or_attach: Écrivez quelque chose ou ajoutez un fichier
+        cannot_send_conversation: Vous ne pouvez pas envoyer dans cette conversation
+        attach_failed: Impossible de joindre ce fichier
+        not_a_conversation: Les messages s’envoient dans une conversation
+  dummy:
+    home:
+      title: Hôte dummy
+      subtitle: Deux bureaux de messages, un seul gem. Cet hôte n’est pas le produit.
+      staff_desk: Bureau équipe
+      inbox: Boîte de réception
+      admin: Admin
+  flatpack:
+    chat:
+      placeholder: Écrire un message…
+      send: Envoyer
+      back: Retour
+      back_to_conversations: Retour aux conversations
+      loading_older: Chargement des messages plus anciens…
+      jump_to_latest: Aller au plus récent
+      jump_to_latest_message: Aller au message le plus récent
+      sending: Envoi…
+      failed: Échec
+      edit: Modifier
+      delete: Supprimer
+      typing: Quelqu’un écrit
+      outgoing_images: Images envoyées
+      incoming_images: Images reçues
+      image: Image
+      you: Vous
+      attachment: Pièce jointe
+    timestamp:
+      fallback: "-"
+      in: Dans %{distance}
+      ago: "il y a %{distance}"
+      just_now: À l’instant
+      a_min_ago: il y a 1 min
+      minutes_ago: "il y a %{count} minutes"
+      hours_ago: "il y a %{count} heures"
+      yesterday: Hier
+      days_ago: "il y a %{count} jours"
+      weeks_ago: "il y a %{count} semaines"
+      months_ago: "il y a %{count} mois"
+      short_a_min_ago: il y a 1 min
+      short_min_ago: "il y a %{count} min"
+      short_hr_ago: "il y a %{count} h"
+      short_yesterday: il y a 1 j
+      short_d_ago: "il y a %{count} j"
+      short_wk_ago: "il y a %{count} sem"
+      short_mo_ago: "il y a %{count} mois"
+    page_nav:
+      back: Retour
+      close: Fermer
+      previous: Page précédente
+      label: Navigation de page
+    select:
+      placeholder: Choisir
+      search: Rechercher…
+      remove: Retirer %{label}
+      type_to_search: Tapez au moins %{count} caractères
+      searching: Recherche…
+      empty: Aucune option
+    common:
+      close: Fermer
+      search: Rechercher
+      previous: Préc.
+      next: Suiv.
+      back: Retour
+      save: Enregistrer
+    modal:
+      close: Fermer
+    alert:
+      dismiss: Fermer
+    button:
+      loading: Chargement

@@ -2,6 +2,8 @@
 
 module RecordingStudioMessages
   module PanelHelper
+    include CopyHelper
+
     def messages_desk_panel_id
       "messages-desk-panel"
     end
@@ -32,7 +34,7 @@ module RecordingStudioMessages
     end
 
     def message_sender_name(actor)
-      return "Someone" if actor.blank?
+      return Copy.t("panel.someone") if actor.blank?
 
       named_actor(actor) || profile_actor_name(actor) || emailed_actor(actor) || actor.class.name.demodulize
     end
@@ -66,6 +68,10 @@ module RecordingStudioMessages
 
     def message_timestamp(message_recording)
       message_recording.created_at
+    end
+
+    def message_day_label(date)
+      Copy.l(date, format: "%-d %b %Y")
     end
 
     def message_attachments_for(message_recording)

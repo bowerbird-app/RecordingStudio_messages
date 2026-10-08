@@ -1,22 +1,22 @@
-<% content_for :title, "Verify it's you" %>
+<% content_for :title, messages_t("contact.verify_title") %>
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
   <div class="flex flex-col gap-[var(--stack-gap-lg)]" data-public-contact-step="verify">
     <div class="flex flex-col gap-[var(--stack-gap-sm)]">
-      <h1 class="text-xl font-semibold">Verify it's you</h1>
-      <p>We sent a 6-digit code to <%= @intent.email %>.</p>
+      <h1 class="text-xl font-semibold"><%= messages_t("contact.verify_title") %></h1>
+      <p><%= messages_t("contact.verify_intro", email: @intent.email) %></p>
     </div>
 
     <%= form_with url: public_contact_verify_path, method: :post, class: "flex flex-col gap-[var(--stack-gap-lg)]", **public_contact_form_options do %>
       <%= public_contact_modal_fields %>
       <%= render FlatPack::TextInput::Component.new(
         name: "code",
-        label: "Verification code",
+        label: messages_t("contact.code"),
         required: true,
         inputmode: "numeric",
         autocomplete: "one-time-code",
         maxlength: 6
       ) %>
-      <%= render FlatPack::Button::Component.new(text: "Next", style: :primary, size: :md, type: "submit", class: "w-full") %>
+      <%= render FlatPack::Button::Component.new(text: messages_t("contact.next"), style: :primary, size: :md, type: "submit", class: "w-full") %>
     <% end %>
 
     <% resend_query = {} %>
@@ -31,7 +31,7 @@
         turbo_frame: modal_frame_request? ? public_contact_frame_id : "_top"
       }
     ) do %>
-      Resend code
+      <%= messages_t("contact.resend") %>
     <% end %>
   </div>
 <% end %>

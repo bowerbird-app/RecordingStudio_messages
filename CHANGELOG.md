@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Development and dummy pins climb the Recording Studio family through layer 2. Core stays on `v4.2.2`. Flatpack stays on the current pins. This gem's version is unchanged.
+## [0.5.0] - 2026-10-08
+
+Customer-facing Messages copy now lives under `recording_studio.messages.*` so hosts can translate contact forms, conversation chrome, flashes, and related screens.
+
+### Added
+- Engine ships English only in `config/locales/en.yml`
+- Nested keys: `t("recording_studio.messages.contact.submit")` (not a top-level `recording_studio_messages:` namespace)
+- Dummy hosts English and French via Recording Studio Internationalization, with a compact language selector in the top nav
+
+### Upgrade notes
+- Bump to **0.5.0** (minor: hosts can translate customer Messages screens). No migration
+- English screens stay the same. Helper arguments that already accept custom text (`title`, `introduction`, `submit_label` on `public_contact_form` / `public_contact_modal`) still win over the locale default
+- To offer another language, copy `recording_studio.messages.*` from `config/locales/en.yml` into the host (`config/locales/<locale>.yml`) and list that locale in `config.i18n.available_locales`. Dummy `test/dummy/config/locales/fr.yml` is a complete starting point
+- Do not add `RecordingStudio_Internationalization` as a gem dependency of this engine. Use plain Rails I18n. Internationalization is a host (and dummy) concern
+- Conversation titles, message bodies, attachment names, and notification titles stored in the database are data. This gem does not translate them. Host-configured form titles and submit labels passed into the helpers are also data
+- OTP email copy is owned by Recording Studio Users, not this gem
+- Staff Admin screens and recordable labels stay English
+
+Development and dummy pins climb the Recording Studio family through layer 2. Core stays on `v4.2.2`. Dummy Flatpack moves to `v0.1.206` so chat kit copy can follow the locale. This gem's gemspec still accepts `flat_pack ~> 0.1.148`.
 
 ### Changed
 - Accessible tag `v0.11.1` (gem `VERSION` `0.11.0`), Attachable tag `v0.7.1` (`0.7.0`), Notifications tag `v0.3.4` (`0.3.2`), Users tag `v0.12.5` (`0.12.3`), Admin tag `v2.0.4` (`2.0.2`), Root Switchable tag `v0.5.3` (`0.5.1`), and Site Settings tag `v0.1.3` (`0.1.0`). Bundler matches those `VERSION` constants; the git tags are newer than the constants.
@@ -278,7 +296,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.6...v0.5.0
 [0.4.5]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.4...v0.4.5
 [0.4.1]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.1
 [0.4.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.4.0

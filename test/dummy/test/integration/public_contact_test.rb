@@ -315,7 +315,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_response :success
-    assert_includes response.body, "Verify it's you"
+    assert_select "h1", text: "Verify it's you"
     assert_includes response.body, "We sent a 6-digit code to ada@example.com."
     refute_includes response.body, "Check your email"
     refute_includes response.body, "Confirm & send"

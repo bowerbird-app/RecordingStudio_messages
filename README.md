@@ -195,7 +195,7 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 
 One dialog per page. A normal visit to `public_contact_path`, including `presentation=modal` without the frame header, still uses the centered page. The page posts are full document posts. Coming back to the host page does not restore an open dialog.
 
-Include `RecordingStudioMessages::PublicContactHelper` on the host controller that embeds either helper. The defaults are title "Contact", no introduction, and submit label "Send message". The dialog needs Turbo on that page.
+Include `RecordingStudioMessages::PublicContactHelper` on the host controller that embeds either helper. The defaults are title "Contact", no introduction, and submit label "Send message". Those strings follow I18n (`recording_studio.messages.contact.*`). Passing `title`, `introduction`, or `submit_label` still overrides the locale. The dialog needs Turbo on that page.
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 
@@ -279,12 +279,14 @@ Authenticated dummy pages use Recording Studio's shared default layout (`UsesDef
 | Email    | casey@example.com  |
 | Password | Password           |
 
+The dummy switches English and French with Recording Studio Internationalization. The compact language selector sits in PageNav. Conversation titles and seeded message bodies stay in the language they were written.
+
 The dummy proves two mounts at once:
 
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin mounts Site Settings (`v0.1.3`) and Terms and Conditions (`v0.7.3`). Publishable stays on `v0.3.1` because Terms requires `~> 0.3`; it serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Terms requires Flatpack `>= 0.1.196`, so the dummy pins `v0.1.198`. The messages gemspec stays `~> 0.1.148`.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin mounts Site Settings (`v0.1.3`) and Terms and Conditions (`v0.7.3`). Publishable stays on `v0.3.1` because Terms requires `~> 0.3`; it serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Terms requires Flatpack `>= 0.1.196`. Dummy pins `v0.1.206` so chat kit copy follows the locale. The messages gemspec stays `~> 0.1.148`.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -294,10 +296,24 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_accessible` | `~> 0.11` | `v0.11.1` | `0.11.0` |
 | `recording_studio_attachable` | `~> 0.7` | `v0.7.1` | `0.7.0` |
 | `recording_studio_notifications` | `~> 0.3.1` | `v0.3.4` | `0.3.2` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.198` | `0.1.198` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.206` | `0.1.206` |
 | `recording_studio_user` (dummy host only) | `~> 0.12.3` | `v0.12.5` | `0.12.3` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
+
+## Internationalization
+
+The gem ships **English only** in `config/locales/en.yml`. Keys nest under `recording_studio.messages.*`:
+
+```ruby
+t("recording_studio.messages.contact.submit")
+t("recording_studio.messages.composer.placeholder")
+t("recording_studio.messages.flashes.sent")
+```
+
+Hosts own other languages. Copy `recording_studio.messages.*` into `config/locales/<locale>.yml` and list that locale in `config.i18n.available_locales`. Do not add `RecordingStudio_Internationalization` as a dependency of this gem — it is optional on the host (the dummy uses it to switch English/French).
+
+Conversation titles, message bodies, attachment names, and notification titles written to the database are data and stay in the language they were stored. OTP mail is owned by Recording Studio Users.
 
 ## Out of this version
 
