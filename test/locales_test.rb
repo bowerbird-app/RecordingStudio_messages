@@ -2,6 +2,8 @@
 
 require "test_helper"
 require "yaml"
+require_relative "../app/helpers/recording_studio_messages/copy_helper"
+require_relative "../app/helpers/recording_studio_messages/public_contact_helper"
 
 class LocalesTest < Minitest::Test
   Copy = RecordingStudioMessages::Copy

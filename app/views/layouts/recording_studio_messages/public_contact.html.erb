@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html <%= tag.attributes(public_contact_document_attributes) %>>
+<html <%= tag.attributes(messages_document_attributes("data-theme" => "rounded")) %>>
   <head>
     <title><%= content_for(:title) || messages_t("contact.title") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -12,11 +12,6 @@
     <%= javascript_importmap_tags %>
   </head>
   <body class="bg-[var(--surface-page-background-color)] text-[var(--surface-content-color)]">
-    <% if respond_to?(:recording_studio_language_selector) %>
-      <div class="absolute right-4 top-4">
-        <%= public_contact_language_selector %>
-      </div>
-    <% end %>
     <main class="flex min-h-dvh items-center justify-center p-6">
       <div class="w-full max-w-sm space-y-4">
         <% if flash[:notice].present? %>

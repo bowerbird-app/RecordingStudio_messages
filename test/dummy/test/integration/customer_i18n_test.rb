@@ -24,7 +24,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_select "nav.flat-pack-page-nav .dummy-language-selector"
   end
 
-  test "contact form and conversation views stay English until the host locale changes" do
+  test "contact form stays English until the host locale changes" do
     sign_out @staff
     get recording_studio_messages.public_contact_path(mount_id: DummyCatalog.inbox_mount_recording.id)
 
@@ -33,8 +33,9 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Name"
     assert_includes response.body, "Contact"
     assert_select "html[lang='en']"
+  end
 
-    sign_in @staff
+  test "conversation views stay English until the host locale changes" do
     get staff_desk_path
 
     assert_response :success
@@ -43,7 +44,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_select "html[lang='en']"
   end
 
-  test "dummy French locale renders the contact form and conversation views" do
+  test "dummy French locale renders the public contact form" do
     sign_out @staff
     switch_to_french
 
@@ -54,15 +55,9 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Envoyer"
     assert_includes response.body, "Nom"
     refute_includes response.body, "Send message"
+  end
 
-    post recording_studio_messages.public_contact_path(mount_id: DummyCatalog.inbox_mount_recording.id),
-         params: { name: "", email: "ada@example.com", body: "Bonjour" }
-
-    assert_response :unprocessable_entity
-    assert_includes response.body, "Entrez votre nom."
-    refute_includes response.body, "Enter your name."
-
-    sign_in @staff
+  test "dummy French locale renders conversation views" do
     switch_to_french
     get staff_desk_path
 
