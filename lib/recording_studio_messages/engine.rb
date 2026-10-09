@@ -110,6 +110,10 @@ module RecordingStudioMessages
       end
     end
 
+    initializer "recording_studio_messages.metrics" do
+      config.to_prepare { RecordingStudioMessages::Metrics.register! }
+    end
+
     # Apply model extensions when models are loaded
     initializer "recording_studio_messages.apply_model_extensions" do
       config.to_prepare do
