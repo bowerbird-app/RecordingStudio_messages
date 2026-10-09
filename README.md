@@ -34,7 +34,7 @@ Add the gem next to Recording Studio 4.2, Accessible, Attachable, Notifications,
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.3.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"
-gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.4.0"
+gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.5.0"
 gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.198"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
@@ -295,7 +295,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio` | `~> 4.2` | `v4.3.0` | `4.3.0` |
 | `recording_studio_accessible` | `~> 0.11` | `v0.11.1` | `0.11.0` |
 | `recording_studio_attachable` | `~> 0.7` | `v0.7.1` | `0.7.0` |
-| `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.4.0` | `0.4.0` |
+| `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.5.0` | `0.5.0` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.207` | `0.1.207` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.16.0` | `0.16.0` |
 
