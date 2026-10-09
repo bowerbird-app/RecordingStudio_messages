@@ -15,8 +15,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
 
     assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
-    assert_equal "~> 0.11", gemspec_constraint(gemspec, "recording_studio_accessible")
-    assert_equal "~> 0.7", gemspec_constraint(gemspec, "recording_studio_attachable")
+    assert_equal "~> 0.13", gemspec_constraint(gemspec, "recording_studio_accessible")
+    assert_equal "~> 0.13", gemspec_constraint(gemspec, "recording_studio_attachable")
     assert_includes gemspec, 'spec.add_dependency "recording_studio_notifications", ">= 0.3.1", "< 1"'
     requirement = Gem::Requirement.new(">= 0.3.1", "< 1")
     assert requirement.satisfied_by?(Gem::Version.new("0.3.1"))
@@ -37,16 +37,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.4.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.13.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.13.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.4.0"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.3.1", "< 1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.16"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.207"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.213"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.7"'
-    assert_equal "~> 0.11", gemfile_constraint(gemfile, "recording_studio_accessible")
+    assert_equal "~> 0.13", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     assert_equal "~> 0.1.198", gemfile_constraint(gemfile, "flat_pack")
   end
@@ -55,8 +55,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.4.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.11.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.7.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.13.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.13.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.4.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.5.3"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"'
@@ -65,7 +65,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.8.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.0.7"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.207"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.213"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.1.2"'
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v0.1.148"'
@@ -261,6 +261,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"Folder"'
     assert_includes initializer_source, '"Page"'
     assert_includes initializer_source, '"RecordingStudioAttachable::Attachment"'
+    assert_includes initializer_source, '"RecordingStudioAttachable::Library"'
+    assert_includes initializer_source, '"RecordingStudioAttachable::Placement"'
     refute_includes initializer_source, "config.include_children"
     refute_includes initializer_source, "config.features."
     assert_includes initializer_source, "RecordingStudioMessages::MessageMount"
