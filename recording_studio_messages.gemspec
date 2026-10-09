@@ -27,5 +27,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "recording_studio", "~> 4.2"
   spec.add_dependency "recording_studio_accessible", "~> 0.13"
   spec.add_dependency "recording_studio_attachable", "~> 0.13"
+  spec.add_dependency "recording_studio_metrics", "~> 0.2"
   spec.add_dependency "recording_studio_notifications", ">= 0.3.1", "< 1"
 end

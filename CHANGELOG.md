@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-09
+
+Operations metrics for messages, conversations, and public contact intents.
+
+### Added
+- `RecordingStudioMessages::Metrics.register!` from `config.to_prepare` (idempotent on reload)
+- Site-wide operations metrics, all `expose: { api: [:operations] }`, `blast_radius: :site`
+- `messages.sent_over_time` and `message_groups.created_over_time` count live `RecordingStudio::Recording` rows (`recordable_type` + `trashed_at: nil`)
+- `contact_intents.submitted_over_time` and `contact_intents.converted` (`converted` / `expired` / `pending`) on `PublicContactIntent`
+- `RecordingStudioMessages::Api::Access.can_view?` — AdminRoot `:view` through Accessible
+- Gemspec `recording_studio_metrics ~> 0.2`, GitHub pin `v0.2.0`
+
+### Upgrade notes
+- Bump to **0.6.0**. No migration
+- Hosts that expose Admin operations call `RecordingStudioMetrics::Api.register!(api: :operations)`. This gem only registers metric definitions
+- Staff with AdminRoot view see the metrics. Other actors are denied
+
 ## [0.5.2] - 2026-10-08
 
 Allow Notifications 0.4.
@@ -309,7 +326,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.4.6...v0.5.0
