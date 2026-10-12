@@ -9,7 +9,7 @@ gemspec
 gem "flat_pack", "~> 0.1.198", github: "bowerbird-app/flatpack", tag: "v0.1.213"
 gem "recording_studio", "~> 4.2", github: "bowerbird-app/RecordingStudio", tag: "v4.5.0"
 gem "recording_studio_accessible", "~> 0.13",
-    github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.13.0"
+    github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"
 gem "recording_studio_admin", "~> 2.1", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.1.0"
 gem "recording_studio_attachable", "~> 0.13",
     github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.13.0"
