@@ -68,10 +68,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_publishable.git
-  revision: 6e7da3c8a9359dfcde7a177d29a49886f85fdbf8
-  tag: v0.6.0
+  revision: 059a41ad0b821bbd978c0d0ad22a46013c8867e1
+  tag: v0.8.0
   specs:
-    recording_studio_publishable (0.6.0)
+    recording_studio_publishable (0.8.0)
       rails (~> 8.1.0)
       recording_studio (~> 4.2)
       view_component (>= 3.0, < 5.0)
@@ -826,7 +826,7 @@ CHECKSUMS
   recording_studio_messages (0.6.0)
   recording_studio_metrics (0.2.0)
   recording_studio_notifications (0.5.0)
-  recording_studio_publishable (0.6.0)
+  recording_studio_publishable (0.8.0)
   recording_studio_root_switchable (0.8.0)
   recording_studio_site_settings (0.1.0)
   recording_studio_terms_and_conditions (0.8.0)
