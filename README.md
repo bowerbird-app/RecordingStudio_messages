@@ -286,13 +286,13 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin mounts Site Settings (`v0.1.3`) and Terms and Conditions (`v0.8.1`). Publishable is on `v0.6.0` (i18n release; Terms still allows `~> 0.4`); it serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Terms requires Flatpack `>= 0.1.196`. Dummy pins `v0.1.213`. The messages gemspec stays `~> 0.1.148`.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin mounts Site Settings (`v0.1.3`) and Terms and Conditions (`v0.8.1`). Publishable is on `v0.6.0` (i18n release; Terms still allows `~> 0.4`); it serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.8.0` (translatable `page_copy`; rendered English unchanged). Recording Studio is on `v4.5.0` (translatable `Labels.empty_label`; rendered English unchanged). Terms requires Flatpack `>= 0.1.196`. Dummy pins `v0.1.213`. The messages gemspec stays `~> 0.1.148`.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Default-branch `VERSION` |
 |---|---|---|---|
-| `recording_studio` | `~> 4.2` | `v4.3.0` | `4.3.0` |
+| `recording_studio` | `~> 4.2` | `v4.5.0` | `4.5.0` |
 | `recording_studio_accessible` | `~> 0.11` | `v0.11.1` | `0.11.0` |
 | `recording_studio_attachable` | `~> 0.7` | `v0.7.1` | `0.7.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.5.0` | `0.5.0` |
