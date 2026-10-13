@@ -37,6 +37,15 @@ GIT
       recording_studio_metrics (~> 0.2)
 
 GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_cache.git
+  revision: ffadfbd2a804104e1146c835aaf1bdb8068596ff
+  tag: v0.5.0
+  specs:
+    recording_studio_cache (0.5.0)
+      rails (~> 8.1.0)
+      recording_studio (~> 4.2)
+
+GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git
   revision: 6e02b6b75a8a9dad2bd80c6ba2d30f7444e67b9e
   tag: v0.2.0
@@ -60,10 +69,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_users.git
-  revision: 6ceb672ae05b36b8bf56ee405e9ab2f15b71b3be
-  tag: v0.16.0
+  revision: 208aaeff7a2cec103a1f8068bef17d7aefcc8295
+  tag: v0.21.0
   specs:
-    recording_studio_user (0.16.0)
+    recording_studio_user (0.21.0)
       devise (~> 5.0)
       flat_pack (>= 0.1.144)
       omniauth (~> 2.1)
@@ -78,6 +87,8 @@ GIT
       recording_studio_accessible (~> 0.11)
       recording_studio_admin (~> 2.0)
       recording_studio_attachable (~> 0.7)
+      recording_studio_cache (~> 0.5)
+      recording_studio_metrics (~> 0.2)
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
@@ -478,6 +489,7 @@ DEPENDENCIES
   recording_studio_accessible (~> 0.13)!
   recording_studio_admin (~> 2.1)!
   recording_studio_attachable (~> 0.13)!
+  recording_studio_cache (~> 0.5)!
   recording_studio_messages!
   recording_studio_metrics (~> 0.2)!
   recording_studio_notifications (>= 0.3.1, < 1)!
@@ -589,10 +601,11 @@ CHECKSUMS
   recording_studio_accessible (0.15.0)
   recording_studio_admin (2.2.0)
   recording_studio_attachable (0.15.0)
+  recording_studio_cache (0.5.0)
   recording_studio_messages (0.6.0)
   recording_studio_metrics (0.2.0)
   recording_studio_notifications (0.7.0)
-  recording_studio_user (0.16.0)
+  recording_studio_user (0.21.0)
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   reline (0.7.0) sha256=5b012d8e55dbf9d450f12bde2cf7d15ff546ae80b3f8f3b30e570d431815583d
   responders (3.2.1) sha256=c2772970cbda654c0e772d852e5a851e82cd8e96f5fa958650861ba75b8ffa84
