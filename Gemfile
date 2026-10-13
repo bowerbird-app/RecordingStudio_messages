@@ -9,7 +9,7 @@ gemspec
 gem "flat_pack", "~> 0.1.198", github: "bowerbird-app/flatpack", tag: "v0.1.213"
 gem "recording_studio", "~> 4.2", github: "bowerbird-app/RecordingStudio", tag: "v4.5.0"
 gem "recording_studio_accessible", "~> 0.13",
-    github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"
+    github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.17.0"
 gem "recording_studio_admin", "~> 2.1", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.3.0"
 gem "recording_studio_attachable", "~> 0.13",
     github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"
@@ -18,7 +18,7 @@ gem "recording_studio_cache", "~> 0.5", github: "bowerbird-app/RecordingStudio_c
 gem "recording_studio_metrics", "~> 0.2", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.2.0"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1",
     github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"
-# Admin 2.3 loads Trashable query helpers only; pin for Bundler resolution.
+# Admin 2.3 / Accessible 0.17 load Trashable query helpers only; pin for Bundler.
 gem "recording_studio_trashable",
     github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.10.0",
     require: false
