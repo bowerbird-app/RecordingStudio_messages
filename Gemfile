@@ -13,10 +13,12 @@ gem "recording_studio_accessible", "~> 0.13",
 gem "recording_studio_admin", "~> 2.1", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.2.0"
 gem "recording_studio_attachable", "~> 0.13",
     github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"
+# Required by recording_studio_user >= 0.21 (git-only; not on RubyGems).
+gem "recording_studio_cache", "~> 0.5", github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"
 gem "recording_studio_metrics", "~> 0.2", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.2.0"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1",
     github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"
-gem "recording_studio_user", "~> 0.16", github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"
+gem "recording_studio_user", "~> 0.16", github: "bowerbird-app/RecordingStudio_users", tag: "v0.21.0"
 
 gem "devise"
 gem "puma"
