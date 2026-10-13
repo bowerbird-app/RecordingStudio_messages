@@ -20,8 +20,7 @@ gem "recording_studio_notifications", ">= 0.3.1", "< 1",
     github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"
 # Admin 2.3 loads Trashable query helpers only; pin for Bundler resolution.
 gem "recording_studio_trashable",
-    github: "bowerbird-app/RecordingStudio_trashable",
-    tag: "v0.10.0",
+    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.10.0",
     require: false
 gem "recording_studio_user", "~> 0.16", github: "bowerbird-app/RecordingStudio_users", tag: "v0.21.0"
 

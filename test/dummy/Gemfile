@@ -17,8 +17,7 @@ gem "recording_studio_site_settings", github: "bowerbird-app/RecordingStudio_sit
 gem "recording_studio_terms_and_conditions", github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.8.1"
 # Admin 2.3 loads Trashable query helpers only; pin for Bundler resolution.
 gem "recording_studio_trashable",
-    github: "bowerbird-app/RecordingStudio_trashable",
-    tag: "v0.10.0",
+    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.10.0",
     require: false
 gem "recording_studio_user", github: "bowerbird-app/RecordingStudio_users", tag: "v0.21.0"
 
