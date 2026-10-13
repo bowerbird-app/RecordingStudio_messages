@@ -68,7 +68,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.21.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.8.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.1.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.2.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.8.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.3.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.10.0"'
