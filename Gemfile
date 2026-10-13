@@ -15,7 +15,7 @@ gem "recording_studio_attachable", "~> 0.13",
     github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"
 gem "recording_studio_metrics", "~> 0.2", github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.2.0"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1",
-    github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.5.0"
+    github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"
 gem "recording_studio_user", "~> 0.16", github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"
 
 gem "devise"

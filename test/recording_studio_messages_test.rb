@@ -40,7 +40,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.5.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.3.1", "< 1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.16"'
@@ -59,7 +59,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v4.5.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.15.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.5.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.7.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.8.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.16.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.8.0"'
@@ -77,17 +77,17 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes gemfile, 'tag: "v0.1.84"'
   end
 
-  def test_lockfiles_resolve_notifications_0_5_0
+  def test_lockfiles_resolve_notifications_0_7_0
     root_lock = File.read(File.expand_path("../Gemfile.lock", __dir__))
     dummy_lock = File.read(File.expand_path("dummy/Gemfile.lock", __dir__))
 
-    assert_includes root_lock, "tag: v0.5.0"
-    assert_includes root_lock, "recording_studio_notifications (0.5.0)"
+    assert_includes root_lock, "tag: v0.7.0"
+    assert_includes root_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "recording_studio_notifications (>= 0.3.1, < 1)"
-    refute_includes root_lock, "tag: v0.4.0"
-    assert_includes dummy_lock, "tag: v0.5.0"
-    assert_includes dummy_lock, "recording_studio_notifications (0.5.0)"
-    refute_includes dummy_lock, "tag: v0.4.0"
+    refute_includes root_lock, "tag: v0.5.0"
+    assert_includes dummy_lock, "tag: v0.7.0"
+    assert_includes dummy_lock, "recording_studio_notifications (0.7.0)"
+    refute_includes dummy_lock, "tag: v0.5.0"
   end
 
   def test_does_not_ship_copied_core_hooks_or_template_leftovers
