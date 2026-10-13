@@ -87,10 +87,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes root_lock, "tag: v0.7.0"
     assert_includes root_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "recording_studio_notifications (>= 0.3.1, < 1)"
-    refute_includes root_lock, "tag: v0.5.0"
+    refute_includes root_lock, "recording_studio_notifications (0.5.0)"
     assert_includes dummy_lock, "tag: v0.7.0"
     assert_includes dummy_lock, "recording_studio_notifications (0.7.0)"
-    refute_includes dummy_lock, "tag: v0.5.0"
+    refute_includes dummy_lock, "recording_studio_notifications (0.5.0)"
   end
 
   def test_does_not_ship_copied_core_hooks_or_template_leftovers
