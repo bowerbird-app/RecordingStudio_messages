@@ -5,7 +5,7 @@ gem "recording_studio_messages", path: "../.."
 
 # RecordingStudio engine
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.6.0"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.17.0"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.18.0"
 gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.3.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"
 # Required by recording_studio_user >= 0.21 and root_switchable >= 0.9 (git-only).
