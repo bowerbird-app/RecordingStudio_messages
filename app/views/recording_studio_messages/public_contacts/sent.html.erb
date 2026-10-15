@@ -13,6 +13,17 @@
     <% if credit.present? %>
       <p><%= credit %></p>
     <% end %>
+    <% success_url = public_contact_success_redirect_url(@group_recording) %>
+    <% if success_url %>
+      <%= render FlatPack::Button::Component.new(
+        text: public_contact_success_redirect_label,
+        href: success_url,
+        style: :primary,
+        size: :md,
+        class: "w-full",
+        data: { turbo_frame: "_top", public_contact_success_redirect: true }
+      ) %>
+    <% end %>
     <% if public_contact_actor && @group_recording %>
       <%= render FlatPack::Button::Component.new(
         text: messages_t("contact.view_conversation"),

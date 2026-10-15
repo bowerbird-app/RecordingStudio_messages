@@ -4,9 +4,11 @@ module RecordingStudioMessages
   class PublicContactsController < ActionController::Base
     include PublicContactHelper
     include PublicContactFlow
+    include PublicContactSignIn
 
     helper CopyHelper
     helper PublicContactHelper
+    helper PublicContactSuccessHelper
 
     protect_from_forgery with: :exception
     layout :public_contact_layout
@@ -40,6 +42,7 @@ module RecordingStudioMessages
     def submit_verification
       @intent = session_intent
       remember_sent(PublicContact.submit_code!(intent: @intent, code: params[:code], session: session))
+      sign_in_verified_contact(@intent)
       redirect_to_sent
     end
 

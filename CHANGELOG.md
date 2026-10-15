@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `public_contact_sign_in_after_verification` signs a signed-out visitor in through Devise/Warden after the public contact email code verifies (new registration or existing login). Default `false`.
+- `public_contact_success_redirect_url` (String or callable receiving `mount_recording:`, `user:`, `request:`) and `public_contact_success_redirect_label` add a button to the "Message sent" step, page and dialog. Label defaults to `contact.success_redirect` ("Go to your inbox").
+
 ## [0.6.0] - 2026-10-09
 
 Operations metrics for messages, conversations, and public contact intents.

@@ -235,6 +235,40 @@ RecordingStudioMessages.configure do |config|
     [User.find_by(email: "admin@admin.com")].compact
   }
   config.public_contact_sent_icon = "rocket-launch"
+  config.public_contact_sign_in_after_verification = false
+  config.public_contact_success_redirect_url = nil
+  config.public_contact_success_redirect_label = nil
+end
+```
+
+### After the message is sent
+
+`public_contact_sign_in_after_verification` (default `false`). When `true`, a
+signed-out visitor who enters the right email code is signed in through the
+host's Devise (`sign_in(scope, user)` with the scope Devise maps for that user;
+plain Warden `set_user(user, scope: :user)` when Devise helpers are absent).
+That covers both a brand-new OTP registration and an existing account that
+verified with a login code. A wrong or expired code never signs anyone in, and
+someone already signed in is left alone. Off, the visitor stays signed out
+after sending.
+
+`public_contact_success_redirect_url` (default `nil`) adds a primary button to
+the "Message sent" step, on the full page and in the dialog, for new and
+existing users alike, whether or not sign-in after verification is on. It
+leaves the dialog (`turbo_frame: "_top"`). Give a String, or a callable that
+receives `mount_recording:`, `user:` (the sender), and `request:` and returns a
+URL. A blank result hides the button.
+
+`public_contact_success_redirect_label` sets the button text. Leave it `nil`
+for the translated default, `contact.success_redirect` ("Go to your inbox").
+
+```ruby
+RecordingStudioMessages.configure do |config|
+  config.public_contact_sign_in_after_verification = true
+  config.public_contact_success_redirect_url = lambda { |mount_recording:, user:, request:|
+    Rails.application.routes.url_helpers.inbox_path
+  }
+  config.public_contact_success_redirect_label = "Go to your inbox"
 end
 ```
 
