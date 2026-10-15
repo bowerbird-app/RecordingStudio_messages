@@ -53,7 +53,7 @@ gem "tailwindcss-rails"
 # FlatPack UI component library [https://github.com/bowerbird-app/flatpack]
 # Terms and Conditions requires Flatpack >= 0.1.196. Chat copy follows locale
 # from Flatpack 0.1.206. The messages gemspec stays ~> 0.1.148.
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.213"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.245"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
