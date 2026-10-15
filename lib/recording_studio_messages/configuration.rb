@@ -3,7 +3,9 @@
 module RecordingStudioMessages
   class Configuration
     attr_accessor :api_key, :enable_feature_x, :timeout,
-                  :public_contact_recipient_resolver, :public_contact_sent_icon
+                  :public_contact_recipient_resolver, :public_contact_sent_icon,
+                  :public_contact_sign_in_after_verification,
+                  :public_contact_success_redirect_url, :public_contact_success_redirect_label
     attr_reader :hooks
 
     def initialize
@@ -12,6 +14,9 @@ module RecordingStudioMessages
       @timeout = 5
       @public_contact_recipient_resolver = nil
       @public_contact_sent_icon = "rocket-launch"
+      @public_contact_sign_in_after_verification = false
+      @public_contact_success_redirect_url = nil
+      @public_contact_success_redirect_label = nil
       @hooks = RecordingStudio::Hooks.new
     end
 

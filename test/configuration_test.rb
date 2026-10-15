@@ -43,6 +43,9 @@ class ConfigurationTest < Minitest::Test
     assert_equal false, configuration.enable_feature_x
     assert_equal 5, configuration.timeout
     assert_equal "rocket-launch", configuration.public_contact_sent_icon
+    assert_equal false, configuration.public_contact_sign_in_after_verification
+    assert_nil configuration.public_contact_success_redirect_url
+    assert_nil configuration.public_contact_success_redirect_label
     assert_instance_of RecordingStudio::Hooks, configuration.hooks
   ensure
     ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] = previous_value

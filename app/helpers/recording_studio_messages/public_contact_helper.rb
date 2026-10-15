@@ -76,10 +76,6 @@ module RecordingStudioMessages
       warden.user(:user)
     end
 
-    def public_contact_sent_icon
-      RecordingStudioMessages.configuration.public_contact_sent_icon.presence
-    end
-
     def public_contact_powered_by(recording)
       PublicContact::SiteName.powered_by(recording)
     end

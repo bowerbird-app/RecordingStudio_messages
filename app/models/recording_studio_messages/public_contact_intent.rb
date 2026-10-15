@@ -25,6 +25,12 @@ module RecordingStudioMessages
       !fulfilled? && expires_at <= Time.current
     end
 
+    def user
+      return if user_id.blank?
+
+      RecordingStudioUser.config.user_class.find_by(id: user_id)
+    end
+
     def group_recording
       return if message_group_id.blank?
 

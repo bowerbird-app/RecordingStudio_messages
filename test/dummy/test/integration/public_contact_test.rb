@@ -221,16 +221,60 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_select ".text-center h1.text-3xl", text: "Message sent"
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "paper-airplane"
     get recording_studio_messages.public_contact_sent_path
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+    assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = nil
     get recording_studio_messages.public_contact_sent_path
-    assert_select "svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] img", count: 0
     assert_select ".text-center h1.text-3xl", text: "Message sent"
+  ensure
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
+  end
+
+  test "sent screen icon slot renders an image for a path or URL" do
+    sign_in @staff
+    post contact_path, params: { body: "Show the mark." }
+    follow_redirect!
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "/icon.png"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img.block.h-8.w-8[src=?]", "/icon.png"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "https://cdn.example.com/sent.webp"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "https://cdn.example.com/sent.webp"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "images/brand-mark.png"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "images/brand-mark.png"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "mark.svg"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "mark.svg"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "http://cdn.example.com/mark.gif"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "http://cdn.example.com/mark.gif"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "brand/mark"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "brand/mark"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = nil
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img", count: 0
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
   ensure
     RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end
@@ -746,7 +790,155 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
   end
 
+  test "verified new visitor stays signed out by default" do
+    verify_contact(email: "default-off@example.com")
+
+    assert_nil session["warden.user.user.key"]
+    assert_select "[data-public-contact-success-redirect]", count: 0
+    assert_select "[data-public-contact-step=sent] a", count: 0
+  end
+
+  test "sign in after verification signs in a newly registered visitor" do
+    with_contact_config(public_contact_sign_in_after_verification: true) do
+      verify_contact(email: "new-signin@example.com")
+
+      user = User.find_by!(email: "new-signin@example.com")
+      assert_equal user.id, session["warden.user.user.key"]&.first&.first
+      assert_select "a[href=?]", message_group_path_for_last_group, text: "View conversation"
+      assert_select "[data-public-contact-success-redirect]", count: 0
+      assert_select "[data-public-contact-step=sent] a", count: 1
+    end
+  end
+
+  test "sign in after verification signs in an existing confirmed user via login OTP" do
+    existing = User.create!(
+      email: "existing-signin@example.com", password: "Password123!",
+      password_confirmation: "Password123!", name: "Existing Person", confirmed_at: Time.current
+    )
+
+    with_contact_config(public_contact_sign_in_after_verification: true) do
+      verify_contact(email: "existing-signin@example.com", purpose: "login")
+
+      assert_equal existing.id, session["warden.user.user.key"]&.first&.first
+    end
+  end
+
+  test "wrong code does not sign in even when enabled" do
+    with_contact_config(public_contact_sign_in_after_verification: true) do
+      post contact_path, params: { name: "Ada Lovelace", email: "nope@example.com", body: "No." }
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      wrong = otp_code_for(intent) == "000000" ? "111111" : "000000"
+
+      post recording_studio_messages.public_contact_verify_path, params: { code: wrong }
+
+      assert_nil session["warden.user.user.key"]
+    end
+  end
+
+  test "success redirect string shows one button with the default label for a new visitor" do
+    with_contact_config(public_contact_success_redirect_url: "/inbox") do
+      verify_contact(email: "button-new@example.com")
+
+      assert_nil session["warden.user.user.key"]
+      assert_select "[data-public-contact-step=sent] a", count: 1
+      assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox", text: "View conversation"
+    end
+  end
+
+  test "success redirect callable receives context and custom label renders for an existing user" do
+    User.create!(
+      email: "button-existing@example.com", password: "Password123!",
+      password_confirmation: "Password123!", name: "Button Person", confirmed_at: Time.current
+    )
+    seen = nil
+    resolver = lambda do |mount_recording:, group_recording:, user:, request:|
+      seen = [ mount_recording, group_recording, user, request ]
+      "/people/#{user.id}"
+    end
+
+    with_contact_config(
+      public_contact_success_redirect_url: resolver,
+      public_contact_success_redirect_label: "Open my messages",
+      public_contact_sign_in_after_verification: true
+    ) do
+      verify_contact(email: "button-existing@example.com", purpose: "login")
+
+      user = User.find_by!(email: "button-existing@example.com")
+      assert_select "[data-public-contact-step=sent] a", count: 1
+      assert_select "a[data-public-contact-success-redirect][href=?]", "/people/#{user.id}", text: "Open my messages"
+      assert_equal @mount.id, seen[0].id
+      assert_equal last_group_recording.id, seen[1].id
+      assert_equal user.id, seen[2].id
+      assert seen[3].respond_to?(:host)
+    end
+  end
+
+  test "success redirect button renders in the modal sent step and for signed-in senders" do
+    with_contact_config(public_contact_success_redirect_url: "/inbox") do
+      post contact_path, params: modal_message(email: "modal-button@example.com"), headers: modal_headers
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      post recording_studio_messages.public_contact_verify_path,
+           params: { code: otp_code_for(intent), presentation: "modal" }, headers: modal_headers
+      get recording_studio_messages.public_contact_sent_path(presentation: "modal"), headers: modal_headers
+      assert_select "turbo-frame#public_contact [data-public-contact-step=sent] a", count: 1
+      assert_select "turbo-frame#public_contact a[data-public-contact-success-redirect][href=?]", "/inbox"
+
+      sign_in User.create!(
+        email: "signed-in-button@example.com", password: "Password123!",
+        password_confirmation: "Password123!", name: "Signed In", confirmed_at: Time.current
+      )
+      post contact_path, params: { body: "Hello while signed in." }
+      follow_redirect!
+      assert_select "[data-public-contact-step=sent] a", count: 1
+      assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox"
+      assert_select "[data-public-contact-step=sent] a[href=?]", message_group_path_for_last_group, count: 0
+    end
+  end
+
+  test "blank success redirect from a callable hides the button" do
+    with_contact_config(
+      public_contact_success_redirect_url: ->(**) { nil },
+      public_contact_sign_in_after_verification: true
+    ) do
+      verify_contact(email: "blank-button@example.com")
+
+      assert_select "[data-public-contact-success-redirect]", count: 0
+      assert_select "[data-public-contact-step=sent] a", count: 0
+    end
+  end
+
   private
+
+  def verify_contact(email:, purpose: "registration")
+    post contact_path, params: { name: "Ada Lovelace", email: email, body: "Hello from #{email}." }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal purpose, otp_purpose_for(intent)
+    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    follow_redirect!
+    assert_response :success
+    intent
+  end
+
+  def last_group_recording
+    RecordingStudio::Recording
+      .where(recordable_type: "RecordingStudioMessages::MessageGroup")
+      .order(:created_at)
+      .last
+  end
+
+  def message_group_path_for_last_group
+    recording_studio_messages.message_group_path(last_group_recording)
+  end
+
+  def with_contact_config(**values)
+    config = RecordingStudioMessages.configuration
+    previous = values.keys.to_h { |key| [ key, config.public_send(key) ] }
+    values.each { |key, value| config.public_send("#{key}=", value) }
+    yield
+  ensure
+    previous&.each { |key, value| config.public_send("#{key}=", value) }
+  end
 
   def register_otp_channels!
     adapter = Class.new do
