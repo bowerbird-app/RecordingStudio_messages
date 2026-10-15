@@ -50,7 +50,6 @@ fr:
         resend: Renvoyer le code
         sent_title: Message envoyé
         view_conversation: Voir la conversation
-        success_redirect: Aller à votre boîte de réception
         expired_title: Consultez vos e-mails
         expired_body: Ce formulaire a expiré. Envoyez-le à nouveau.
         send_again: Envoyer à nouveau

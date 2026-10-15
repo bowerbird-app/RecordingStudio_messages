@@ -14,7 +14,6 @@ en:
         resend: Resend code
         sent_title: Message sent
         view_conversation: View conversation
-        success_redirect: Go to your inbox
         expired_title: Check your email
         expired_body: That contact form expired. Send it again.
         send_again: Send it again

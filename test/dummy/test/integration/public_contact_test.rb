@@ -751,6 +751,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     assert_nil session["warden.user.user.key"]
     assert_select "[data-public-contact-success-redirect]", count: 0
+    assert_select "[data-public-contact-step=sent] a", count: 0
   end
 
   test "sign in after verification signs in a newly registered visitor" do
@@ -760,6 +761,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       user = User.find_by!(email: "new-signin@example.com")
       assert_equal user.id, session["warden.user.user.key"]&.first&.first
       assert_select "a[href=?]", message_group_path_for_last_group, text: "View conversation"
+      assert_select "[data-public-contact-success-redirect]", count: 0
+      assert_select "[data-public-contact-step=sent] a", count: 1
     end
   end
 
@@ -788,12 +791,13 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "success redirect string shows a button with the default label for a new visitor" do
+  test "success redirect string shows one button with the default label for a new visitor" do
     with_contact_config(public_contact_success_redirect_url: "/inbox") do
       verify_contact(email: "button-new@example.com")
 
       assert_nil session["warden.user.user.key"]
-      assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox", text: "Go to your inbox"
+      assert_select "[data-public-contact-step=sent] a", count: 1
+      assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox", text: "View conversation"
     end
   end
 
@@ -803,8 +807,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       password_confirmation: "Password123!", name: "Button Person", confirmed_at: Time.current
     )
     seen = nil
-    resolver = lambda do |mount_recording:, user:, request:|
-      seen = [ mount_recording, user, request ]
+    resolver = lambda do |mount_recording:, group_recording:, user:, request:|
+      seen = [ mount_recording, group_recording, user, request ]
       "/people/#{user.id}"
     end
 
@@ -816,10 +820,12 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       verify_contact(email: "button-existing@example.com", purpose: "login")
 
       user = User.find_by!(email: "button-existing@example.com")
+      assert_select "[data-public-contact-step=sent] a", count: 1
       assert_select "a[data-public-contact-success-redirect][href=?]", "/people/#{user.id}", text: "Open my messages"
       assert_equal @mount.id, seen[0].id
-      assert_equal user.id, seen[1].id
-      assert seen[2].respond_to?(:host)
+      assert_equal last_group_recording.id, seen[1].id
+      assert_equal user.id, seen[2].id
+      assert seen[3].respond_to?(:host)
     end
   end
 
@@ -830,6 +836,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       post recording_studio_messages.public_contact_verify_path,
            params: { code: otp_code_for(intent), presentation: "modal" }, headers: modal_headers
       get recording_studio_messages.public_contact_sent_path(presentation: "modal"), headers: modal_headers
+      assert_select "turbo-frame#public_contact [data-public-contact-step=sent] a", count: 1
       assert_select "turbo-frame#public_contact a[data-public-contact-success-redirect][href=?]", "/inbox"
 
       sign_in User.create!(
@@ -838,15 +845,21 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       )
       post contact_path, params: { body: "Hello while signed in." }
       follow_redirect!
+      assert_select "[data-public-contact-step=sent] a", count: 1
       assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox"
+      assert_select "[data-public-contact-step=sent] a[href=?]", message_group_path_for_last_group, count: 0
     end
   end
 
   test "blank success redirect from a callable hides the button" do
-    with_contact_config(public_contact_success_redirect_url: ->(**) { nil }) do
+    with_contact_config(
+      public_contact_success_redirect_url: ->(**) { nil },
+      public_contact_sign_in_after_verification: true
+    ) do
       verify_contact(email: "blank-button@example.com")
 
       assert_select "[data-public-contact-success-redirect]", count: 0
+      assert_select "[data-public-contact-step=sent] a", count: 0
     end
   end
 
@@ -863,9 +876,15 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     intent
   end
 
+  def last_group_recording
+    RecordingStudio::Recording
+      .where(recordable_type: "RecordingStudioMessages::MessageGroup")
+      .order(:created_at)
+      .last
+  end
+
   def message_group_path_for_last_group
-    group = RecordingStudio::Recording.where(recordable_type: "RecordingStudioMessages::MessageGroup").order(:created_at).last
-    recording_studio_messages.message_group_path(group)
+    recording_studio_messages.message_group_path(last_group_recording)
   end
 
   def with_contact_config(**values)

@@ -177,7 +177,7 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent" and "Powered by" the site name. The page loads Flatpack's application stylesheet so primary buttons use the theme colors. The site name comes from Site Settings on that root when the host has it, otherwise the root's name. "View conversation" is a primary button and leaves the dialog. In the dialog, the Contact title is hidden on this step. The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent" and "Powered by" the site name. The page loads Flatpack's application stylesheet so primary buttons use the theme colors. The site name comes from Site Settings on that root when the host has it, otherwise the root's name. One primary button leaves the dialog. By default a signed-in sender sees "View conversation" to the new conversation. `public_contact_success_redirect_url` sends that same button to another URL for every sender. In the dialog, the Contact title is hidden on this step. The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to `nil`, to change that slot. Refreshing that page does not send again.
 
 `public_contact_form` renders that same form on a host page. The post still leaves for the full-page code step or the sent screen.
 
@@ -186,7 +186,7 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 <%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
 ```
 
-`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. On the code step the heading is "Verify it's you", the button is "Next", "Resend code" is a link, and the Contact title is hidden. A notice or error in the dialog has space under it. On "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. "View conversation" is a primary button and leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
+`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. On the code step the heading is "Verify it's you", the button is "Next", "Resend code" is a link, and the Contact title is hidden. A notice or error in the dialog has space under it. On "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
 
 ```erb
 <%= public_contact_modal(mount) %>
@@ -252,20 +252,26 @@ verified with a login code. A wrong or expired code never signs anyone in, and
 someone already signed in is left alone. Off, the visitor stays signed out
 after sending.
 
-`public_contact_success_redirect_url` (default `nil`) adds a primary button to
-the "Message sent" step, on the full page and in the dialog, for new and
-existing users alike, whether or not sign-in after verification is on. It
-leaves the dialog (`turbo_frame: "_top"`). Give a String, or a callable that
-receives `mount_recording:`, `user:` (the sender), and `request:` and returns a
-URL. A blank result hides the button.
+The "Message sent" step, on the full page and in the dialog, shows one primary
+button. It leaves the dialog (`turbo_frame: "_top"`).
 
-`public_contact_success_redirect_label` sets the button text. Leave it `nil`
-for the translated default, `contact.success_redirect` ("Go to your inbox").
+With `public_contact_success_redirect_url` left `nil`, that button reads
+"View conversation" and links to the new conversation. It appears when the
+sender is signed in.
+
+Set `public_contact_success_redirect_url` and that same button uses the
+configured URL instead, for new and existing users, signed in or not. Give a
+String, or a callable that receives `mount_recording:`, `group_recording:` (the
+new conversation), `user:` (the sender), and `request:` and returns a URL. A
+blank result hides the button.
+
+`public_contact_success_redirect_label` sets that button's text. Leave it `nil`
+for the translated "View conversation" (`contact.view_conversation`).
 
 ```ruby
 RecordingStudioMessages.configure do |config|
   config.public_contact_sign_in_after_verification = true
-  config.public_contact_success_redirect_url = lambda { |mount_recording:, user:, request:|
+  config.public_contact_success_redirect_url = lambda { |mount_recording:, group_recording:, user:, request:|
     Rails.application.routes.url_helpers.inbox_path
   }
   config.public_contact_success_redirect_label = "Go to your inbox"
