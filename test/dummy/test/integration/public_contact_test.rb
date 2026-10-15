@@ -221,16 +221,60 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_select ".text-center h1.text-3xl", text: "Message sent"
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "paper-airplane"
     get recording_studio_messages.public_contact_sent_path
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+    assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = nil
     get recording_studio_messages.public_contact_sent_path
-    assert_select "svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] img", count: 0
     assert_select ".text-center h1.text-3xl", text: "Message sent"
+  ensure
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
+  end
+
+  test "sent screen icon slot renders an image for a path or URL" do
+    sign_in @staff
+    post contact_path, params: { body: "Show the mark." }
+    follow_redirect!
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "/icon.png"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img.block.h-8.w-8[src=?]", "/icon.png"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "https://cdn.example.com/sent.webp"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "https://cdn.example.com/sent.webp"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "images/brand-mark.png"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "images/brand-mark.png"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "mark.svg"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "mark.svg"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "http://cdn.example.com/mark.gif"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "http://cdn.example.com/mark.gif"
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = "brand/mark"
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img[src=?]", "brand/mark"
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+
+    RecordingStudioMessages.configuration.public_contact_sent_icon = nil
+    get recording_studio_messages.public_contact_sent_path
+    assert_select "[data-public-contact-step=sent] img", count: 0
+    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
   ensure
     RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end

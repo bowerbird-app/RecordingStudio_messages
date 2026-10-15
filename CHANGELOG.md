@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `public_contact_sign_in_after_verification` signs a signed-out visitor in through Devise/Warden after the public contact email code verifies (new registration or existing login). Default `false`.
 - `public_contact_success_redirect_url` (String or callable receiving `mount_recording:`, `group_recording:`, `user:`, `request:`) and `public_contact_success_redirect_label` replace the single "Message sent" button on the page and in the dialog. Unset, a signed-in sender gets "View conversation" to the new conversation. Set, that button uses the URL for new and existing users. The label defaults to the translated "View conversation". A blank URL hides the button.
 
+### Changed
+
+- `public_contact_sent_icon` still defaults to the heroicon `rocket-launch`. A path or URL — an image extension, a value starting with `/`, `http://`, or `https://`, or any other asset path — renders an image in that slot at the same size. `nil` hides the slot.
+
 ## [0.6.0] - 2026-10-09
 
 Operations metrics for messages, conversations, and public contact intents.

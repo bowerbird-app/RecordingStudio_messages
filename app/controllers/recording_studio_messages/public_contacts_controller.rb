@@ -8,6 +8,7 @@ module RecordingStudioMessages
 
     helper CopyHelper
     helper PublicContactHelper
+    helper PublicContactSentIconHelper
     helper PublicContactSuccessHelper
 
     protect_from_forgery with: :exception

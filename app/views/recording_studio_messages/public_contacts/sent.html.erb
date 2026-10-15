@@ -1,9 +1,16 @@
 <% content_for :title, messages_t("contact.sent_title") %>
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
   <div class="flex flex-col items-center gap-3 text-center" data-public-contact-step="sent">
-    <% if public_contact_sent_icon %>
+    <% sent_icon = public_contact_sent_icon %>
+    <% if sent_icon && public_contact_sent_image?(sent_icon) %>
+      <%= tag.img(
+        src: sent_icon,
+        alt: "",
+        class: "block h-8 w-8 shrink-0 object-contain"
+      ) %>
+    <% elsif sent_icon %>
       <%= render FlatPack::Shared::IconComponent.new(
-        name: public_contact_sent_icon,
+        name: sent_icon,
         size: :xl,
         class: "text-[var(--surface-muted-content-color)]"
       ) %>
