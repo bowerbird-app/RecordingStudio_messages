@@ -34,7 +34,7 @@ module RecordingStudioMessages
     def resolved_admin_notification_root
       value = admin_notification_root
       value = value.call if value.respond_to?(:call)
-      return value if value.is_a?(RecordingStudio::Recording)
+      return value if defined?(RecordingStudio::Recording) && value.instance_of?(RecordingStudio::Recording)
 
       nil
     end

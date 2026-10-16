@@ -35,17 +35,25 @@ module RecordingStudioMessages
       end
 
       def notification_attributes(recipients, root_recording:)
-        {
+        attributes = {
           recipients: recipients,
           notification_type: :message_received,
           actor: @actor,
-          recording: @message_recording,
           root_recording: root_recording
         }.merge(notification_copy)
+        attributes[:recording] = @message_recording if same_root?(root_recording, ticket_root)
+        attributes
+      end
+
+      def ticket_root
+        @ticket_root ||= @group_recording.root_recording || @group_recording
+      end
+
+      def same_root?(left, right)
+        left.present? && right.present? && left.instance_of?(right.class) && left.id.to_s == right.id.to_s
       end
 
       def notification_root_for(recipient)
-        ticket_root = @group_recording.root_recording || @group_recording
         admin_root = RecordingStudioMessages.configuration.resolved_admin_notification_root
         return ticket_root if admin_root.blank?
         return ticket_root unless staff_recipient?(recipient, admin_root)

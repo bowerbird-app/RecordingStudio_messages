@@ -72,7 +72,7 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_resolved_admin_notification_root_calls_a_callable_and_ignores_non_recordings
-    @configuration.admin_notification_root = -> { nil }
+    @configuration.admin_notification_root = -> {}
     assert_nil @configuration.resolved_admin_notification_root
 
     @configuration.admin_notification_root = "not-a-recording"

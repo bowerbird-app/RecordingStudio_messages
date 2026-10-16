@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `admin_notification_root` files `:message_received` for staff under an Admin root recording. Default `nil` keeps every recipient on the conversation root. A recording or a callable that returns one opts in. Recipients with Accessible `:view` on that recording are staff for this purpose (the same check as `Api::Access.can_view?`). The ticket owner stays on the ticket root. Tickets do not move. Notification type stays `scope: :root`.
+- `admin_notification_root` files `:message_received` for staff under an Admin root recording. Default `nil` keeps every recipient on the conversation root. A recording or a callable that returns one opts in. Recipients with Accessible `:view` on that recording are staff for this purpose (the same check as `Api::Access.can_view?`). The ticket owner stays on the ticket root. Tickets do not move. Notification type stays `scope: :root`. Staff copies omit `recording` when the Admin root is not the message's tree root, because Notifications requires those two to match. URL and metadata stay.
 
 ### Upgrade notes
 

@@ -51,6 +51,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     staff_note = last_message_received_for(@staff)
     assert_equal @ticket_root.id, staff_note.root_recording_id
     assert_equal @staff, staff_note.recipient
+    assert_equal RecordingStudioMessages::MESSAGE_TYPE, staff_note.recording.recordable_type
   end
 
   test "opted-in staff recipient is filed under the admin root" do
@@ -65,6 +66,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
 
     staff_note = last_message_received_for(@staff)
     assert_equal @admin_root.id, staff_note.root_recording_id
+    assert_nil staff_note.recording_id
     assert_equal @group.id, staff_note.metadata["message_group_id"]
     assert_equal @ticket_root, @group.root_recording
   end
