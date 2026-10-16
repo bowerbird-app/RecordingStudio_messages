@@ -79,6 +79,27 @@ class MetricsTest < ActiveSupport::TestCase
     assert_equal 1, by_key["pending"]
   end
 
+  test "mcp tool names match registered identifiers and timeseries take a window" do
+    tools = {
+      "messages.sent_over_time" => "messages-sent_over_time",
+      "message_groups.created_over_time" => "message_groups-created_over_time",
+      "contact_intents.submitted_over_time" => "contact_intents-submitted_over_time",
+      "contact_intents.converted" => "contact_intents-converted"
+    }
+
+    tools.each do |identifier, tool|
+      definition = RecordingStudioMetrics.find(identifier)
+      assert definition, "missing #{identifier}"
+      assert_equal identifier.sub(".", "-"), tool
+    end
+
+    timeseries = RecordingStudioMetrics.find("messages.sent_over_time").catalog_metadata
+    assert timeseries.dig(:date_range, :supported)
+
+    converted = RecordingStudioMetrics.find("contact_intents.converted").catalog_metadata
+    refute converted.dig(:date_range, :supported)
+  end
+
   test "staff can view operations metrics and a non-admin cannot" do
     staff_context = api_context_for(@staff)
     customer_context = api_context_for(@customer)
