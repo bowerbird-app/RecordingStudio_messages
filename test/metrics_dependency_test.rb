@@ -10,17 +10,17 @@ class MetricsDependencyTest < Minitest::Test
     root_lock = File.read(File.expand_path("../Gemfile.lock", __dir__))
     dummy_lock = File.read(File.expand_path("dummy/Gemfile.lock", __dir__))
 
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_metrics", "~> 0.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.2.0"'
-    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.2.0"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_metrics", ">= 0.3.0", "< 0.4"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.3.1"'
+    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.3.1"'
     assert_includes root_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
-    assert_includes root_lock, "tag: v0.2.0"
-    assert_includes root_lock, "recording_studio_metrics (0.2.0)"
+    assert_includes root_lock, "tag: v0.3.1"
+    assert_includes root_lock, "recording_studio_metrics (0.3.0)"
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
-    assert_includes dummy_lock, "tag: v0.2.0"
-    assert_includes dummy_lock, "recording_studio_metrics (0.2.0)"
-    assert_includes root_lock, "recording_studio_messages (0.6.0)"
-    assert_includes dummy_lock, "recording_studio_messages (0.6.0)"
+    assert_includes dummy_lock, "tag: v0.3.1"
+    assert_includes dummy_lock, "recording_studio_metrics (0.3.0)"
+    assert_includes root_lock, "recording_studio_messages (0.7.0)"
+    assert_includes dummy_lock, "recording_studio_messages (0.7.0)"
   end
 
   def test_engine_registers_metrics_on_reload
@@ -29,5 +29,8 @@ class MetricsDependencyTest < Minitest::Test
     end
 
     assert initializer
+    source = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
+    assert_includes source, "RecordingStudioMessages::Metrics.register!"
+    refute_includes source, "RecordingStudioMetrics::Api.register!"
   end
 end

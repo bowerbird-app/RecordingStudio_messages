@@ -58,6 +58,23 @@ Customer-facing chrome (contact form, composer, empty states, flashes, validatio
 
 Sending does not wait on a cable. The composer posts as a Turbo stream. The response replaces the message list (and the composer, so the field is empty again). A full HTML visit still works and shows a flash. Do not add Action Cable here.
 
+## Operations metrics
+
+The engine registers site-wide operations metrics at boot (`config.to_prepare` calls `RecordingStudioMessages::Metrics.register!`). Definitions go through `RecordingStudioMetrics.register` with `api_authorize` set to `RecordingStudioMessages::Api::Access.can_view?` (AdminRoot Accessible `:view`). This gem does not call `RecordingStudioMetrics::Api.register!`. The host registers Metrics endpoints once:
+
+```ruby
+RecordingStudioMetrics::Api.register!(api: :operations)
+```
+
+| Identifier | MCP tool (RecordingStudio MCP 0.17.0) | Window |
+|---|---|---|
+| `messages.sent_over_time` | `messages-sent_over_time` | `from`, `to`, `interval` |
+| `message_groups.created_over_time` | `message_groups-created_over_time` | `from`, `to`, `interval` |
+| `contact_intents.submitted_over_time` | `contact_intents-submitted_over_time` | `from`, `to`, `interval` |
+| `contact_intents.converted` | `contact_intents-converted` | none (breakdown) |
+
+MCP replaces the identifier's single dot with a hyphen. It does not register a second surface. A grant that fails `can_view?` is denied and the metric stays off `tools/list`.
+
 ## Related docs
 
 - Product install and API: `README.md`
