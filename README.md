@@ -304,6 +304,25 @@ The desk fills the viewport under the host's page nav. `Chat::Layout` is `h-full
 
 Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Layout](https://flatpack.bowerbird.io/demo/chat/layout), [Chat::InboxRow](https://flatpack.bowerbird.io/demo/chat/inbox_row), [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel), and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
+## Operations metrics
+
+The engine registers four site-wide metrics on `:operations` (`blast_radius: :site`). `api_authorize` uses `RecordingStudioMessages::Api::Access.can_view?`. This gem does not call `RecordingStudioMetrics::Api.register!`. The host registers Metrics endpoints once:
+
+```ruby
+RecordingStudioMetrics::Api.register!(api: :operations)
+```
+
+RecordingStudio MCP `0.17.0` adds one read-only tool per exposed metric. The tool name is the identifier with its single dot replaced by a hyphen. `from`, `to`, and `interval` apply to timeseries only.
+
+| Identifier | MCP tool | Window |
+|---|---|---|
+| `messages.sent_over_time` | `messages-sent_over_time` | `from`, `to`, `interval` |
+| `message_groups.created_over_time` | `message_groups-created_over_time` | `from`, `to`, `interval` |
+| `contact_intents.submitted_over_time` | `contact_intents-submitted_over_time` | `from`, `to`, `interval` |
+| `contact_intents.converted` | `contact_intents-converted` | none |
+
+See [How Recording Studio Messages works](docs/how-it-works.md#operations-metrics).
+
 ## Dummy host
 
 `test/dummy/` is a host that proves the gem. It is not the product.
@@ -336,6 +355,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_accessible` | `~> 0.13` | `v0.18.0` | `0.18.0` |
 | `recording_studio_attachable` | `~> 0.13` | `v0.15.0` | `0.15.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.7.0` | `0.7.0` |
+| `recording_studio_metrics` | `>= 0.3.0, < 0.4` | `v0.3.1` | `0.3.0` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.245` | `0.1.245` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.21.0` | `0.21.0` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.0` | `0.5.0` |

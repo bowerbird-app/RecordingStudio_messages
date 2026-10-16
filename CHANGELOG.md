@@ -9,12 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Docs and tests for operations metric MCP tool names. RecordingStudio MCP `0.17.0` turns each identifier's single dot into a hyphen (`messages.sent_over_time` → `messages-sent_over_time`). `from`, `to`, and `interval` apply to the three timeseries only. `contact_intents.converted` is a breakdown and does not take a window.
 - `public_contact_sign_in_after_verification` signs a signed-out visitor in through Devise/Warden after the public contact email code verifies (new registration or existing login). Default `false`.
 - `public_contact_success_redirect_url` (String or callable receiving `mount_recording:`, `group_recording:`, `user:`, `request:`) and `public_contact_success_redirect_label` replace the single "Message sent" button on the page and in the dialog. Unset, a signed-in sender gets "View conversation" to the new conversation. Set, that button uses the URL for new and existing users. The label defaults to the translated "View conversation". A blank URL hides the button.
 
 ### Changed
 
+- Gemspec `recording_studio_metrics >= 0.3.0, < 0.4`, GitHub pin `v0.3.1`
 - `public_contact_sent_icon` still defaults to the heroicon `rocket-launch`. A path or URL — an image extension, a value starting with `/`, `http://`, or `https://`, or any other asset path — renders an image in that slot at the same size. `nil` hides the slot.
+
+### Upgrade notes
+
+- Bump to **0.7.0**. No migration
+- Pin `recording_studio_metrics` to `>= 0.3.0, < 0.4` (git tag `v0.3.1`)
+- This gem still registers definitions only. Hosts that expose Admin operations call `RecordingStudioMetrics::Api.register!(api: :operations)`
+- Registration and `api_authorize` (`RecordingStudioMessages::Api::Access.can_view?`) are unchanged
+- Staff with AdminRoot view see the metrics. Other actors are denied
 
 ## [0.6.0] - 2026-10-09
 
@@ -335,7 +345,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.8...HEAD
 [0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1
