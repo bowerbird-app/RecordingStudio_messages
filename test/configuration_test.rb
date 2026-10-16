@@ -42,6 +42,8 @@ class ConfigurationTest < Minitest::Test
     assert_equal "env-token", configuration.api_key
     assert_equal false, configuration.enable_feature_x
     assert_equal 5, configuration.timeout
+    assert_nil configuration.admin_notification_root
+    assert_nil configuration.resolved_admin_notification_root
     assert_equal "rocket-launch", configuration.public_contact_sent_icon
     assert_equal false, configuration.public_contact_sign_in_after_verification
     assert_nil configuration.public_contact_success_redirect_url
@@ -67,6 +69,14 @@ class ConfigurationTest < Minitest::Test
 
     assert_equal 2, result.fetch(:hooks_registered).fetch(:before_initialize)
     assert_equal 1, result.fetch(:hooks_registered).fetch(:after_service)
+  end
+
+  def test_resolved_admin_notification_root_calls_a_callable_and_ignores_non_recordings
+    @configuration.admin_notification_root = -> {}
+    assert_nil @configuration.resolved_admin_notification_root
+
+    @configuration.admin_notification_root = "not-a-recording"
+    assert_nil @configuration.resolved_admin_notification_root
   end
 
   def test_configure_without_block_is_safe
