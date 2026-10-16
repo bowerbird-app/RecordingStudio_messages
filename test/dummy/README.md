@@ -17,7 +17,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Dummy-only Recording Studio Internationalization (`en` + `fr`) with a compact language selector in PageNav, left of any host actions
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
 - Mounted Messages, Users, Accessible, Attachable, Admin, Site Settings, Terms and Conditions, Publishable, and Recording Studio engines
-- Site settings live on the current Workspace. Admin is a separate root. Staff (`admin@admin.com`) can open Admin from home
+- Site settings live on the current Workspace. Admin is a separate root. Staff (`admin@admin.com`) can open Admin from home. Dummy leaves `admin_notification_root` unset, so staff `:message_received` notices stay on the ticket workspace unless a test opts in
 - Terms and Conditions redirects signed-in people to Agree only after a live version exists. Seeds do not publish one
 
 ## Quick Start

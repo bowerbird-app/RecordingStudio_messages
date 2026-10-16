@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `admin_notification_root` files `:message_received` for staff under an Admin root recording. Default `nil` keeps every recipient on the conversation root. A recording or a callable that returns one opts in. Recipients with Accessible `:view` on that recording are staff for this purpose (the same check as `Api::Access.can_view?`). The ticket owner stays on the ticket root. Tickets do not move. Notification type stays `scope: :root`.
+
+### Upgrade notes
+
+- Bump to **0.8.0**. No migration
+- Hosts and Support that want staff copies in the Admin notifications inbox set `config.admin_notification_root` to the Admin root recording, commonly `-> { RecordingStudioMessages::Api::Access.admin_root_recording }`
+- Unset, filing is unchanged
+
+## [0.7.0] - 2026-10-16
+
+### Added
+
 - Docs and tests for operations metric MCP tool names. RecordingStudio MCP `0.17.0` turns each identifier's single dot into a hyphen (`messages.sent_over_time` → `messages-sent_over_time`). `from`, `to`, and `interval` apply to the three timeseries only. `contact_intents.converted` is a breakdown and does not take a window.
 - `public_contact_sign_in_after_verification` signs a signed-out visitor in through Devise/Warden after the public contact email code verifies (new registration or existing login). Default `false`.
 - `public_contact_success_redirect_url` (String or callable receiving `mount_recording:`, `group_recording:`, `user:`, `request:`) and `public_contact_success_redirect_label` replace the single "Message sent" button on the page and in the dialog. Unset, a signed-in sender gets "View conversation" to the new conversation. Set, that button uses the URL for new and existing users. The label defaults to the translated "View conversation". A blank URL hides the button.

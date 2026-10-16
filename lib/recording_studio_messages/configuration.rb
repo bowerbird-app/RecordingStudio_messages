@@ -3,6 +3,7 @@
 module RecordingStudioMessages
   class Configuration
     attr_accessor :api_key, :enable_feature_x, :timeout,
+                  :admin_notification_root,
                   :public_contact_recipient_resolver, :public_contact_sent_icon,
                   :public_contact_sign_in_after_verification,
                   :public_contact_success_redirect_url, :public_contact_success_redirect_label
@@ -12,6 +13,7 @@ module RecordingStudioMessages
       @api_key = ENV.fetch("RECORDING_STUDIO_MESSAGES_API_KEY", nil)
       @enable_feature_x = false
       @timeout = 5
+      @admin_notification_root = nil
       @public_contact_recipient_resolver = nil
       @public_contact_sent_icon = "rocket-launch"
       @public_contact_sign_in_after_verification = false
@@ -27,6 +29,14 @@ module RecordingStudioMessages
         timeout: timeout,
         hooks_registered: hooks.instance_variable_get(:@registry).transform_values(&:size)
       }
+    end
+
+    def resolved_admin_notification_root
+      value = admin_notification_root
+      value = value.call if value.respond_to?(:call)
+      return value if value.is_a?(RecordingStudio::Recording)
+
+      nil
     end
 
     def merge!(hash)

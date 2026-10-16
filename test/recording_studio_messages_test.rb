@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.7.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.8.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -302,6 +302,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "https://flatpack.bowerbird.io/"
     assert_includes readme, "ensure_message_mount"
     assert_includes readme, "notify_each"
+    assert_includes readme, "admin_notification_root"
     assert_includes readme, "two mounts"
     assert_includes readme, "Do not add a Notifications → Messages dependency"
     assert_includes readme, "docs/cursor-skills.md"

@@ -19,7 +19,11 @@ module RecordingStudioMessages
         recipients = other_granted_actors
         return if recipients.empty?
 
-        RecordingStudioNotifications.notify_each(**notification_attributes(recipients))
+        recipients.group_by { |recipient| notification_root_for(recipient) }.each do |root_recording, batch|
+          RecordingStudioNotifications.notify_each(
+            **notification_attributes(batch, root_recording: root_recording)
+          )
+        end
       end
 
       private
@@ -30,14 +34,34 @@ module RecordingStudioMessages
         end
       end
 
-      def notification_attributes(recipients)
+      def notification_attributes(recipients, root_recording:)
         {
           recipients: recipients,
           notification_type: :message_received,
           actor: @actor,
           recording: @message_recording,
-          root_recording: @group_recording.root_recording
+          root_recording: root_recording
         }.merge(notification_copy)
+      end
+
+      def notification_root_for(recipient)
+        ticket_root = @group_recording.root_recording || @group_recording
+        admin_root = RecordingStudioMessages.configuration.resolved_admin_notification_root
+        return ticket_root if admin_root.blank?
+        return ticket_root unless staff_recipient?(recipient, admin_root)
+
+        admin_root
+      end
+
+      def staff_recipient?(recipient, admin_root)
+        return false unless defined?(RecordingStudioAccessible)
+        return false if recipient.blank?
+
+        RecordingStudioAccessible.authorized?(
+          actor: recipient,
+          recording: admin_root,
+          role: :view
+        )
       end
 
       def notification_copy

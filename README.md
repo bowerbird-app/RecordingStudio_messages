@@ -164,6 +164,18 @@ RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_re
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
+`:message_received` stays root-scoped. By default every copy is filed under the conversation's root, so a ticket owner sees it when that workspace is selected. Staff who should see the same notice in the Admin inbox need a host opt-in:
+
+```ruby
+RecordingStudioMessages.configure do |config|
+  config.admin_notification_root = -> {
+    RecordingStudioMessages::Api::Access.admin_root_recording
+  }
+end
+```
+
+Set `admin_notification_root` to an Admin root `Recording`, or a callable that returns one. Recipients with Accessible `:view` on that recording (the same staff check as operations metrics) get the notice filed there. Everyone else, including the ticket owner, stays on the conversation root. Tickets, mounts, and groups do not move. Leave it `nil` to keep today's filing. This gem does not add an Admin dependency. Support and hosts that already resolve the Admin root through `Api::Access.admin_root_recording` pass that recording in.
+
 ## Public contact
 
 Public contact is off until a host opts in. Pass `public_contact` to `Messages.to` on the recordable that owns the mount. `true` opts in every key in `keys`. An array opts in those keys. A missing value, `false`, or `[]` leaves the mount off.
