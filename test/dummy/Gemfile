@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gem "recording_studio_messages", path: "../.."
 
 # RecordingStudio engine
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.6.0"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v4.7.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.18.0"
 gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.3.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.15.0"
@@ -17,7 +17,7 @@ gem "recording_studio_site_settings", github: "bowerbird-app/RecordingStudio_sit
 gem "recording_studio_terms_and_conditions", github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.8.1"
 # Admin 2.3 / Accessible 0.17 load Trashable query helpers only; pin for Bundler.
 gem "recording_studio_trashable",
-    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.10.0",
+    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.0",
     require: false
 gem "recording_studio_user", github: "bowerbird-app/RecordingStudio_users", tag: "v0.21.0"
 
