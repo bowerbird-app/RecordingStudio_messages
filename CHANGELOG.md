@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrade notes
 
-- Bump to **0.6.7**. No migration
+- Bump to **0.7.0**. No migration
 - Pin `recording_studio_metrics` to `>= 0.3.0, < 0.4` (git tag `v0.3.1`)
 - This gem still registers definitions only. Hosts that expose Admin operations call `RecordingStudioMetrics::Api.register!(api: :operations)`
 - Registration and `api_authorize` (`RecordingStudioMessages::Api::Access.can_view?`) are unchanged
@@ -345,7 +345,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.6...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.8...HEAD
 [0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1
