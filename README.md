@@ -369,7 +369,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_accessible` | `~> 0.13` | `v0.18.0` | `0.18.0` |
 | `recording_studio_attachable` | `~> 0.13` | `v0.15.0` | `0.15.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.7.0` | `0.7.0` |
-| `recording_studio_metrics` | `>= 0.3.0, < 0.4` | `v0.3.1` | `0.3.0` |
+| `recording_studio_metrics` | `>= 0.3.0, < 0.6` | `v0.3.1` | `0.3.0` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `~> 0.1.148` | `v0.1.245` | `0.1.245` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.21.0` | `0.21.0` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.0` | `0.5.0` |

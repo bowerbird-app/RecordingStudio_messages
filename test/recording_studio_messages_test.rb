@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.8.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.8.2", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -17,7 +17,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_equal "~> 4.2", gemspec_constraint(gemspec, "recording_studio")
     assert_equal "~> 0.13", gemspec_constraint(gemspec, "recording_studio_accessible")
     assert_equal "~> 0.13", gemspec_constraint(gemspec, "recording_studio_attachable")
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_metrics", ">= 0.3.0", "< 0.4"'
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_metrics", ">= 0.3.0", "< 0.6"'
+    metrics_requirement = Gem::Requirement.new(">= 0.3.0", "< 0.6")
+    assert metrics_requirement.satisfied_by?(Gem::Version.new("0.3.0"))
+    assert metrics_requirement.satisfied_by?(Gem::Version.new("0.5.0"))
+    refute metrics_requirement.satisfied_by?(Gem::Version.new("0.2.9"))
+    refute metrics_requirement.satisfied_by?(Gem::Version.new("0.6.0"))
     assert_includes gemspec, 'spec.add_dependency "recording_studio_notifications", ">= 0.3.1", "< 1"'
     requirement = Gem::Requirement.new(">= 0.3.1", "< 1")
     assert requirement.satisfied_by?(Gem::Version.new("0.3.1"))

@@ -17,6 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hosts and Support that want staff copies in the Admin notifications inbox set `config.admin_notification_root` to the Admin root recording, commonly `-> { RecordingStudioMessages::Api::Access.admin_root_recording }`
 - Unset, filing is unchanged
 
+## [0.8.2] - 2026-10-20
+
+Allow Metrics 0.5.
+
+### Changed
+
+- Gemspec `recording_studio_metrics >= 0.3.0, < 0.6` so hosts can install Metrics 0.5. Dummy and development stay on Metrics `v0.3.1` (0.3.0) until Attachable widens its `< 0.4` cap.
+
+### Upgrade notes
+
+- Bump to **0.8.2**. No migration
+- Hosts that stay on Metrics 0.3.x do not need to change
+- To use Metrics 0.5, raise the host pin to a 0.5.x tag. Attachable 0.20.0 still requires Metrics `< 0.4`
+
 ## [0.7.0] - 2026-10-16
 
 ### Added
