@@ -17,6 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hosts and Support that want staff copies in the Admin notifications inbox set `config.admin_notification_root` to the Admin root recording, commonly `-> { RecordingStudioMessages::Api::Access.admin_root_recording }`
 - Unset, filing is unchanged
 
+## [0.8.3] - 2026-10-22
+
+Widen the Metrics runtime ceiling.
+
+### Changed
+
+- Gemspec `recording_studio_metrics >= 0.3.0, < 1.0` (CI tested with 0.3.0). No code change.
+
+### Upgrade notes
+
+- Bump to **0.8.3**. No migration
+- Dummy and development stay on Metrics `v0.3.1` (0.3.0)
+
 ## [0.8.2] - 2026-10-20
 
 Allow Metrics 0.5.
@@ -371,7 +384,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.6.8...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.3...HEAD
+[0.8.3]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.2...v0.8.3
 [0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1
