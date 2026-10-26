@@ -213,7 +213,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
     assert_includes desk, '<div class="w-full min-w-0 <%= desk_height_class %>">'
-    assert_includes desk, "h-[calc(100dvh-8.5rem)]"
+    assert_includes desk, "h-[calc(100dvh-15.5rem)]"
     assert_includes desk, "local_assigns[:desk_height_class]"
     refute_includes desk, "min-h-[70vh]"
     refute_match(/class="[^"]*md:grid-cols-\[280px/, desk)

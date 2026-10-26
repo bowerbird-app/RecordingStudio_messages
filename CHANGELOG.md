@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Conversation lists, the staff desk, the inbox, and the dummy home use Recording Studio 6.1's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. `false` renders no layout. A string is a layout name. A callable is invoked as `call(controller:)` and must return a String, `nil`, or `false`.
 - Page titles are `content_for :title` and `content_for :subtitle`. The default layout renders one `FlatPack::PageTitle`. Back and close use `flat_pack_page_nav(round: true, style: :default, ...)`.
+- The desk wrapper defaults to `h-[calc(100dvh-15.5rem)]` so the title stays below the sticky top nav and the page does not scroll. The old `8.5rem` offset was the shorter nav from before Recording Studio 6. Hosts that pass `desk_height_class` keep their own value.
 - Public contact asks Users `Services::IssueOtp` for a code and `resend_otp!` for another. Both return a result. A throttled result tells the visitor to wait. A suppressed result says email codes are required. `RecordingStudioUser.issue_otp!` is gone in Users 0.24.
 - Gemspec floors are `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Development and the dummy pin Recording Studio `v6.1.0`, Flatpack `v0.1.315`, and `view_component` `4.19.0`.
 
