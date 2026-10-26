@@ -21,7 +21,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Français"
     assert_select "html[lang='en']"
     assert_select ".dummy-language-selector"
-    assert_select "nav.flat-pack-page-nav .dummy-language-selector"
+    assert_select "header .dummy-language-selector"
   end
 
   test "contact form stays English until the host locale changes" do

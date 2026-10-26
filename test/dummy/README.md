@@ -12,7 +12,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Seeded conversations, people, an agent, lines, and one image attachment
 - Staff desk (`/staff/desk`) and Inbox (`/inbox`) land on Flatpack `Chat::Layout` `:split` (`Chat::InboxRow` sidebar + `Chat::Panel`). A row click targets the `messages-desk-panel` turbo frame and Layout `showPanel` so a phone tap opens the conversation without remounting the list. Send replaces the thread over Turbo so the new line appears without Action Cable
 - Home includes a Contact button that opens the Site mailbox public form in a modal. The full page remains `GET /recording_studio_messages/public_contact?mount_id=`
-- Recording Studio default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
+- Recording Studio 6.1 default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply
 - Dummy-only Recording Studio Internationalization (`en` + `fr`) with a compact language selector in PageNav, left of any host actions
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
@@ -40,7 +40,7 @@ Then open the app and sign in with:
 
 ## Layouts and assets
 
-Authenticated pages include `RecordingStudio::UsesDefaultLayout` and render `recording_studio/default_layout`. That layout owns the back/close chrome and Flatpack flash alerts.
+Authenticated pages render `recording_studio/default_layout` through `recording_studio_layout`. Devise requests use `"application"`. Messages screens follow `RecordingStudioMessages.configuration.layout`, which defaults to `nil` and then the core layout. That layout owns the back/close chrome and Flatpack flash alerts. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so `config/application.rb` defines an empty module until that gem stops.
 
 Recording Studio Users owns `/users/sign_in` through
 `recording_studio_user_auth_for :users`. Users `0.8.2` renders those screens in
@@ -58,15 +58,9 @@ second back button. That layout still loads:
 - `tailwind`
 - Importmap JS, including `@hotwired/turbo-rails`
 
-The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement` because core default layout leaves `<html>` bare. The dummy also copies the attribute onto the `html` tag in the response so the named theme is present without JavaScript. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
+The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement`. Core's layout already sets the same attribute on `<html>`. The dummy copies `lang` onto the `html` tag when the response omits it. The language selector is prepended to `:page_nav_right`. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
-Flatpack is pinned to `v0.1.245` (Attachable `0.12+` needs `>= 0.1.213`; Admin
-requires `~> 0.1.207`; Terms needs `>= 0.1.196`). The messages gemspec stays
-`~> 0.1.148`. Rounded on the live kit is monochrome charcoal, not blue buttons.
-Outgoing chat bubbles use Flatpack's light neutral surface. Flatpack `0.1.237`
-removed card styles `:outlined` and `:elevated`. Pinned Admin and Users still
-pass them, so `config/initializers/flatpack_card_styles.rb` maps `:outlined`
-to `border: :strong` and `:elevated` to `shadow: :md`.
+Flatpack is pinned to `v0.1.315`. The messages gemspec requires `flat_pack >= 0.1.315` and `recording_studio >= 6.1.0`. Recording Studio is pinned to `v6.1.0`. `view_component` is `4.19.0`. Rounded on the live kit is monochrome charcoal, not blue buttons. Outgoing chat bubbles use Flatpack's light neutral surface. Current `FlatPack::Card` rejects `style:`. Pinned Admin and Users still pass it, so `config/initializers/flatpack_card_styles.rb` maps `:outlined` to `border: :strong` and `:elevated` to `shadow: :md`. Users still calls `recording_studio_page_nav`. `app/helpers/dummy_layout_helper.rb` turns that into `flat_pack_page_nav` until those gems migrate. Latest sibling tags still require Recording Studio below 5. `test/support/widen_recording_studio_requirement.rb` widens those constraints at Bundler load so this app can boot.
 
 Tailwind scans dummy views plus Flatpack and Recording Studio gem files. On boot, Root Switchable's source linker adds `vendor/flat_pack` and `vendor/recording_studio` so a local `bin/rails tailwindcss:build` sees those classes. Rebuild Tailwind after changing views.
 

@@ -48,6 +48,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal false, configuration.public_contact_sign_in_after_verification
     assert_nil configuration.public_contact_success_redirect_url
     assert_nil configuration.public_contact_success_redirect_label
+    assert_nil configuration.layout
     assert_instance_of RecordingStudio::Hooks, configuration.hooks
   ensure
     ENV["RECORDING_STUDIO_MESSAGES_API_KEY"] = previous_value
@@ -83,5 +84,51 @@ class ConfigurationTest < Minitest::Test
     RecordingStudioMessages.configure
 
     assert_kind_of RecordingStudioMessages::Configuration, RecordingStudioMessages.configuration
+  end
+
+  def test_layout_defaults_to_nil_and_rejects_invalid_values
+    assert_nil @configuration.layout
+
+    @configuration.layout = false
+    assert_equal false, @configuration.layout
+
+    @configuration.layout = "admin"
+    assert_equal "admin", @configuration.layout
+
+    callable = ->(controller:) { controller }
+    @configuration.layout = callable
+    assert_equal callable, @configuration.layout
+
+    assert_raises(ArgumentError) { @configuration.layout = "  " }
+    assert_equal callable, @configuration.layout
+    assert_raises(ArgumentError) { @configuration.layout = ->(controller) { controller } }
+    assert_equal callable, @configuration.layout
+    assert_raises(ArgumentError) { @configuration.layout = 1 }
+    assert_equal callable, @configuration.layout
+
+    @configuration.layout = ->(controller:) { controller && 1 }
+    assert_raises(ArgumentError) do
+      RecordingStudio::Layout.resolve(@configuration.layout, controller: Object.new)
+    end
+  end
+
+  def test_nil_layout_falls_through_to_the_core_layout_then_the_default_name
+    controller = Object.new
+    assert_nil RecordingStudio::Layout.resolve(nil, controller: controller)
+    assert_equal "recording_studio/default_layout", RecordingStudio::DEFAULT_LAYOUT
+    assert_equal false, RecordingStudio::Layout.resolve(false, controller: controller)
+
+    seen = nil
+    callable = lambda do |controller:|
+      seen = controller
+      "pages"
+    end
+    resolved = RecordingStudio::Layout.resolve(callable, controller: controller)
+    assert_equal controller, seen
+    assert_equal "pages", resolved
+  end
+
+  def test_engine_controllers_do_not_hardcode_a_recording_studio_layout
+    assert_empty RecordingStudio::Layout.hardcoded_layout_paths(RecordingStudioMessages::Engine.root)
   end
 end

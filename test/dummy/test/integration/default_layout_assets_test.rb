@@ -91,7 +91,8 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_select "nav.flat-pack-page-nav", count: 1
-    assert_select "main.max-w-6xl", count: 1
+    assert_select "main", minimum: 1
+    assert_select "main.min-h-dvh.items-center.justify-center", count: 0
     assert_select "main.max-w-md", count: 0
   ensure
     Current.actor = nil

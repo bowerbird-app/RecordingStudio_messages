@@ -2,14 +2,14 @@
 
 module RecordingStudioMessages
   class ApplicationController < (defined?(::ApplicationController) ? ::ApplicationController : ActionController::Base)
-    include RecordingStudio::UsesDefaultLayout
-
     helper RecordingStudioAccessible::AvatarsHelper if defined?(RecordingStudioAccessible::AvatarsHelper)
     helper RecordingStudioMessages::CopyHelper
     helper RecordingStudioMessages::PanelHelper
     helper RecordingStudioMessages::InboxHelper
 
     helper_method :current_messages_actor
+
+    recording_studio_layout { RecordingStudioMessages.configuration.layout }
 
     private
 

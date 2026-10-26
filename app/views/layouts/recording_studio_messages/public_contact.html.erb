@@ -14,6 +14,7 @@
   <body class="bg-[var(--surface-page-background-color)] text-[var(--surface-content-color)]">
     <main class="flex min-h-dvh items-center justify-center p-6">
       <div class="w-full max-w-sm space-y-4">
+        <%= flat_pack_page_nav_tag %>
         <% if flash[:notice].present? %>
           <%= render FlatPack::Alert::Component.new(description: flash[:notice], style: :success) %>
         <% end %>

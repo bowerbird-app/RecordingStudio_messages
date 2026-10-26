@@ -1,27 +1,30 @@
 # frozen_string_literal: true
 
-# Flatpack 0.1.237 removed card styles :flat, :elevated, :outlined,
-# :interactive, and :list. Pinned sibling engines still pass them.
-# Map each one the way Flatpack's upgrade notes describe.
+# Flatpack 0.1.315 removed Card's style: keyword. Background is the fill.
+# Pinned sibling engines still pass the old style names.
 module FlatpackLegacyCardStyles
   REPLACEMENTS = {
-    flat: { style: :shaded, border: :none },
-    elevated: { style: :default, shadow: :md },
-    outlined: { style: :default, border: :strong },
-    interactive: { style: :default, hover: :strong },
-    list: { style: :default, hover: :subtle }
+    flat: { background: :shaded, border: :none },
+    elevated: { background: :default, shadow: :md },
+    outlined: { background: :default, border: :strong },
+    interactive: { background: :default, hover: :strong },
+    list: { background: :default, hover: :subtle }
   }.freeze
 
-  def initialize(style: :default, shadow: :none, border: :default, hover: :none, **rest)
-    replacement = REPLACEMENTS[style.to_sym]
-    if replacement
-      style = replacement.fetch(:style)
-      shadow = replacement[:shadow] if replacement.key?(:shadow)
-      border = replacement[:border] if replacement.key?(:border)
-      hover = replacement[:hover] if replacement.key?(:hover)
+  def initialize(style: nil, background: :default, shadow: nil, border: nil, hover: :none, **rest)
+    if style
+      replacement = REPLACEMENTS[style.to_sym]
+      if replacement
+        background = replacement.fetch(:background)
+        shadow = replacement[:shadow] if replacement.key?(:shadow)
+        border = replacement[:border] if replacement.key?(:border)
+        hover = replacement[:hover] if replacement.key?(:hover)
+      elsif FlatPack::Card::Background::NAMES.include?(style.to_sym)
+        background = style.to_sym
+      end
     end
 
-    super(style:, shadow:, border:, hover:, **rest)
+    super(background:, shadow:, border:, hover:, **rest)
   end
 end
 

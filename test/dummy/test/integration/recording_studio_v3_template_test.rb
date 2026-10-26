@@ -8,7 +8,8 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     assert_equal "recording_studio_root_switchable/blank", RecordingStudioRootSwitchable.configuration.layout
     assert_equal "recording_studio/default_layout", RecordingStudioUser.config.layout
     assert_includes ApplicationController.ancestors, RecordingStudio::RootSwitchable::ControllerSupport
-    assert_includes ApplicationController.ancestors, RecordingStudio::UsesDefaultLayout
+    assert_includes ApplicationController.ancestors, RecordingStudio::ControllerLayout
+    refute_includes File.read(Rails.root.join("app/controllers/application_controller.rb")), "UsesDefaultLayout"
   end
 
   test "dummy app validates recordable declarations" do

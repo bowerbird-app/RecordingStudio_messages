@@ -1,12 +1,8 @@
-<% recording_studio_page_nav(title: t("dummy.home.title")) %>
+<% content_for :title, t("dummy.home.title") %>
+<% content_for :subtitle, t("dummy.home.subtitle") %>
+<% flat_pack_page_nav(round: true, style: :default) %>
 
 <div class="flex w-full flex-col gap-6">
-  <%= render FlatPack::PageTitle::Component.new(
-    title: t("dummy.home.title"),
-    subtitle: t("dummy.home.subtitle"),
-    variant: :h1
-  ) %>
-
   <div class="flex flex-wrap gap-3">
     <%= render FlatPack::Button::Component.new(
       text: t("dummy.home.staff_desk"),

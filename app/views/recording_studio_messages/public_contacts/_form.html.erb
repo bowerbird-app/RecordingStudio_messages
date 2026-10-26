@@ -6,6 +6,7 @@
 <% actor = public_contact_actor %>
 
 <% if heading %>
+  <% content_for :title, title %>
   <h1 class="text-xl font-semibold"><%= title %></h1>
 <% end %>
 <% if introduction.present? %>

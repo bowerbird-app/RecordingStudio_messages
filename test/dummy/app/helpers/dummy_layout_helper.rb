@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-# Host layout helpers. Engine screens (Users, Admin) also render the forked
-# default layout, so this module is included on ActionView, not only
-# ApplicationHelper.
 module DummyLayoutHelper
   def dummy_language_selector
     return unless respond_to?(:recording_studio_language_selector)
@@ -31,11 +28,38 @@ module DummyLayoutHelper
     attributes
   end
 
-  def dummy_page_nav_back_label
-    I18n.exists?("flatpack.page_nav.back") ? I18n.t("flatpack.page_nav.back") : "Go back"
+  def recording_studio_page_nav(title: nil, **options)
+    content_for(:title, title) if title.present?
+    flat_pack_page_nav(
+      round: true,
+      style: :default,
+      back_href: options[:page_nav_back_url],
+      back_icon: options[:page_nav_back_icon],
+      back_tooltip: options[:page_nav_back_label],
+      back_style: options[:page_nav_back_style],
+      back_size: options[:page_nav_back_size],
+      anchor_href: options[:page_nav_anchor_url],
+      anchor_icon: options[:page_nav_anchor_icon],
+      anchor_tooltip: options[:page_nav_anchor_label]
+    )
+    nil
   end
 
-  def dummy_page_nav_close_label
-    I18n.exists?("flatpack.page_nav.close") ? I18n.t("flatpack.page_nav.close") : "Close"
+  def content_for(name, content = nil, options = {}, &block)
+    rendered = super
+    return rendered unless page_nav_right_read?(name, content, block)
+    return rendered if @_dummy_language_in_page_nav
+
+    selector = dummy_language_selector
+    return rendered if selector.blank?
+
+    @_dummy_language_in_page_nav = true
+    safe_join([selector, rendered].compact)
+  end
+
+  private
+
+  def page_nav_right_read?(name, content, block)
+    name.to_sym == :page_nav_right && content.nil? && block.nil?
   end
 end
