@@ -119,6 +119,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
 
+  def test_widen_rewrites_a_four_x_constraint_that_happens_to_contain_the_digit_six
+    pessimistic = dependency_requirement("~> 4.6")
+    assert pessimistic.satisfied_by?(Gem::Version.new("6.1.0"))
+    assert_equal ">= 6.1.0", pessimistic.to_s
+
+    already_open = dependency_requirement(">= 4.2")
+    assert_equal ">= 4.2", already_open.to_s
+    assert already_open.satisfied_by?(Gem::Version.new("6.1.0"))
+  end
+
   def test_does_not_ship_copied_core_hooks_or_template_leftovers
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/hooks.rb", __dir__))
     refute File.exist?(File.expand_path("../lib/recording_studio_messages/services/base_service.rb", __dir__))
@@ -420,6 +430,12 @@ class RecordingStudioMessagesTest < Minitest::Test
   def gemspec_constraint(gemspec, name)
     match = gemspec.match(/spec\.add_dependency "#{Regexp.escape(name)}", "([^"]+)"/)
     match && match[1]
+  end
+
+  def dependency_requirement(*requirements)
+    spec = Gem::Specification.new("widen-example", "0.0.1")
+    spec.add_dependency("recording_studio", *requirements)
+    spec.dependencies.find { |dependency| dependency.name == "recording_studio" }.requirement
   end
 
   def gemfile_constraint(gemfile, name)

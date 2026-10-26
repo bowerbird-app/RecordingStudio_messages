@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrade notes
 
-- Bump to **0.9.0**. No migration.
+- Bump to **0.9.0**. No Messages migration. Hosts still run the Notifications and Users generators listed below.
 - Require `recording_studio` `>= 6.1.0` (git tag `v6.1.0`) and `flat_pack` `>= 0.1.315` (git tag `v0.1.315`). `v0.1.319` is not a published tag. `view_component` resolves at `4.19.0` (`>= 4.14, < 5`).
 - Set the shell with `config.layout`. Leave it `nil` to follow the host's `RecordingStudio.configuration.layout`.
 - Delete host copies of `layouts/recording_studio/default_layout` that still draw `FlatPack::PageNav` by hand. Core's layout is the shell. It sets `data-theme="rounded"` on `<html>`.
