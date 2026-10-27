@@ -48,17 +48,20 @@ module RecordingStudioMessages
       end
 
       def issue_otp!(user:, purpose:, request:, session:, rate_limit_scope:)
-        call_users_otp do
-          RecordingStudioUser.issue_otp!(
+        raise Error, Copy.t("errors.users_required") unless defined?(RecordingStudioUser::Services::IssueOtp)
+
+        issued_code!(
+          RecordingStudioUser::Services::IssueOtp.call(
             user: user, purpose: purpose, request: request, session: session, rate_limit_scope: rate_limit_scope
           )
-        end
+        )
       end
 
-      def call_users_otp
-        yield
-      rescue RecordingStudioUser::RateLimited
-        raise Error, Copy.t("errors.rate_limited")
+      def issued_code!(result)
+        return result if result.issued?
+        raise Error, Copy.t("errors.rate_limited") if result.throttled?
+
+        raise Error, Copy.t("errors.users_required")
       end
     end
   end

@@ -15,9 +15,7 @@ RecordingStudio.configure do |config|
     "RecordingStudioSiteSettings::SiteSetting",
     "RecordingStudioTermsAndConditions::Terms",
     "RecordingStudioPublishable::Publishable",
-    "RecordingStudioAttachable::Attachment",
-    "RecordingStudioAttachable::Library",
-    "RecordingStudioAttachable::Placement"
+    "RecordingStudioAttachable::Attachment"
   ]
 
   config.require_recordable_declarations = true

@@ -1,4 +1,5 @@
-<% recording_studio_page_nav(title: messages_inbox_title(@mount_recording)) %>
+<% content_for :title, messages_inbox_title(@mount_recording) %>
+<% flat_pack_page_nav(round: true, style: :default, anchor_href: main_app.root_path) %>
 
 <%= render "recording_studio_messages/message_groups/desk",
            group_recordings: @group_recordings,

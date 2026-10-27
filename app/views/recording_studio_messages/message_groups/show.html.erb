@@ -4,7 +4,14 @@
              message_recordings: @message_recordings,
              current_actor: current_messages_actor %>
 <% else %>
-  <% recording_studio_page_nav(title: @group_recording.recordable.title) %>
+  <% content_for :title, @group_recording.recordable.title %>
+  <% flat_pack_page_nav(
+       round: true,
+       style: :default,
+       back_href: message_groups_path(mount_id: @mount_recording&.id),
+       back_tooltip: messages_inbox_title(@mount_recording),
+       anchor_href: main_app.root_path
+     ) %>
 
   <%= render "recording_studio_messages/message_groups/desk",
              group_recordings: @group_recordings,

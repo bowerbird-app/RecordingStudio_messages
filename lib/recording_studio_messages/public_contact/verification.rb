@@ -72,9 +72,9 @@ module RecordingStudioMessages
         proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
         raise Error, Copy.t("errors.confirm_code") if proof.nil?
 
-        call_users_otp do
+        issued_code!(
           RecordingStudioUser.resend_otp!(user: user, purpose: proof.purpose, request: request, session: session)
-        end
+        )
       end
 
       def complete_locked(intent, actor)

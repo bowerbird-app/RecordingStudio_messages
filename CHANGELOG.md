@@ -7,15 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- `admin_notification_root` files `:message_received` for staff under an Admin root recording. Default `nil` keeps every recipient on the conversation root. A recording or a callable that returns one opts in. Recipients with Accessible `:view` on that recording are staff for this purpose (the same check as `Api::Access.can_view?`). The ticket owner stays on the ticket root. Tickets do not move. Notification type stays `scope: :root`. Staff copies omit `recording` when the Admin root is not the message's tree root, because Notifications requires those two to match. URL and metadata stay.
+- Conversation lists, the staff desk, the inbox, and the dummy home use Recording Studio 6.1's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. `false` renders no layout. A string is a layout name. A callable is invoked as `call(controller:)` and must return a String, `nil`, or `false`.
+- Page titles are `content_for :title` and `content_for :subtitle`. The default layout renders one `FlatPack::PageTitle`. Back and close use `flat_pack_page_nav(round: true, style: :default, ...)`.
+- The desk wrapper defaults to `h-[calc(100dvh-15.5rem)]` so the title stays below the sticky top nav and the page does not scroll. The old `8.5rem` offset was the shorter nav from before Recording Studio 6. Hosts that pass `desk_height_class` keep their own value.
+- Public contact asks Users `Services::IssueOtp` for a code and `resend_otp!` for another. Both return a result. A throttled result tells the visitor to wait. A suppressed result says email codes are required. `RecordingStudioUser.issue_otp!` is gone in Users 0.24.
+- Gemspec floors are `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Development and the dummy pin Recording Studio `v6.1.0`, Flatpack `v0.1.315`, and `view_component` `4.19.0`.
+
+### Removed
+
+- `include RecordingStudio::UsesDefaultLayout`. That module is gone in Recording Studio 5.
+- `recording_studio_page_nav`. That helper is gone in Recording Studio 6. The dummy still defines it so Users, Admin, and Site Settings screens that have not migrated keep a back and close row.
 
 ### Upgrade notes
 
-- Bump to **0.8.0**. No migration
-- Hosts and Support that want staff copies in the Admin notifications inbox set `config.admin_notification_root` to the Admin root recording, commonly `-> { RecordingStudioMessages::Api::Access.admin_root_recording }`
-- Unset, filing is unchanged
+- Bump to **0.9.0**. No Messages migration. Hosts still run the Notifications and Users generators listed below.
+- Require `recording_studio` `>= 6.1.0` (git tag `v6.1.0`) and `flat_pack` `>= 0.1.315` (git tag `v0.1.315`). `v0.1.319` is not a published tag. `view_component` resolves at `4.19.0` (`>= 4.14, < 5`).
+- Set the shell with `config.layout`. Leave it `nil` to follow the host's `RecordingStudio.configuration.layout`.
+- Delete host copies of `layouts/recording_studio/default_layout` that still draw `FlatPack::PageNav` by hand. Core's layout is the shell. It sets `data-theme="rounded"` on `<html>`.
+- Replace `recording_studio_page_nav(title:)` with `content_for :title` and `flat_pack_page_nav`. Put extra actions in `register_page_nav` or `content_for :page_nav_right`.
+- `FlatPack::Card` no longer accepts `style:`. Use `background:`.
+- These latest sibling tags still require `recording_studio` below 5, so a host Gemfile cannot resolve 6.1.0 until they publish a compatible tag. This repo's Gemfiles load `test/support/widen_recording_studio_requirement.rb` so Bundler can boot. Delete that file when the tags below allow `>= 6.1.0`.
+  - `recording_studio_accessible` `v0.21.0` (`~> 4.7`, `>= 4.7.1`). Open PR 42 (`cursor/rs-6-1-default-layout-7e10`) allows 6.1 and is not tagged.
+  - `recording_studio_admin` `v2.6.2` depends on `recording_studio_logs` `>= 0.4.1, < 1` (pinned `v0.7.0`, which itself requires `recording_studio ~> 4.2`)
+  - `recording_studio_attachable` `v0.21.1` (`~> 4.2`)
+  - `recording_studio_cache` `v0.5.1` (`~> 4.2`)
+  - `recording_studio_internationalization` `v0.1.7` (`~> 4.2`)
+  - `recording_studio_metrics` `v0.6.1` (`~> 4.2`)
+  - `recording_studio_notifications` `v0.13.1` (`~> 4.2`)
+  - `recording_studio_publishable` `v0.11.0` (`~> 4.2`)
+  - `recording_studio_root_switchable` `v0.10.0` (`~> 4.1`)
+  - `recording_studio_site_settings` `v0.5.1` (`~> 4.2`, and `include RecordingStudio::UsesDefaultLayout` with no `defined?` guard)
+  - `recording_studio_terms_and_conditions` `v0.13.4` (`~> 4.2`)
+  - `recording_studio_trashable` `v0.11.3` (`~> 4.7`)
+  - `recording_studio_user` `v0.25.2` (`~> 4.2`)
+- The dummy defines an empty `RecordingStudio::UsesDefaultLayout` so Site Settings 0.5.1 can load. Remove that stub when Site Settings stops including it.
+- Attachable 0.21 no longer ships `Library` or `Placement` recordables. Drop those names from `config.recordable_types`. Register `RecordingStudioAttachable::Attachment` only.
+- Run `bin/rails generate recording_studio_notifications:migrations` and migrate. Notifications 0.13 writes an `inbox` flag on each notice.
+- Run `bin/rails generate recording_studio_user:migrations` and migrate. Users 0.24 adds a partial unique index on open OTP challenges (`index_rs_user_otp_challenges_open_purpose`).
 
 ## [0.8.3] - 2026-10-22
 
@@ -43,6 +73,18 @@ Allow Metrics 0.5.
 - Bump to **0.8.2**. No migration
 - Hosts that stay on Metrics 0.3.x do not need to change
 - To use Metrics 0.5, raise the host pin to a 0.5.x tag. Attachable 0.20.0 still requires Metrics `< 0.4`
+
+## [0.8.0] - 2026-10-16
+
+### Added
+
+- `admin_notification_root` files `:message_received` for staff under an Admin root recording. Default `nil` keeps every recipient on the conversation root. A recording or a callable that returns one opts in. Recipients with Accessible `:view` on that recording are staff for this purpose (the same check as `Api::Access.can_view?`). The ticket owner stays on the ticket root. Tickets do not move. Notification type stays `scope: :root`. Staff copies omit `recording` when the Admin root is not the message's tree root, because Notifications requires those two to match. URL and metadata stay.
+
+### Upgrade notes
+
+- Bump to **0.8.0**. No migration
+- Hosts and Support that want staff copies in the Admin notifications inbox set `config.admin_notification_root` to the Admin root recording, commonly `-> { RecordingStudioMessages::Api::Access.admin_root_recording }`
+- Unset, filing is unchanged
 
 ## [0.7.0] - 2026-10-16
 
@@ -386,6 +428,7 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 
 [Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.3...HEAD
 [0.8.3]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.2...v0.8.3
+[0.8.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.7.0...v0.8.0
 [0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.0...v0.5.1

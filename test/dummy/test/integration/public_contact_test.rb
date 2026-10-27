@@ -381,7 +381,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name=email]", count: 0
     assert_select "input[type=email]", count: 0
-    assert_select "span.rounded-full", text: "Ada Staff"
+    assert_select "span.inline-flex", text: "Ada Staff"
     refute_includes response.body, "admin@admin.com"
     assert_select "textarea[name=body]"
   end
@@ -644,7 +644,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     sign_in @staff
 
     get contact_path(presentation: "modal"), headers: modal_headers
-    assert_select "span.rounded-full", text: "Ada Staff"
+    assert_select "span.inline-flex", text: "Ada Staff"
     assert_select "input[name=email]", count: 0
     assert_select "h1", count: 0
 
@@ -704,7 +704,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     get contact_path(presentation: "modal"), headers: modal_headers
 
-    assert_select "span.rounded-full", text: "Ada Staff"
+    assert_select "span.inline-flex", text: "Ada Staff"
     assert_select "input[name=code]", count: 0
 
     sign_out @staff

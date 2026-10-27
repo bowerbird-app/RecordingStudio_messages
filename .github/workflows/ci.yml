@@ -46,9 +46,22 @@ jobs:
         BUNDLE_GITHUB__COM: x-access-token:${{ secrets.BOWERBIRD_ORG_CI_TOKEN }}
     
     - name: Install dummy app dependencies
-      run: bundle install
+      # Git clones into the hosted Ruby toolcache race. Keep the dummy
+      # bundle in its own path, install one gem at a time, and retry.
+      run: |
+        bundle config set --local path vendor/bundle
+        bundle config set --local jobs 1
+        for attempt in 1 2 3; do
+          if bundle install; then
+            exit 0
+          fi
+          echo "bundle install failed on attempt ${attempt}"
+          sleep $((attempt * 5))
+        done
+        exit 1
       working-directory: test/dummy
       env:
+        BUNDLE_PATH: vendor/bundle
         BUNDLE_GITHUB__COM: x-access-token:${{ secrets.BOWERBIRD_ORG_CI_TOKEN }}
         DATABASE_URL: postgres://postgres:postgres@localhost:5432/recording_studio_messages_test
     

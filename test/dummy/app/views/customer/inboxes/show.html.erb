@@ -1,4 +1,10 @@
-<% recording_studio_page_nav(title: t("dummy.home.inbox")) %>
+<% content_for :title, t("dummy.home.inbox") %>
+<% flat_pack_page_nav(
+     round: true,
+     style: :default,
+     back_href: root_path,
+     back_tooltip: t("dummy.home.title")
+   ) %>
 
 <%= render "recording_studio_messages/message_groups/desk",
            group_recordings: @group_recordings,
