@@ -14,7 +14,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Home includes a Contact button that opens the Site mailbox public form in a modal. The full page remains `GET /recording_studio_messages/public_contact?mount_id=`
 - Recording Studio 6.1 default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply
-- Dummy-only Recording Studio Internationalization (`en` + `fr`) with a compact language selector in PageNav, left of any host actions
+- Dummy-only Recording Studio Internationalization (`en` + `fr`). Locale switches with `PATCH /recording_studio_internationalization/locale`. The top nav does not include a language selector
 - No Sign out or Root Switchable in the default-layout slot. Core owns back and close.
 - Mounted Messages, Users, Accessible, Attachable, Admin, Site Settings, Terms and Conditions, Publishable, and Recording Studio engines
 - Site settings live on the current Workspace. Admin is a separate root. Staff (`admin@admin.com`) can open Admin from home. Dummy leaves `admin_notification_root` unset, so staff `:message_received` notices stay on the ticket workspace unless a test opts in
@@ -58,7 +58,7 @@ second back button. That layout still loads:
 - `tailwind`
 - Importmap JS, including `@hotwired/turbo-rails`
 
-The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement`. Core's layout already sets the same attribute on `<html>`. The dummy copies `lang` onto the `html` tag when the response omits it. The language selector is prepended to `:page_nav_right`. Do not put a switcher or a Sign out button in that slot, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
+The host injects `flat_pack/application` through `app/views/recording_studio/_default_layout_head.html.erb`. That partial also sets `data-theme="rounded"` on `document.documentElement`. Core's layout already sets the same attribute on `<html>`. The dummy copies `lang` onto the `html` tag when the response omits it. Do not put a language switcher or a Sign out button in `:page_nav_right`, the home view, or the chat panel. Do not fork Chat::Panel CSS here.
 
 Flatpack is pinned to `v0.1.315`. The messages gemspec requires `flat_pack >= 0.1.315` and `recording_studio >= 6.1.0`. Recording Studio is pinned to `v6.1.0`. `view_component` is `4.19.0`. Rounded on the live kit is monochrome charcoal, not blue buttons. Outgoing chat bubbles use Flatpack's light neutral surface. Current `FlatPack::Card` rejects `style:`. Pinned Admin and Users still pass it, so `config/initializers/flatpack_card_styles.rb` maps `:outlined` to `border: :strong` and `:elevated` to `shadow: :md`. Users still calls `recording_studio_page_nav`. `app/helpers/dummy_layout_helper.rb` turns that into `flat_pack_page_nav` until those gems migrate. Latest sibling tags still require Recording Studio below 5. `test/support/widen_recording_studio_requirement.rb` widens those constraints at Bundler load so this app can boot.
 

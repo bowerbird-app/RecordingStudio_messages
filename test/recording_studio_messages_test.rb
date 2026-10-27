@@ -292,7 +292,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes tailwind_source, '@source inline("pt-16")'
     assert_includes tailwind_source, '@source inline("min-h-dvh")'
     assert_includes tailwind_source, '@source "../../helpers/**/*.rb"'
-    assert_includes tailwind_source, '@source inline("[&_button]:sr-only")'
+    refute_includes tailwind_source, '@source inline("dummy-language-selector")'
+    refute_includes tailwind_source, '@source inline("[&_button]:sr-only")'
     refute_includes tailwind_source, "@theme"
     refute_includes tailwind_source, ":root {"
     refute_includes tailwind_source, "--color-fp-primary"

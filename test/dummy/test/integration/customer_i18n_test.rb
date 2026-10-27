@@ -12,16 +12,12 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     sign_in @staff
   end
 
-  test "language selector sits in the dummy top nav" do
+  test "home stays English without a language selector in the top nav" do
     get "/"
 
     assert_response :success
-    assert_select "form[action='/recording_studio_internationalization/locale']"
-    assert_includes response.body, "English"
-    assert_includes response.body, "Français"
     assert_select "html[lang='en']"
-    assert_select ".dummy-language-selector"
-    assert_select "header .dummy-language-selector"
+    assert_no_language_selector
   end
 
   test "contact form stays English until the host locale changes" do
@@ -33,6 +29,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Name"
     assert_includes response.body, "Contact"
     assert_select "html[lang='en']"
+    assert_no_language_selector
   end
 
   test "conversation views stay English until the host locale changes" do
@@ -42,6 +39,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Write a message"
     assert_includes response.body, "Studio help"
     assert_select "html[lang='en']"
+    assert_no_language_selector
   end
 
   test "dummy French locale renders the public contact form" do
@@ -55,6 +53,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Envoyer"
     assert_includes response.body, "Nom"
     refute_includes response.body, "Send message"
+    assert_no_language_selector
   end
 
   test "dummy French locale renders conversation views" do
@@ -65,6 +64,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Écrire un message"
     assert_includes response.body, "Studio help"
     refute_includes response.body, "Write a message"
+    assert_no_language_selector
   end
 
   test "public contact helper text overrides still win" do
@@ -84,5 +84,10 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
   def switch_to_french
     patch "/recording_studio_internationalization/locale", params: { locale: "fr", return_to: "/" }
     follow_redirect!
+  end
+
+  def assert_no_language_selector
+    assert_select ".dummy-language-selector", count: 0
+    assert_select "form[action='/recording_studio_internationalization/locale']", count: 0
   end
 end

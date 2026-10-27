@@ -353,7 +353,7 @@ Authenticated dummy pages use Recording Studio's default layout (`recording_stud
 | Email    | casey@example.com  |
 | Password | Password           |
 
-The dummy switches English and French with Recording Studio Internationalization. The compact language selector sits in PageNav. Conversation titles and seeded message bodies stay in the language they were written.
+The dummy switches English and French with Recording Studio Internationalization by `PATCH /recording_studio_internationalization/locale`. The top nav does not include a language selector. Conversation titles and seeded message bodies stay in the language they were written.
 
 The dummy proves two mounts at once:
 
