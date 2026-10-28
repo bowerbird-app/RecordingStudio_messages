@@ -50,6 +50,13 @@ config/credentials/*.key
 test/dummy/config/master.key
 test/dummy/config/credentials/*.key
 
+# Coverage reports
+coverage/
+test/dummy/coverage/
+
+# Local audit captures
+.audit/rs-61-layout.tsv
+
 # Build artifacts
 *.gem
 pkg/

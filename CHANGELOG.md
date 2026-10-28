@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-28
+
+Stop tracking coverage output and a local layout audit file. README pins match `main`.
+
+### Changed
+
+- `.gitignore` covers `coverage/`, `test/dummy/coverage/`, and `.audit/rs-61-layout.tsv`. Those paths are untracked; files on disk are left in place.
+- README upgrade notes list Core `6.1.0`, Accessible `0.21.0`, Attachable `0.21.1`, Notifications `0.13.1`, Users `0.26.3`, Metrics `0.6.1`, and Flatpack `0.1.329`. Accessible and Metrics no longer constrain Recording Studio below 5.
+
+### Upgrade notes
+
+- Bump to **0.9.2**. No Messages migration. No host code change.
+
 ## [0.9.1] - 2026-10-28
 
 Dummy Flatpack 0.1.329 and Users 0.26.3. Drop the Card `style:` shim.
