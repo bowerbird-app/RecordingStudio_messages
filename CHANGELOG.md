@@ -17,7 +17,7 @@ Dummy Flatpack 0.1.329 and Users 0.26.3. Drop the Card `style:` shim.
 
 ### Changed
 
-- Development and dummy pin Flatpack `v0.1.329` and Users `v0.26.3` (`59c0e16`). Users 0.26.3 views pass `shadow: :md` on cards, not `style:`. Gemspec floor stays `flat_pack >= 0.1.315`. Admin stays `v2.6.2`. Root Switchable stays `v0.10.0`.
+- Development and dummy pin Flatpack `v0.1.329` and Users `v0.26.3` (`59c0e16`). Users 0.26.3 views pass `shadow: :md` on cards, not `style:`. Gemspec floor stays `flat_pack >= 0.1.315`. Admin stays `v2.6.2`. Root Switchable stays `v0.10.0`. Dummy Tailwind checks keep alert tokens in the Tailwind build; secondary button tokens live in Flatpack CSS.
 
 ### Upgrade notes
 
