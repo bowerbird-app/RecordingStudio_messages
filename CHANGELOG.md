@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Hosts can override `messages_panel_right_header(group_recording)`, `messages_panel_right_header_mobile(group_recording)`, and `messages_panel_after(group_recording)`. Defaults return nil. The panel fills Flatpack `Chat::Panel` `right_header` and `right_header_mobile` only when that hook returns content, and renders `messages_panel_after` once after the panel. A blank return leaves the panel markup unchanged.
+
+### Changed
+
+- Gemspec floor is `flat_pack >= 0.1.329`. Development and the dummy still pin Flatpack tag `v0.1.329`.
+
 ## [0.9.1] - 2026-10-28
 
 Dummy Flatpack 0.1.329 and Users 0.26.3. Drop the Card `style:` shim.

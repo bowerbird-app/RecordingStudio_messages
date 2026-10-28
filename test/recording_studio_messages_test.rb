@@ -30,7 +30,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert requirement.satisfied_by?(Gem::Version.new("0.5.0"))
     refute requirement.satisfied_by?(Gem::Version.new("0.3.0"))
     refute requirement.satisfied_by?(Gem::Version.new("1.0.0"))
-    assert_equal ">= 0.1.315", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal ">= 0.1.329", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -115,6 +115,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes root_lock, "recording_studio (6.1.0)"
     assert_includes root_lock, "tag: v0.1.329"
     assert_includes root_lock, "flat_pack (0.1.329)"
+    assert_includes dummy_lock, "tag: v0.1.329"
+    assert_includes dummy_lock, "flat_pack (0.1.329)"
+    assert_includes root_lock, "flat_pack (>= 0.1.329)"
+    assert_includes dummy_lock, "flat_pack (>= 0.1.329)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
@@ -195,6 +199,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
     assert_includes panel, "membership_locked_for_group?"
+    assert_includes panel, "messages_panel_right_header(group_recording)"
+    assert_includes panel, "messages_panel_right_header_mobile(group_recording)"
+    assert_includes panel, "messages_panel_after(group_recording)"
+    assert_includes panel, "panel.right_header do"
+    assert_includes panel, "panel.right_header_mobile do"
+    assert_includes panel, "if right_header.present?"
+    assert_includes panel, "if right_header_mobile.present?"
+    assert_includes panel_helper, "def messages_panel_right_header(group_recording)"
+    assert_includes panel_helper, "def messages_panel_right_header_mobile(group_recording)"
+    assert_includes panel_helper, "def messages_panel_after(group_recording)"
     assert_includes panel, "if membership_open"
     assert_includes panel, "recording_studio_accessible_avatars"
     refute_includes panel, "show_access:"

@@ -20,6 +20,39 @@ module RecordingStudioMessages
       request.fullpath
     end
 
+    # HTML for Flatpack Chat::Panel's `right_header` slot. `group_recording` is
+    # the open conversation. `current_messages_actor` is available while the
+    # panel renders.
+    #
+    # A host overrides this the same way Support overrides `messages_inbox_href`:
+    # define a helper with the same name. Return nil or blank to omit the slot.
+    # Return html-safe markup.
+    #
+    # On Flatpack 0.1.329 a lone `right_header` is `flex` at every width. It is
+    # `hidden sm:flex` (shown at 640px and up) only when `right_header_mobile`
+    # is also set. Both slots stay in the DOM when both are present, so their
+    # ids, Stimulus targets, and `aria-controls` targets must differ.
+    def messages_panel_right_header(group_recording)
+      panel_hook_default(group_recording)
+    end
+
+    # HTML for Flatpack Chat::Panel's `right_header_mobile` slot (shown below
+    # `sm`). Same argument and override rules as `messages_panel_right_header`.
+    # Pass only this hook and the compact actions show below `sm`.
+    def messages_panel_right_header_mobile(group_recording)
+      panel_hook_default(group_recording)
+    end
+
+    # HTML rendered once after the chat panel, inside the `messages-desk-panel`
+    # turbo frame (`h-full`). That frame sits in Chat::Layout's `overflow-hidden`
+    # panel column, so in-flow markup here is clipped. A Flatpack modal is
+    # `fixed` (backdrop `inset-0`), so it is not clipped and does not add height.
+    # Same argument and override rules as `messages_panel_right_header`.
+    # Nil or blank renders nothing.
+    def messages_panel_after(group_recording)
+      panel_hook_default(group_recording)
+    end
+
     def messages_panel_list_id(group_recording)
       "conversation-#{group_recording.id}-messages"
     end
@@ -107,6 +140,12 @@ module RecordingStudioMessages
       return unless attachment.attachment_kind.to_s == "image"
 
       message_attachment_href(attachment_recording)
+    end
+
+    private
+
+    def panel_hook_default(_group_recording)
+      nil
     end
   end
 end

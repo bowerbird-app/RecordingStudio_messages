@@ -46,7 +46,7 @@ gem "recording_studio", ">= 6.1.0"
 gem "recording_studio_accessible", "~> 0.13"
 gem "recording_studio_attachable", "~> 0.13"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1"
-gem "flat_pack", ">= 0.1.315"
+gem "flat_pack", ">= 0.1.329"
 ```
 
 Then:
@@ -311,9 +311,25 @@ The pending row expires 24 hours after `begin`. An expired row does not send. On
 
 Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. On a `membership_locked` mount the header omits that control and Accessible refuses membership changes (see Enablement).
 
+## Overridable helpers
+
+A host helper with the same name replaces the engine helper. Support does this for `messages_inbox_href(group_recording)` so staff desk links stay on the messages mount.
+
+The chat panel calls three hooks. Each takes `group_recording`, the open conversation. `current_messages_actor` is available while the panel renders. All three return `nil` until a host overrides them. Return html-safe markup. These hooks add no strings of their own.
+
+| Helper | When it shows |
+|---|---|
+| `messages_panel_right_header(group_recording)` | Flatpack `Chat::Panel` `right_header`. Alone, the part is `flex` at every width. When the mobile hook also returns content, this part is `hidden sm:flex` (shown at 640px and up). |
+| `messages_panel_right_header_mobile(group_recording)` | Flatpack `Chat::Panel` `right_header_mobile`. Shown below `sm` (`flex sm:hidden`). |
+| `messages_panel_after(group_recording)` | Once, after the panel, inside the `messages-desk-panel` turbo frame. Use a fixed modal. |
+
+A nil or blank return omits that piece, and the panel markup stays as it is without the hook. The panel passes a right-header slot only when that hook returns content (`panel.right_header` and `panel.right_header_mobile`). On Flatpack 0.1.329, `right_header` is `hidden sm:flex` only when `right_header_mobile` is also supplied. A lone `right_header` stays `flex` at every width. When both return content, both slots are in the DOM and CSS hides one, so their ids, Stimulus targets, and `aria-controls` targets must differ. Pass only the mobile hook and the compact actions show below `sm`.
+
+`messages_panel_after` is a sibling after the panel, still inside the `h-full` turbo frame. That frame sits in `Chat::Layout`'s `overflow-hidden` panel column, so in-flow markup is clipped. Flatpack's modal backdrop is `fixed inset-0`, so a modal is not clipped and does not add height in the frame.
+
 ## Screens
 
-The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.315` supplies a fluid split from `sm`, rounded theme tokens for charcoal Send buttons, and outgoing bubbles on the neutral surface. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
+The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. Accessible (`authorized?` `:view` on each `MessageGroup`) scopes the sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.329` supplies a fluid split from `sm`, `Chat::Panel` `right_header` and `right_header_mobile`, rounded theme tokens for charcoal Send buttons, and outgoing bubbles on the neutral surface. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
 
 The desk fills the viewport under the host's page nav and page title. `Chat::Layout` is `h-full`, so height lives on the wrapper (`h-[calc(100dvh-15.5rem)]`, matching Recording Studio 6.1's top nav, page title, and layout padding). The same wrapper is `w-full min-w-0` so the split can shrink inside core `main`. Messages scroll inside the panel and the composer stays on the bottom edge instead of sitting under the browser chrome. A host with different chrome passes `desk_height_class` to the partial. Do not set the height on `Chat::Layout` itself; its own `h-full` wins.
 
@@ -360,7 +376,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.10.0`. Users is on `v0.26.3`. Both require Cache `v0.5.1`. Recording Studio is on `v6.1.0`. Accessible is on `v0.21.0`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.329`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Latest sibling tags still constrain Recording Studio below 5. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.10.0`. Users is on `v0.26.3`. Both require Cache `v0.5.1`. Recording Studio is on `v6.1.0`. Accessible is on `v0.21.0`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.329`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.329`. Latest sibling tags still constrain Recording Studio below 5. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -371,7 +387,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_attachable` | `~> 0.13` | `v0.21.1` | `0.21.1` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.13.1` | `0.13.1` |
 | `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.6.1` | `0.6.1` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.315` | `v0.1.329` | `0.1.329` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.329` | `v0.1.329` | `0.1.329` |
 | `view_component` | `4.19.0` | | `4.19.0` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.26.3` | `0.26.3` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |

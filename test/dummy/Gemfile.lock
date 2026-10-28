@@ -192,7 +192,7 @@ PATH
   remote: ../..
   specs:
     recording_studio_messages (0.9.1)
-      flat_pack (>= 0.1.315)
+      flat_pack (>= 0.1.329)
       rails (~> 8.1.0)
       recording_studio (>= 6.1.0)
       recording_studio_accessible (~> 0.13)
