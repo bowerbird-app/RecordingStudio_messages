@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-28
+
+Dummy Flatpack 0.1.329 and Users 0.26.3. Drop the Card `style:` shim.
+
+### Removed
+
+- Dummy `config/initializers/flatpack_card_styles.rb` and `test/dummy/test/integration/flatpack_card_styles_test.rb`. That test only covered the shim.
+
+### Changed
+
+- Development and dummy pin Flatpack `v0.1.329` and Users `v0.26.3` (`59c0e16`). Users 0.26.3 views pass `shadow: :md` on cards, not `style:`. Gemspec floor stays `flat_pack >= 0.1.315`. Admin stays `v2.6.2`. Root Switchable stays `v0.10.0`.
+
+### Upgrade notes
+
+- Bump to **0.9.1**. No Messages migration.
+- Dummy no longer maps Card `style:`. Hosts still on Users below 0.26 must stop passing `style:` to `FlatPack::Card`. Use `background:`, `shadow:`, `border:`, and `hover:`.
+
+## [0.9.0] - 2026-10-27
+
 ### Changed
 
 - Conversation lists, the staff desk, the inbox, and the dummy home use Recording Studio 6.1's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. `false` renders no layout. A string is a layout name. A callable is invoked as `call(controller:)` and must return a String, `nil`, or `false`.

@@ -35,7 +35,7 @@ gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.1.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.21.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.315"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.329"
 gem "view_component", "4.19.0"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
@@ -360,7 +360,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.10.0`. Users is on `v0.25.2`. Both require Cache `v0.5.1`. Recording Studio is on `v6.1.0`. Accessible is on `v0.21.0`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.315`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Latest sibling tags still constrain Recording Studio below 5. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.10.0`. Users is on `v0.26.3`. Both require Cache `v0.5.1`. Recording Studio is on `v6.1.0`. Accessible is on `v0.21.0`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.329`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Latest sibling tags still constrain Recording Studio below 5. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -371,9 +371,9 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_attachable` | `~> 0.13` | `v0.21.1` | `0.21.1` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.13.1` | `0.13.1` |
 | `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.6.1` | `0.6.1` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.315` | `v0.1.315` | `0.1.315` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.315` | `v0.1.329` | `0.1.329` |
 | `view_component` | `4.19.0` | | `4.19.0` |
-| `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.25.2` | `0.25.2` |
+| `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.26.3` | `0.26.3` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |
 | `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.6.2` | `2.6.2` |
 | `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.7.0` | `0.7.0` |
