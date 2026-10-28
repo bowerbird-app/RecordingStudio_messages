@@ -54,9 +54,6 @@ test/dummy/config/credentials/*.key
 coverage/
 test/dummy/coverage/
 
-# Local audit captures
-.audit/rs-61-layout.tsv
-
 # Build artifacts
 *.gem
 pkg/
