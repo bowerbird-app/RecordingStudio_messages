@@ -5,25 +5,25 @@ module RecordingStudioMessages
     class << self
       private
 
-      def queue_verification(mount:, name:, email:, text:, request:, session:)
+      def queue_verification(mount:, name:, email:, text:, request:, session:, tags:)
         raise Error, Copy.t("errors.users_required") unless users_otp_ready?
 
-        normalized_email = normalize_email(email)
-        user, purpose = account_for(normalized_email)
-        ensure_recipient!(mount, user)
+        user, purpose = account_for(normalize_email(email))
+        stored_ids = Services::MessageGroupTags.tag_ids(tags)
+        ensure_recipient!(mount, user, tags: tags)
         intent = store_intent(
-          mount: mount, user: user, purpose: purpose, name: name, email: normalized_email, text: text,
-          request: request, session: session
+          mount: mount, user: user, purpose: purpose, name: name, email: normalize_email(email), text: text,
+          request: request, session: session, tag_ids: stored_ids
         )
         session[SESSION_KEY] = intent.id
         Outcome.new(intent: intent)
       end
 
-      def ensure_recipient!(mount, user)
-        raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user)).nil?
+      def ensure_recipient!(mount, user, tags:)
+        raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user, tags: tags)).nil?
       end
 
-      def store_intent(mount:, user:, purpose:, name:, email:, text:, request:, session:)
+      def store_intent(mount:, user:, purpose:, name:, email:, text:, request:, session:, tag_ids:)
         issued = issue_otp!(user: user, purpose: purpose, request: request, session: session, rate_limit_scope: :issue)
         PublicContactIntent.create!(
           mount_recording_id: mount.id,
@@ -31,7 +31,7 @@ module RecordingStudioMessages
           otp_challenge_id: issued.challenge_id,
           email: email,
           submitted_name: normalize_name(name),
-          body: text,
+          body: text, tags: tag_ids,
           expires_at: PublicContactIntent::LIFETIME.from_now
         )
       end
@@ -82,19 +82,26 @@ module RecordingStudioMessages
         return intent.group_recording if intent.fulfilled?
         raise Error, Copy.t("errors.expired") unless intent_open?(intent)
 
+        tags = tags_for_intent(intent)
         settle_identity!(actor, intent)
-        publish_intent!(intent, actor)
+        publish_intent!(intent, actor, tags: tags)
+      end
+
+      def tags_for_intent(intent)
+        Services::MessageGroupTags.tags_from_ids(intent.tags)
+      rescue ArgumentError
+        raise Error, Copy.t("errors.contact_target_missing")
       end
 
       def intent_open?(intent)
         !intent.expired? && intent.open?
       end
 
-      def publish_intent!(intent, actor)
+      def publish_intent!(intent, actor, tags:)
         mount = RecordingStudio::Recording.find(intent.mount_recording_id)
         group = fulfill!(
           mount: mount, contact: actor, title: intent.submitted_name, body: intent.body,
-          recipients: recipients_for(mount, actor)
+          recipients: recipients_for(mount, actor, tags: tags), tags: tags
         )
         intent.update!(message_group_id: group.id, body: nil)
         group

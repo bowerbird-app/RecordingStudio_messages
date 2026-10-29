@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-29
+
+A conversation can take its tags in the same commit that creates it. Hosts can count those conversations without an actor. Public contact can store the same tags on a pending intent.
+
+### Added
+
+- `create_group(mount_recording, title:, actor:, tags: nil)`. `tags:` is a hash of a host key to a `RecordingStudio::Recording`. `nil` and `{}` write no tag rows. The conversation, the owner grant, and the tag rows commit together. A failed owner grant rolls all three back.
+- `tagged_group_recordings(mount_recording:, tags:)`. Returns an unsorted relation of kept `MessageGroup` children of that mount. It does not take an actor and it does not call Accessible. Empty `tags` adds no filter, so the relation is every kept conversation on the mount. This lookup is not an ACL. `press_center` and `press_kit` in the docs are examples.
+- `begin_public_contact` takes `tags: nil`. A signed-out send stores recording ids on `recording_studio_messages_public_contact_intents.tags` (`jsonb`, not null, default `{}`). `complete_public_contact(intent:, actor:)` reads that column. It still has no `tags:` argument. A missing tagged recording raises `RecordingStudioMessages::Error` with "We couldn't send that message. Start a new one." The intent stays open and no conversation is written.
+- The public-contact resolver receives `tags:` only when its parameters include a `tags` keyword or a keyrest. The value is a duplicate hash. When there are no tags, the resolver receives `{}`. A lambda that only takes `mount_recording:` and `actor:` still works.
+
+### Upgrade notes
+
+- Bump to **0.11.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known. Use `tagged_group_recordings` for a count that has no actor. Keep `viewable_group_recordings` for an actor who can view the mount.
+- Add `tags: nil` or `**` to `public_contact_recipient_resolver` when the desk depends on those recordings. Leave a two-keyword lambda as it is.
+- Leave the intent `tags` column alone. `complete_public_contact` reads it.
+- A failed owner grant now removes the new conversation. In `0.10.0`, `record!` could commit the conversation and a later grant failure could leave it in place.
+
 ## [0.10.0] - 2026-10-29
 
 Hosts can tag a conversation with host recordings and list only the groups that match those tags.

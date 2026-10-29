@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -205,6 +205,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
     t.uuid "otp_challenge_id", null: false
     t.string "submitted_name", null: false
     t.uuid "user_id", null: false
+    t.jsonb "tags", default: {}, null: false
     t.index ["message_group_id"], name: "index_public_contact_intents_on_message_group", unique: true, where: "(message_group_id IS NOT NULL)"
     t.check_constraint "message_group_id IS NULL AND body IS NOT NULL AND char_length(body) >= 1 AND char_length(body) <= 10000 OR message_group_id IS NOT NULL AND body IS NULL", name: "contact_intent_state"
   end

@@ -907,7 +907,149 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "signed-out contact stores tag ids and complete tags one conversation" do
+    press = press_recording("Press center")
+    kit = press_recording("Press kit")
+    received = []
+    resolver = lambda { |mount_recording:, actor:, tags:|
+      received << tags.dup
+      tags.clear
+      [@staff]
+    }
+
+    with_contact_config(public_contact_recipient_resolver: resolver) do
+      session = {}
+      outcome = RecordingStudioMessages.begin_public_contact(
+        mount_recording: @mount,
+        name: "Ada Lovelace",
+        email: "tagged-contact@example.com",
+        body: "Hello from the center",
+        current_actor: nil,
+        request: nil,
+        session: session,
+        tags: { "press_center" => press, press_kit: kit }
+      )
+
+      intent = outcome.intent
+      assert_nil outcome.group_recording
+      assert_equal(
+        { "press_center" => press.id.to_s, "press_kit" => kit.id.to_s },
+        intent.tags
+      )
+      assert_equal [{ "press_center" => press, "press_kit" => kit }], received
+
+      verified = RecordingStudioUser.verify_otp!(
+        challenge_id: intent.otp_challenge_id,
+        code: otp_code_for(intent),
+        purpose: otp_purpose_for(intent),
+        session: session
+      )
+      assert verified.success?
+
+      user = User.find_by!(email: "tagged-contact@example.com")
+      group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: user)
+      rows = RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id)
+      assert_equal press.id, rows.find_by!(key: "press_center").tagged_recording_id
+      assert_equal kit.id, rows.find_by!(key: "press_kit").tagged_recording_id
+      assert_equal({ "press_center" => press, "press_kit" => kit }, received.last)
+
+      again = RecordingStudioMessages.complete_public_contact(intent: intent.reload, actor: user)
+      assert_equal group.id, again.id
+      assert_equal 2, RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id).count
+      assert_equal 2, received.size
+    end
+  end
+
+  test "a keyrest resolver receives tags and an omitted hash is empty" do
+    press = press_recording("Press center")
+    received = []
+    resolver = lambda { |mount_recording:, actor:, **rest|
+      received << rest.fetch(:tags)
+      [@staff]
+    }
+
+    with_contact_config(public_contact_recipient_resolver: resolver) do
+      RecordingStudioMessages.begin_public_contact(
+        mount_recording: @mount,
+        name: nil,
+        email: nil,
+        body: "Signed in",
+        current_actor: @staff,
+        request: nil,
+        session: {},
+        tags: { "press_center" => press }
+      )
+      RecordingStudioMessages.begin_public_contact(
+        mount_recording: @mount,
+        name: nil,
+        email: nil,
+        body: "No tags",
+        current_actor: @staff,
+        request: nil,
+        session: {}
+      )
+    end
+
+    assert_equal [{ "press_center" => press }, {}], received
+  end
+
+  test "signed-in contact tags the new conversation through the two-keyword resolver" do
+    press = press_recording("Press center")
+    outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: nil,
+      email: nil,
+      body: "From the desk",
+      current_actor: @staff,
+      request: nil,
+      session: {},
+      tags: { "press_center" => press }
+    )
+
+    group = outcome.group_recording
+    assert_nil outcome.intent
+    row = RecordingStudioMessages::MessageGroupTag.find_by!(
+      message_group_recording_id: group.id,
+      key: "press_center"
+    )
+    assert_equal press.id, row.tagged_recording_id
+  end
+
+  test "complete raises when a tagged recording is gone and leaves the intent open" do
+    press = press_recording("Press center")
+    outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: "Ada Lovelace",
+      email: "missing-target@example.com",
+      body: "Hello",
+      current_actor: nil,
+      request: nil,
+      session: {},
+      tags: { "press_center" => press }
+    )
+    intent = outcome.intent
+    press.destroy
+    user = User.find_by!(email: "missing-target@example.com")
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      error = assert_raises(RecordingStudioMessages::Error) do
+        RecordingStudioMessages.complete_public_contact(intent: intent, actor: user)
+      end
+      assert_equal "We couldn't send that message. Start a new one.", error.message
+    end
+
+    intent.reload
+    assert_nil intent.message_group_id
+    assert_equal "Hello", intent.body
+    assert intent.open?
+  end
+
   private
+
+  def press_recording(name)
+    workspace = Workspace.create!(name: "#{name} #{SecureRandom.hex(4)}")
+    RecordingStudio.root_recording_for(workspace)
+  end
 
   def verify_contact(email:, purpose: "registration")
     post contact_path, params: { name: "Ada Lovelace", email: email, body: "Hello from #{email}." }

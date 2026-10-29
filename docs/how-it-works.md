@@ -36,14 +36,19 @@ Notifications are facts, not recordings. They live in the Notifications tables. 
 Use the public helpers:
 
 - `ensure_message_mount` to hang or find a keyed mount
-- `create_group` to open a conversation and grant the first owner
+- `create_group` to open a conversation, grant the first owner, and optionally write tags in that same commit
 - `viewable_group_recordings` to list the kept conversations one actor can view under one mount
+- `tagged_group_recordings` to list kept conversations on one mount without an actor
 - `tag` / `untag` to join a conversation to a host recording by a host-chosen key
 - `send_message` to write a line, attach files, and notify everyone else who has a grant
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil)` calls Accessible `recordings_for` with `minimum_role: :view` and the `MessageGroup` type, then sorts by latest message time and title. Pass a mount. A blank actor or a blank mount returns `[]`. Optional `tags:` is a hash of key to tagged recording. Every pair must match a `recording_studio_message_group_tags` row. Tags shrink that Accessible list. They are not an ACL.
 
-Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
+Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. `MessageGroupTags` is the only writer of those rows. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
+
+`create_group(..., tags: nil)` writes those rows in the same transaction as the conversation and the owner grant. `nil` and `{}` write none. A failed owner grant leaves no conversation and no tag rows. A second successful `create_group` with the same tags creates a second conversation.
+
+`tagged_group_recordings(mount_recording:, tags:)` is an unsorted relation of kept `MessageGroup` children of that mount. It does not call Accessible, so it is not an ACL. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. `tags: nil` and `tags: {}` leave the filter off and return every kept conversation on the mount. A non-empty hash requires every pair. `press_center` and `press_kit` are examples, not constants. Many conversations may share one key. The host counts, then creates, when one conversation is the goal. Two processes can both read zero and both create. That race stays in the host.
 
 `NotifyGrantedActors` files `:message_received` under the conversation root unless the host sets `admin_notification_root`. That option is a recording or a callable that returns one. Recipients with Accessible `:view` on it (staff, the same check `Api::Access.can_view?` uses on the Admin root) get that recording as `root_recording`. Other recipients keep the ticket root. Conversation placement does not change. The notification type stays `scope: :root`. When the filing root is not the message's tree root, the notice omits `recording` so Notifications' root check still holds. URL and metadata stay.
 

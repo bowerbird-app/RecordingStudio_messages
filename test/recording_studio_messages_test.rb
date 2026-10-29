@@ -4,7 +4,18 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.10.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.11.0", ::RecordingStudioMessages::VERSION
+  end
+
+  def test_facade_creates_and_lists_groups_by_tag_without_an_actor
+    api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
+    flow = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/public_contact_flow.rb", __dir__)
+    )
+
+    assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil)"
+    assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
+    refute_includes flow, "tags:"
   end
 
   def test_engine_exists

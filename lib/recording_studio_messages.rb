@@ -44,8 +44,12 @@ module RecordingStudioMessages
       Services::EnsureMount.call(parent_recording, key: key, actor: actor)
     end
 
-    def create_group(mount_recording, title:, actor:)
-      Services::CreateGroup.call(mount_recording, title: title, actor: actor)
+    def create_group(mount_recording, title:, actor:, tags: nil)
+      Services::CreateGroup.call(mount_recording, title: title, actor: actor, tags: tags)
+    end
+
+    def tagged_group_recordings(mount_recording:, tags:)
+      Services::MessageGroupTags.recordings_for_mount(mount_recording, tags)
     end
 
     def send_message(...)
@@ -93,8 +97,8 @@ module RecordingStudioMessages
       PublicContact.enabled?(mount_recording)
     end
 
-    def begin_public_contact(...)
-      PublicContact.begin(...)
+    def begin_public_contact(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil)
+      PublicContact.begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags:)
     end
 
     def complete_public_contact(intent:, actor:)

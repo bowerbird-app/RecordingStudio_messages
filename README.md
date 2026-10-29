@@ -61,6 +61,36 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.11.0
+
+Messages `0.11.0` tags a conversation in the same commit that creates it, lists those conversations without an actor, and can pass the same hash into public contact. Accessible still decides who can open a conversation. Core stays `6.1.0`. The Accessible floor stays `~> 0.24`.
+
+1. Install Messages `0.11.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known.
+4. Send counts that have no actor to `tagged_group_recordings`.
+5. Add `tags:` or `**` to the public-contact resolver when the desk depends on those recordings. A lambda that only takes `mount_recording:` and `actor:` keeps working.
+
+The new migration adds `tags` `jsonb` on `recording_studio_messages_public_contact_intents`, not null, default `{}`. Leave that column alone. `complete_public_contact` reads it.
+
+`tagged_group_recordings` is not an ACL. A conversation with matching tags is included when the caller has no grant. `press_center` and `press_kit` in the samples are examples. A later kit is another key in the same hash.
+
+A failed owner grant now removes the new conversation. In `0.10.0`, `record!` could commit the conversation and a later grant failure could leave it in place.
+
+```ruby
+group = RecordingStudioMessages.create_group(
+  mount,
+  title: "Center desk",
+  actor: editor,
+  tags: { "press_center" => press_center, "press_kit" => press_kit }
+)
+
+RecordingStudioMessages.tagged_group_recordings(
+  mount_recording: mount,
+  tags: { "press_center" => press_center }
+).count
+```
+
 ### Upgrading to 0.10.0
 
 Messages `0.10.0` adds message group tags. A conversation can join to host recordings by a host-chosen key. `ListGroups` can require those tags. Accessible still decides who can see the conversation. Core stays `6.1.0`. The Accessible floor stays `~> 0.24`.
@@ -185,11 +215,25 @@ RecordingStudioMessages.viewable_group_recordings(
   mount_recording: mount,
   tags: { "press_center" => press_center }
 )
+RecordingStudioMessages.create_group(
+  mount,
+  title: "Center desk",
+  actor: current_actor,
+  tags: { "press_center" => press_center, "press_kit" => press_kit }
+)
+RecordingStudioMessages.tagged_group_recordings(
+  mount_recording: mount,
+  tags: { "press_center" => press_center }
+)
 ```
 
 `viewable_group_recordings` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. The engine index, the staff desk, and the inbox all use this list.
 
 `tag` writes a message group tag row. One group can hold many keys. Each key points at one tagged recording. `untag` deletes that key, or the exact row when you also pass `recording:`. Optional `tags:` on the list is an AND filter over those rows. It does not replace Accessible. Example keys are `press_center` and `press_kit`. This gem does not define a press vocabulary.
+
+`create_group` accepts the same hash. Omit `tags:`, or pass `nil` or `{}`, and the conversation is created with no tag rows. The conversation, the owner grant, and the tag rows commit together. If the owner grant fails, the conversation and the tag rows are gone. A second successful `create_group` with the same tags creates a second conversation. `tag` and `untag` still change tags after the conversation exists.
+
+`tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the desk. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
@@ -270,7 +314,21 @@ group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: v
 
 `complete_public_contact` is the host call after the code has been verified. Calling it again returns the same conversation and does not send a second message. The code form calls `RecordingStudioMessages::PublicContact.submit_code!` and `resend!` itself. Those two methods are not on the host facade.
 
-Set `public_contact_recipient_resolver` to a callable. `begin` and `complete` call it with `mount_recording:` and `actor:`. A value that does not respond to `call` is ignored. The first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist. There is no file field on this form.
+`begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation. If a tagged recording is gone when complete runs, complete raises `RecordingStudioMessages::Error`. The intent stays open. No conversation is written. The visitor message is "We couldn't send that message. Start a new one."
+
+The engine contact form has no tag field. Call `begin_public_contact` from the host when the message should carry a center or a kit.
+
+Set `public_contact_recipient_resolver` to a callable. When the callable lists `tags:` or a keyrest parameter, `begin` and `complete` pass `tags:` as a hash. Keys are strings. Values are recordings. When there are no tags, that hash is `{}`. A callable that only lists `mount_recording:` and `actor:` is called with those two keywords. A value that does not respond to `call` is ignored. The first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist. There is no file field on this form.
+
+```ruby
+RecordingStudioMessages.configure do |config|
+  config.public_contact_recipient_resolver = lambda { |mount_recording:, actor:, tags: {}|
+    desk_for(mount_recording, tags)
+  }
+end
+```
+
+A resolver that does not need the hash stays on two keywords.
 
 ```ruby
 RecordingStudioMessages.configure do |config|

@@ -127,6 +127,170 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
     end
   end
 
+  test "create_group with tags writes rows and tagged_group_recordings finds them" do
+    group = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Center desk",
+      actor: @owner,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+    again = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Second desk",
+      actor: @owner,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+
+    rows = RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id)
+    assert_equal 2, rows.count
+    assert_equal @press_center.id, rows.find_by!(key: "press_center").tagged_recording_id
+    assert_equal @press_kit.id, rows.find_by!(key: "press_kit").tagged_recording_id
+
+    found = RecordingStudioMessages.tagged_group_recordings(
+      mount_recording: @mount,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+    assert_kind_of ActiveRecord::Relation, found
+    assert_equal [group.id, again.id].sort, found.map(&:id).sort
+  end
+
+  test "create_group without tags writes no tag rows" do
+    plain = RecordingStudioMessages.create_group(@mount, title: "Plain", actor: @owner)
+    empty = RecordingStudioMessages.create_group(@mount, title: "Empty", actor: @owner, tags: {})
+
+    assert_equal 0, RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: plain.id).count
+    assert_equal 0, RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: empty.id).count
+  end
+
+  test "create_group rejects a repeated key and tags that are not recordings" do
+    groups_before = RecordingStudioMessages::MessageGroup.count
+
+    repeated = assert_raises(ArgumentError) do
+      RecordingStudioMessages.create_group(
+        @mount,
+        title: "Clash",
+        actor: @owner,
+        tags: { press_center: @press_center, "press_center" => @press_kit }
+      )
+    end
+    assert_equal "tag key is repeated", repeated.message
+
+    assert_raises(ArgumentError) do
+      RecordingStudioMessages.create_group(@mount, title: "Bad", actor: @owner, tags: "press_center")
+    end
+    assert_raises(ArgumentError) do
+      RecordingStudioMessages.create_group(
+        @mount, title: "Bad", actor: @owner, tags: { "press_center" => "nope" }
+      )
+    end
+
+    assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
+  end
+
+  test "the same normalized key and recording writes one tag row" do
+    group = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Once",
+      actor: @owner,
+      tags: { press_center: @press_center, "press_center" => @press_center }
+    )
+
+    rows = RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id)
+    assert_equal ["press_center"], rows.map(&:key)
+    assert_equal @press_center.id, rows.first.tagged_recording_id
+  end
+
+  test "tagged_group_recordings requires a mount and rejects a non-mount" do
+    assert_raises(ArgumentError) do
+      RecordingStudioMessages.tagged_group_recordings(mount_recording: nil, tags: {})
+    end
+
+    error = assert_raises(RecordingStudioMessages::Error) do
+      RecordingStudioMessages.tagged_group_recordings(mount_recording: @press_center, tags: {})
+    end
+    assert_equal "mount recording must be a message mount", error.message
+  end
+
+  test "tagged_group_recordings ignores grants and excludes other mounts, trash, and partial tags" do
+    both = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Both",
+      actor: @owner,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+    center = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Center only",
+      actor: @owner,
+      tags: { "press_center" => @press_center }
+    )
+    other_mount = support_mount("Elsewhere")
+    elsewhere = RecordingStudioMessages.create_group(
+      other_mount,
+      title: "Elsewhere",
+      actor: @owner,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+    trashed = RecordingStudioMessages.create_group(
+      @mount,
+      title: "Gone",
+      actor: @owner,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+    trashed.update!(trashed_at: Time.current)
+
+    Current.actor = @stranger
+    found = RecordingStudioMessages.tagged_group_recordings(
+      mount_recording: @mount,
+      tags: { "press_center" => @press_center, "press_kit" => @press_kit }
+    )
+
+    assert_equal [both.id], found.map(&:id)
+    refute_includes found.map(&:id), center.id
+    refute_includes found.map(&:id), elsewhere.id
+    refute_includes found.map(&:id), trashed.id
+    refute_includes found.map(&:id), @alpha.id
+  end
+
+  test "empty tags on tagged_group_recordings return every kept group on the mount" do
+    other_mount = support_mount("Elsewhere")
+    elsewhere = RecordingStudioMessages.create_group(other_mount, title: "Elsewhere", actor: @owner)
+    trashed = RecordingStudioMessages.create_group(@mount, title: "Gone", actor: @owner)
+    trashed.update!(trashed_at: Time.current)
+
+    found = RecordingStudioMessages.tagged_group_recordings(mount_recording: @mount, tags: {})
+    unfiltered = RecordingStudioMessages.tagged_group_recordings(mount_recording: @mount, tags: nil)
+
+    assert_equal [@alpha.id, @bravo.id].sort, found.map(&:id).sort
+    assert_equal found.map(&:id).sort, unfiltered.map(&:id).sort
+    refute_includes found.map(&:id), elsewhere.id
+    refute_includes found.map(&:id), trashed.id
+  end
+
+  test "a failed owner grant leaves no conversation and no tag rows" do
+    configuration = RecordingStudioAccessible.configuration
+    previous = configuration.access_actor_types
+    configuration.access_actor_types = ["Agent"]
+    groups_before = RecordingStudioMessages::MessageGroup.count
+    tags_before = RecordingStudioMessages::MessageGroupTag.count
+
+    error = assert_raises(RecordingStudioMessages::Error) do
+      RecordingStudioMessages.create_group(
+        @mount,
+        title: "Rolled back",
+        actor: @owner,
+        tags: { "press_center" => @press_center }
+      )
+    end
+
+    assert_equal "Actor type is not allowed for access", error.message
+    assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
+    assert_equal tags_before, RecordingStudioMessages::MessageGroupTag.count
+    refute RecordingStudioMessages::MessageGroup.exists?(title: "Rolled back")
+  ensure
+    configuration.access_actor_types = previous
+  end
+
   private
 
   def support_mount(prefix)
