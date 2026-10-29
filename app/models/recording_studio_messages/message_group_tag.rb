@@ -6,7 +6,5 @@ module RecordingStudioMessages
 
     validates :message_group_recording_id, :key, :tagged_recording_id, presence: true
     validates :key, uniqueness: { scope: :message_group_recording_id }
-
-    before_create { self.created_at ||= Time.current }
   end
 end

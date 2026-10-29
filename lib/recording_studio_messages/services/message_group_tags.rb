@@ -11,8 +11,6 @@ module RecordingStudioMessages
           normalize_key!(key),
           tagged_recording_id!(recording)
         )
-      rescue ActiveRecord::RecordNotUnique
-        retry
       end
 
       def untag(group_recording, key:, recording: nil)
@@ -38,13 +36,25 @@ module RecordingStudioMessages
       end
 
       def upsert_tag(group_id, tag_key, tagged_id)
-        row = RecordingStudioMessages::MessageGroupTag.find_or_initialize_by(
+        RecordingStudioMessages::MessageGroupTag.upsert(
+          tag_row(group_id, tag_key, tagged_id),
+          unique_by: :index_message_group_tags_on_group_and_key,
+          update_only: %i[tagged_recording_id],
+          record_timestamps: false
+        )
+        RecordingStudioMessages::MessageGroupTag.find_by!(
           message_group_recording_id: group_id,
           key: tag_key
         )
-        row.tagged_recording_id = tagged_id
-        row.save!
-        row
+      end
+
+      def tag_row(group_id, tag_key, tagged_id)
+        {
+          message_group_recording_id: group_id,
+          key: tag_key,
+          tagged_recording_id: tagged_id,
+          created_at: Time.current
+        }
       end
 
       def normalize_tags(tags)
