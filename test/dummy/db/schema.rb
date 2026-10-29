@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_26_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -168,6 +168,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_26_120001) do
     t.index ["recording_id", "idempotency_key"], name: "index_recording_studio_events_on_recording_and_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["recording_id", "occurred_at", "created_at"], name: "index_rs_events_on_recording_and_timeline", order: { occurred_at: :desc, created_at: :desc }
     t.index ["recording_id"], name: "index_recording_studio_events_on_recording_id"
+  end
+
+  create_table "recording_studio_message_group_tags", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "message_group_recording_id", null: false
+    t.string "key", null: false
+    t.uuid "tagged_recording_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["key", "tagged_recording_id"], name: "index_message_group_tags_on_key_and_tagged_recording"
+    t.index ["message_group_recording_id", "key"], name: "index_message_group_tags_on_group_and_key", unique: true
   end
 
   create_table "recording_studio_message_groups", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

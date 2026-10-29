@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-29
+
+Hosts can tag a conversation with host recordings and list only the groups that match those tags.
+
+### Added
+
+- Table `recording_studio_message_group_tags` (`message_group_recording_id`, `key`, `tagged_recording_id`). Unique on `(message_group_recording_id, key)`. Index on `(key, tagged_recording_id)`.
+- `RecordingStudioMessages.tag(group_recording, key:, recording:)` and `untag(group_recording, key:, recording: nil)`. Keys are host vocabulary. Example keys in docs are `press_center` and `press_kit`.
+- `viewable_group_recordings` and `ListGroups` take optional `tags:` (a hash of key to tagged recording). Each pair is required. Tags shrink Accessible `recordings_for` candidates. They are not an ACL.
+
+### Upgrade notes
+
+- Bump to **0.10.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Accessible stays `~> 0.24`. Pass a mount. Then pass `tags:` when the host list should only show tagged conversations.
+- `tag` is idempotent for the same group, key, and recording. A second `tag` on the same group and key retargets that key.
+- `untag` with only `key:` removes that key. Pass `recording:` to remove the row only when it still points at that recording.
+
 ## [0.9.3] - 2026-10-29
 
 Conversation lists use Accessible's child query for one mount.

@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.9.3", ::RecordingStudioMessages::VERSION
+    assert_equal "0.10.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -176,7 +176,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes controller, "def index"
     assert_includes controller, "viewable_group_recordings"
     assert_includes api, "def viewable_group_recordings"
+    assert_includes api, "def tag"
+    assert_includes api, "def untag"
     assert_includes list_groups, "RecordingStudioAccessible.recordings_for"
+    assert_includes list_groups, "MessageGroupTags.restrict"
     assert_includes list_groups, "minimum_role: :view"
     assert_includes list_groups, "RecordingStudioMessages::MESSAGE_GROUP_TYPE"
     refute_includes list_groups, "authorized?"
