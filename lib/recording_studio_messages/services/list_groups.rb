@@ -14,30 +14,22 @@ module RecordingStudioMessages
 
       def call
         return [] if @actor.blank?
+        return [] if @mount_recording.blank?
 
-        candidates.select { |group_recording| viewable?(group_recording) }.sort_by do |group_recording|
+        viewable_recordings.sort_by do |group_recording|
           [-latest_activity_at(group_recording).to_i, group_title(group_recording)]
         end
       end
 
       private
 
-      def candidates
-        scope = RecordingStudio::Recording.unscoped.where(
-          recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE,
-          trashed_at: nil
-        ).includes(:recordable)
-        return scope if @mount_recording.blank?
-
-        scope.where(parent_recording_id: @mount_recording.id)
-      end
-
-      def viewable?(group_recording)
-        RecordingStudioAccessible.authorized?(
+      def viewable_recordings
+        RecordingStudioAccessible.recordings_for(
           actor: @actor,
-          recording: group_recording,
-          role: :view
-        )
+          parent_recording: @mount_recording,
+          minimum_role: :view,
+          recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE
+        ).includes(:recordable)
       end
 
       def latest_activity_at(group_recording)
