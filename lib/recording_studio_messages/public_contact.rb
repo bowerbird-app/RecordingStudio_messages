@@ -26,14 +26,16 @@ module RecordingStudioMessages
       public_contact_keys_for(parent.recordable_type).include?(key)
     end
 
-    def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:)
+    def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil)
       raise Error, Copy.t("errors.not_enabled") unless enabled?(mount_recording)
 
       text = normalize_body(body)
-      return send_now(mount_recording, current_actor, text) if current_actor.present?
+      checked = Services::MessageGroupTags.normalize_tags(tags)
+      return send_now(mount_recording, current_actor, text, tags: checked) if current_actor.present?
 
       queue_verification(
-        mount: mount_recording, name: name, email: email, text: text, request: request, session: session
+        mount: mount_recording, name: name, email: email, text: text,
+        request: request, session: session, tags: checked
       )
     end
 

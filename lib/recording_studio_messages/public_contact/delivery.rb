@@ -5,32 +5,35 @@ module RecordingStudioMessages
     class << self
       private
 
-      def send_now(mount, actor, text)
+      def send_now(mount, actor, text, tags:)
         group = fulfill!(
           mount: mount,
           contact: actor,
           title: signed_in_title(actor),
           body: text,
-          recipients: recipients_for(mount, actor)
+          recipients: recipients_for(mount, actor, tags: tags),
+          tags: tags
         )
         Outcome.new(group_recording: group)
       end
 
-      def fulfill!(mount:, contact:, title:, body:, recipients:)
+      def fulfill!(mount:, contact:, title:, body:, recipients:, tags:)
         opener = opener_among(mount, recipients)
         raise Error, Copy.t("errors.no_recipient") if opener.nil?
 
         ActiveRecord::Base.transaction do
-          group = open_contact_group(mount, opener, contact, title, recipients)
+          group = open_contact_group(mount, opener, contact, title, recipients, tags: tags)
           send_contact_message(group, contact, body)
           group
         end
       end
 
-      def open_contact_group(mount, opener, contact, title, recipients)
+      def open_contact_group(mount, opener, contact, title, recipients, tags:)
         group = nil
         RecordingStudioMessages.allow_membership_change do
-          group = RecordingStudioMessages.create_group(mount, title: title.to_s.truncate(120), actor: opener)
+          group = RecordingStudioMessages.create_group(
+            mount, title: title.to_s.truncate(120), actor: opener, tags: tags
+          )
           grant_contact_members(group, opener, contact, recipients)
         end
         group
@@ -67,11 +70,25 @@ module RecordingStudioMessages
         )
       end
 
-      def recipients_for(mount, actor)
+      def recipients_for(mount, actor, tags:)
         resolver = RecordingStudioMessages.configuration.public_contact_recipient_resolver
         return [] unless resolver.respond_to?(:call)
 
-        Array(resolver.call(mount_recording: mount, actor: actor)).compact
+        kwargs = { mount_recording: mount, actor: actor }
+        kwargs[:tags] = tags.dup if resolver_accepts_tags?(resolver)
+        Array(resolver.call(**kwargs)).compact
+      end
+
+      def resolver_accepts_tags?(resolver)
+        parameter_list(resolver).any? do |kind, name|
+          kind == :keyrest || (%i[key keyreq].include?(kind) && name == :tags)
+        end
+      end
+
+      def parameter_list(resolver)
+        return resolver.parameters if resolver.respond_to?(:parameters)
+
+        resolver.method(:call).parameters
       end
 
       def opener_among(mount, recipients)

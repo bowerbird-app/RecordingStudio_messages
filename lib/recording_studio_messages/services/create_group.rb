@@ -7,20 +7,31 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(mount_recording, title:, actor:)
+      def initialize(mount_recording, title:, actor:, tags: nil)
         @mount_recording = mount_recording
         @title = title.to_s
         @actor = actor
+        @tags = tags
       end
 
       def call
         validate!
-        group_recording = record_group
-        grant_owner!(group_recording)
-        group_recording
+        checked = MessageGroupTags.normalize_tags(@tags)
+        RecordingStudio::Recording.transaction do
+          group_recording = record_group
+          grant_owner!(group_recording)
+          write_tags(group_recording, checked)
+          group_recording
+        end
       end
 
       private
+
+      def write_tags(group_recording, checked)
+        checked.each do |key, recording|
+          MessageGroupTags.tag(group_recording, key: key, recording: recording)
+        end
+      end
 
       def record_group
         group = RecordingStudioMessages::MessageGroup.new(title: @title)
