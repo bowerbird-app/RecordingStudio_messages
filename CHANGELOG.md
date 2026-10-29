@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-10-29
+
+Conversation lists use Accessible's child query for one mount.
+
+### Changed
+
+- `ListGroups` loads kept `MessageGroup` recordings with `RecordingStudioAccessible.recordings_for` (`minimum_role: :view`, `recordable_type` `MessageGroup`). The list sorts by latest message time, then title.
+- A blank actor or a blank mount returns `[]`.
+- The gemspec requires `recording_studio_accessible ~> 0.24`. Development and the dummy pin tag `v0.24.0`.
+
+### Upgrade notes
+
+- Bump to **0.9.3**. No Messages migration. Accessible `0.24.0` ships the same migrations as `0.21.0`.
+- Pin Accessible `~> 0.24` and git tag `v0.24.0`. That release depends on `recording_studio_trashable ~> 0.10` and allows `recording_studio ~> 6.1`.
+- Hosts that pass a mount keep the same visible list.
+- A blank mount now returns `[]`. Pass the mount.
+
 ## [0.9.2] - 2026-10-28
 
 Stop tracking coverage output. README pins match `main`.
