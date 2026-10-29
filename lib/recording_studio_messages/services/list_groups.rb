@@ -7,9 +7,10 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(actor:, mount_recording: nil)
+      def initialize(actor:, mount_recording: nil, tags: nil)
         @actor = actor
         @mount_recording = mount_recording
+        @tags = tags
       end
 
       def call
@@ -24,6 +25,10 @@ module RecordingStudioMessages
       private
 
       def viewable_recordings
+        MessageGroupTags.restrict(accessible_group_recordings, @tags)
+      end
+
+      def accessible_group_recordings
         RecordingStudioAccessible.recordings_for(
           actor: @actor,
           parent_recording: @mount_recording,

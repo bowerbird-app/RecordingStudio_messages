@@ -23,7 +23,7 @@ Two desks are two mounts of this gem, not two gems.
 | `MessageGroup` | A conversation | Accessible |
 | `Message` | A line in that conversation | Attachable |
 
-Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency.
+Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency. Message group tags are a join table next to this tree, not children. Hosts choose the keys.
 
 ## Install
 
@@ -60,6 +60,27 @@ bin/rails generate recording_studio_attachable:migrations
 bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
+
+### Upgrading to 0.10.0
+
+Messages `0.10.0` adds message group tags. A conversation can join to host recordings by a host-chosen key. `ListGroups` can require those tags. Accessible still decides who can see the conversation. Core stays `6.1.0`. The Accessible floor stays `~> 0.24`.
+
+1. Install Messages `0.10.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Tag after create, or from a host callback. There is no picker in this gem.
+
+```ruby
+RecordingStudioMessages.tag(group, key: "press_center", recording: press_center)
+RecordingStudioMessages.tag(group, key: "press_kit", recording: press_kit)
+
+RecordingStudioMessages.viewable_group_recordings(
+  actor: current_actor,
+  mount_recording: mount,
+  tags: { "press_center" => press_center, "press_kit" => press_kit }
+)
+```
+
+`press_kit` in that hash is optional at the call site. Omit a key to skip that filter. Keys are yours. This gem does not hardcode press names.
 
 ### Upgrading to 0.9.3
 
@@ -157,10 +178,18 @@ RecordingStudioMessages.send_message(
 
 RecordingStudioAccessible.authorized?(actor: current_actor, recording: group, role: :view)
 RecordingStudioMessages.granted_actors(group)
-RecordingStudioMessages.viewable_group_recordings(actor: current_actor, mount_recording: mount)
+RecordingStudioMessages.tag(group, key: "press_center", recording: press_center)
+RecordingStudioMessages.untag(group, key: "press_center")
+RecordingStudioMessages.viewable_group_recordings(
+  actor: current_actor,
+  mount_recording: mount,
+  tags: { "press_center" => press_center }
+)
 ```
 
 `viewable_group_recordings` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. The engine index, the staff desk, and the inbox all use this list.
+
+`tag` writes a message group tag row. One group can hold many keys. Each key points at one tagged recording. `untag` deletes that key, or the exact row when you also pass `recording:`. Optional `tags:` on the list is an AND filter over those rows. It does not replace Accessible. Example keys are `press_center` and `press_kit`. This gem does not define a press vocabulary.
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 

@@ -17,6 +17,7 @@ require "recording_studio_messages/public_contact"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
 require "recording_studio_messages/services/list_groups"
+require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
 require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/services/send_message"
@@ -60,8 +61,16 @@ module RecordingStudioMessages
       end
     end
 
-    def viewable_group_recordings(actor:, mount_recording: nil)
-      Services::ListGroups.call(actor: actor, mount_recording: mount_recording)
+    def tag(group_recording, key:, recording:)
+      Services::MessageGroupTags.tag(group_recording, key: key, recording: recording)
+    end
+
+    def untag(group_recording, key:, recording: nil)
+      Services::MessageGroupTags.untag(group_recording, key: key, recording: recording)
+    end
+
+    def viewable_group_recordings(actor:, mount_recording: nil, tags: nil)
+      Services::ListGroups.call(actor: actor, mount_recording: mount_recording, tags: tags)
     end
 
     def message_recordings(group_recording)

@@ -29,7 +29,7 @@ The dummy host proves that shape with a staff desk and an inbox.
 | Message | A line people wrote |
 | Attachment | Attachable already owns this child |
 
-Notifications are facts, not recordings. They live in the Notifications tables. Participants are not a type — people and agents are actors with Accessible grants on the conversation.
+Notifications are facts, not recordings. They live in the Notifications tables. Participants are not a type — people and agents are actors with Accessible grants on the conversation. Message group tags are also facts. They live in `recording_studio_message_group_tags` and join a conversation recording to a host recording by a host-chosen key.
 
 ## Writes
 
@@ -38,9 +38,12 @@ Use the public helpers:
 - `ensure_message_mount` to hang or find a keyed mount
 - `create_group` to open a conversation and grant the first owner
 - `viewable_group_recordings` to list the kept conversations one actor can view under one mount
+- `tag` / `untag` to join a conversation to a host recording by a host-chosen key
 - `send_message` to write a line, attach files, and notify everyone else who has a grant
 
-`viewable_group_recordings(actor:, mount_recording:)` calls Accessible `recordings_for` with `minimum_role: :view` and the `MessageGroup` type, then sorts by latest message time and title. Pass a mount. A blank actor or a blank mount returns `[]`.
+`viewable_group_recordings(actor:, mount_recording:, tags: nil)` calls Accessible `recordings_for` with `minimum_role: :view` and the `MessageGroup` type, then sorts by latest message time and title. Pass a mount. A blank actor or a blank mount returns `[]`. Optional `tags:` is a hash of key to tagged recording. Every pair must match a `recording_studio_message_group_tags` row. Tags shrink that Accessible list. They are not an ACL.
+
+Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
 
 `NotifyGrantedActors` files `:message_received` under the conversation root unless the host sets `admin_notification_root`. That option is a recording or a callable that returns one. Recipients with Accessible `:view` on it (staff, the same check `Api::Access.can_view?` uses on the Admin root) get that recording as `root_recording`. Other recipients keep the ticket root. Conversation placement does not change. The notification type stays `scope: :root`. When the filing root is not the message's tree root, the notice omits `recording` so Notifications' root check still holds. URL and metadata stay.
 
