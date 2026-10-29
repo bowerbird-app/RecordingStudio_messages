@@ -61,17 +61,18 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
-### Upgrading to 0.3.0
+### Upgrading to 0.9.2
 
-Messages now follows the current Recording Studio family: Core `4.2.1`,
-Accessible `0.9.1`, Attachable `0.5.1`, Notifications `0.3.1`, Users `0.8.2`,
-and Flatpack `0.1.148`.
+Messages follows the pins on `main`: Core `6.1.0`, Accessible `0.21.0`,
+Attachable `0.21.1`, Notifications `0.13.1`, Users `0.26.3`, Metrics `0.6.1`,
+and Flatpack `0.1.329`. Gemspec floors stay `recording_studio >= 6.1.0` and
+`flat_pack >= 0.1.315`.
 
-1. Install Messages `0.3.0`.
+1. Install Messages `0.9.2`.
 2. Run `bin/rails generate recording_studio_accessible:migrations` and migrate
-   to add `depends_on_recording_id`.
-3. Update host Tailwind sources for current Flatpack and Recording Studio gem
-   views, then rebuild CSS.
+   to add `depends_on_recording_id` if that column is not already present.
+3. Hosts that still list gem view paths in Tailwind sources should keep those
+   paths in step with the pins above, then rebuild CSS.
 
 ## Enablement
 
