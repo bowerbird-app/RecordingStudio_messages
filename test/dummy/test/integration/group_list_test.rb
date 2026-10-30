@@ -63,6 +63,10 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Studio help"
     assert_includes response.body, "flat-pack-page-nav"
     assert_select "[data-controller='flat-pack--chat-layout']"
+    assert_select "textarea[name='message[body]'][rows='1']"
+    assert_includes response.body, "rounded-[var(--chat-composer-radius)]"
+    assert_includes response.body, "min-h-[var(--chat-composer-control-height)]"
+    refute_includes response.body, "rounded-lg border-[var(--chat-input-border-color)]"
   end
 
   test "inbox row click loads the panel through the desk turbo frame" do

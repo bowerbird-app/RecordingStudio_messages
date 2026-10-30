@@ -200,7 +200,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Message sent"
-    assert_select ".text-center h1.text-3xl", text: "Message sent"
+    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
+    assert_includes response.body, "text-[length:var(--text-3xl)]"
     assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."
@@ -220,7 +221,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { body: "Show the rocket." }
     follow_redirect!
 
-    assert_select ".text-center h1.text-3xl", text: "Message sent"
+    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
+    assert_includes response.body, "text-[length:var(--text-3xl)]"
     assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
     assert_select "[data-public-contact-step=sent] img", count: 0
 
@@ -233,7 +235,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
     assert_select "[data-public-contact-step=sent] img", count: 0
-    assert_select ".text-center h1.text-3xl", text: "Message sent"
+    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
+    assert_includes response.body, "text-[length:var(--text-3xl)]"
   ensure
     RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end
@@ -352,6 +355,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Message"
     assert_includes response.body, "Send message"
     assert_includes response.body, "Contact"
+    assert_select "h1.fp-heading.font-semibold", text: "Contact"
+    assert_includes response.body, "text-[length:var(--text-xl)]"
   end
 
   test "verify page shows the code field and the normalized email" do
@@ -359,7 +364,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
 
     assert_response :success
-    assert_select "h1", text: "Verify it's you"
+    assert_select "h1.fp-heading.font-semibold", text: "Verify it's you"
+    assert_includes response.body, "text-[length:var(--text-xl)]"
     assert_includes response.body, "We sent a 6-digit code to ada@example.com."
     refute_includes response.body, "Check your email"
     refute_includes response.body, "Confirm & send"

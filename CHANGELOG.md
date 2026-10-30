@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-30
+
+Flatpack `0.1.331` owns modal Turbo cache close, chat TextArea chrome, and Heading type.
+
+### Changed
+
+- Development and dummy pin Flatpack `v0.1.331`. The gemspec floor is `flat_pack >= 0.1.331`.
+- Public contact headings on the form, verify, and sent screens render `FlatPack::Heading::Component` (`level: 1`, size `:xl` or `:"3xl"`).
+- Chat composer TextArea uses `variant: :chat`. Radius follows `--chat-composer-radius`.
+- Public contact modal no longer closes or unlocks scroll on `turbo:before-cache`. Flatpack Modal does that. A small hook still unhides the modal title after verify/sent hid it.
+
+### Upgrade notes
+
+- Bump to **0.11.0**. No Messages migration.
+- Pin Flatpack `v0.1.331` (`flat_pack >= 0.1.331`). Reload kit CSS and JavaScript. Rebuild host Tailwind so Heading `text-[length:var(--text-*)]` utilities and TextArea `rounded-[var(--chat-composer-radius)]` exist.
+- Drop host `turbo:before-cache` close/unlock for Flatpack Modal. Keep a title unhide if you hid the modal `h2` on a later step. Flatpack does not restore `hidden` on that heading.
+- Pass `variant: :chat` on a composer TextArea instead of a long class list.
+
 ## [0.10.0] - 2026-10-29
 
 Hosts can tag a conversation with host recordings and list only the groups that match those tags.

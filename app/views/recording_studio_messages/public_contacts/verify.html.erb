@@ -2,7 +2,11 @@
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
   <div class="flex flex-col gap-[var(--stack-gap-lg)]" data-public-contact-step="verify">
     <div class="flex flex-col gap-[var(--stack-gap-sm)]">
-      <h1 class="text-xl font-semibold"><%= messages_t("contact.verify_title") %></h1>
+      <%= render FlatPack::Heading::Component.new(
+        text: messages_t("contact.verify_title"),
+        level: 1,
+        size: :xl
+      ) %>
       <p><%= messages_t("contact.verify_intro", email: @intent.email) %></p>
     </div>
 

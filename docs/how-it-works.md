@@ -55,7 +55,7 @@ A mount opens as Flatpack `Chat::Layout` `:split` (`GET /recording_studio_messag
 
 Rounded is a named Flatpack theme. Recording Studio 6.1's default layout sets `data-theme="rounded"` on `<html>`. The dummy head partial still sets it from JavaScript, and a host helper copies `lang` onto `<html>` when the tag omits it. Do not restyle Chat::Panel in this gem.
 
-Flatpack `>= 0.1.315` (pinned tag `v0.1.329`) keeps rounded primary buttons charcoal, a fluid Chat::Layout split from `sm`, and outgoing bubbles on the neutral surface. `v0.1.319` is not a published tag. This gem requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. `view_component` locks at `4.19.0`. `FlatPack::Card` does not take `style:`.
+Flatpack `>= 0.1.331` (pinned tag `v0.1.331`) keeps rounded primary buttons charcoal, a fluid Chat::Layout split from `sm`, and outgoing bubbles on the neutral surface. Modal closes itself on `turbo:before-cache`. Chat composer TextArea uses `variant: :chat`. Contact headings use `FlatPack::Heading::Component`. `v0.1.319` is not a published tag. This gem requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. `view_component` locks at `4.19.0`. `FlatPack::Card` does not take `style:`.
 
 Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 
