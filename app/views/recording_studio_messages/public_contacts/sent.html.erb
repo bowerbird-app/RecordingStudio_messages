@@ -15,7 +15,11 @@
         class: "text-[var(--surface-muted-content-color)]"
       ) %>
     <% end %>
-    <h1 class="text-3xl font-semibold"><%= messages_t("contact.sent_title") %></h1>
+    <%= render FlatPack::Heading::Component.new(
+      text: messages_t("contact.sent_title"),
+      level: 1,
+      size: :"3xl"
+    ) %>
     <% credit = public_contact_powered_by(@group_recording) %>
     <% if credit.present? %>
       <p><%= credit %></p>

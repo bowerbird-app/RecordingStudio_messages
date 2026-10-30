@@ -7,7 +7,7 @@
 
 <% if heading %>
   <% content_for :title, title %>
-  <h1 class="text-xl font-semibold"><%= title %></h1>
+  <%= render FlatPack::Heading::Component.new(text: title, level: 1, size: :xl) %>
 <% end %>
 <% if introduction.present? %>
   <p><%= introduction %></p>

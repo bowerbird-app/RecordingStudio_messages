@@ -21,22 +21,8 @@
     document.documentElement.dataset.recordingStudioMessagesPublicContact = "true"
     document.addEventListener("turbo:before-cache", function () {
       document.querySelectorAll("[data-controller='flat-pack--modal'][id^='public-contact-']").forEach(function (modal) {
-        if (modal.classList.contains("hidden")) return
-
-        modal.classList.add("hidden")
-        modal.classList.remove("flex")
-        modal.setAttribute("aria-hidden", "true")
-        modal.style.opacity = ""
-        var dialog = modal.querySelector("[data-flat-pack--modal-target='dialog']")
-        if (dialog) {
-          dialog.style.opacity = ""
-          dialog.style.transform = ""
-        }
         var title = modal.querySelector("h2")
         if (title) title.hidden = false
-        document.body.style.overflow = ""
-        document.body.style.paddingRight = ""
-        delete document.body.dataset.flatPackModalLockCount
       })
     })
     document.addEventListener("turbo:frame-load", function (event) {

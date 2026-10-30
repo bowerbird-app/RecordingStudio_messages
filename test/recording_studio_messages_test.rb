@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.10.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.11.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_engine_exists
@@ -30,7 +30,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert requirement.satisfied_by?(Gem::Version.new("0.5.0"))
     refute requirement.satisfied_by?(Gem::Version.new("0.3.0"))
     refute requirement.satisfied_by?(Gem::Version.new("1.0.0"))
-    assert_equal ">= 0.1.315", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal ">= 0.1.331", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -53,7 +53,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.329"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.331"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
     assert_equal "~> 2.1", gemfile_constraint(gemfile, "recording_studio_admin")
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
@@ -61,7 +61,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
-    assert_equal ">= 0.1.315", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal ">= 0.1.331", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v4.7.0"'
@@ -86,7 +86,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.329"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.331"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.1.7"'
     assert_includes gemfile, "widen_recording_studio_requirement"
@@ -113,8 +113,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes dummy_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "tag: v6.1.0"
     assert_includes root_lock, "recording_studio (6.1.0)"
-    assert_includes root_lock, "tag: v0.1.329"
-    assert_includes root_lock, "flat_pack (0.1.329)"
+    assert_includes root_lock, "tag: v0.1.331"
+    assert_includes root_lock, "flat_pack (0.1.331)"
+    assert_includes dummy_lock, "tag: v0.1.331"
+    assert_includes dummy_lock, "flat_pack (0.1.331)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
@@ -414,6 +416,42 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes contact_test, "OtpChallenge"
     refute_includes contact_test, "OtpRateLimiter"
     refute_includes contact_test, "Member"
+  end
+
+  def test_public_contact_and_composer_use_flatpack_heading_chat_and_modal_apis
+    modal = File.read(
+      File.expand_path("../app/views/recording_studio_messages/public_contacts/_modal.html.erb", __dir__)
+    )
+    form = File.read(
+      File.expand_path("../app/views/recording_studio_messages/public_contacts/_form.html.erb", __dir__)
+    )
+    verify = File.read(
+      File.expand_path("../app/views/recording_studio_messages/public_contacts/verify.html.erb", __dir__)
+    )
+    sent = File.read(
+      File.expand_path("../app/views/recording_studio_messages/public_contacts/sent.html.erb", __dir__)
+    )
+    composer = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_composer.html.erb", __dir__)
+    )
+
+    assert_includes modal, 'document.addEventListener("turbo:before-cache"'
+    assert_includes modal, "title.hidden = false"
+    assert_includes modal, 'document.addEventListener("turbo:frame-load"'
+    assert_includes modal, "heading.hidden"
+    refute_includes modal, 'modal.classList.add("hidden")'
+    refute_includes modal, "flatPackModalLockCount"
+    refute_includes modal, "document.body.style.overflow"
+    assert_includes form, "FlatPack::Heading::Component.new(text: title, level: 1, size: :xl)"
+    assert_includes verify, "level: 1"
+    assert_includes verify, "size: :xl"
+    refute_includes form, 'h1 class="text-xl font-semibold"'
+    refute_includes verify, 'h1 class="text-xl font-semibold"'
+    assert_includes sent, 'size: :"3xl"'
+    refute_includes sent, 'h1 class="text-3xl font-semibold"'
+    assert_includes composer, "variant: :chat"
+    refute_includes composer, "min-h-[var(--chat-composer-control-height)]"
+    refute_includes composer, "rounded-lg"
   end
 
   def test_public_contact_page_loads_flatpack_application_styles
