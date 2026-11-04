@@ -139,4 +139,49 @@ class GroupListTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
   end
+
+  test "granted actor sees the engine desk for a named mount" do
+    sign_in @staff
+    mount = DummyCatalog.support_mount_recording
+
+    get recording_studio_messages.message_groups_path(mount_id: mount.id)
+
+    assert_response :success
+    assert_select "[data-controller='flat-pack--chat-layout']"
+    assert_includes response.body, DummyCatalog.studio_workspace.name
+    assert_includes response.body, "Studio help"
+  end
+
+  test "ungranted actor gets 404 on engine index and does not see the parent name" do
+    stranger = User.create!(
+      email: "index-stranger-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Pat Stranger",
+      confirmed_at: Time.current
+    )
+    mount = DummyCatalog.support_mount_recording
+    parent_name = DummyCatalog.studio_workspace.name
+
+    sign_in stranger
+    get recording_studio_messages.message_groups_path(mount_id: mount.id)
+
+    assert_response :not_found
+    refute_includes response.body, parent_name
+  end
+
+  test "engine show without a grant redirects" do
+    stranger = User.create!(
+      email: "show-stranger-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Pat Stranger",
+      confirmed_at: Time.current
+    )
+
+    sign_in stranger
+    get recording_studio_messages.message_group_path(DummyCatalog.support_group_recording)
+
+    assert_redirected_to "/"
+  end
 end
