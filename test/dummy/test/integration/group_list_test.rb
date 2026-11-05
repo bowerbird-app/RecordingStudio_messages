@@ -203,6 +203,7 @@ class GroupListTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.message_groups_path(mount_id: mount.id)
 
     assert_response :not_found
+    assert_includes response.body, "Messages mount not found"
   ensure
     if defined?(mount) && mount && defined?(previous_parent_id) && previous_parent_id
       mount.update_column(:parent_recording_id, previous_parent_id)

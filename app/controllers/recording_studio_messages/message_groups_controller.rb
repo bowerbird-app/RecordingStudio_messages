@@ -39,7 +39,7 @@ module RecordingStudioMessages
         role: :view
       )
 
-      raise ActiveRecord::RecordNotFound, "Desk not found"
+      raise ActiveRecord::RecordNotFound, "Messages mount not found"
     end
 
     def viewable_groups_for_mount
