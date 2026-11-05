@@ -46,22 +46,22 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.14.8"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.3.1", "< 1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.26.3"'
     assert_includes gemfile, 'gem "recording_studio_user", "~> 0.16"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.2"'
-    assert_equal "~> 0.6", gemfile_constraint(gemfile, "recording_studio_cache")
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
+    assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
     assert_equal "~> 2.1", gemfile_constraint(gemfile, "recording_studio_admin")
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.2"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.3"'
-    assert_equal ">= 6.3.0", gemfile_constraint(gemfile, "recording_studio")
-    assert_equal ">= 0.1.341", gemfile_constraint(gemfile, "flat_pack")
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
+    assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
+    assert_equal ">= 0.1.331", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v4.7.0"'
@@ -74,17 +74,17 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.14.8"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.10.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.26.3"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.2"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.11.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.13.4"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.12.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.7.2"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
@@ -100,16 +100,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes gemfile, 'tag: "v0.1.245"'
   end
 
-  def test_lockfiles_resolve_notifications_0_14_8
+  def test_lockfiles_resolve_notifications_0_13_1
     root_lock = File.read(File.expand_path("../Gemfile.lock", __dir__))
     dummy_lock = File.read(File.expand_path("dummy/Gemfile.lock", __dir__))
 
-    assert_includes root_lock, "tag: v0.14.8"
-    assert_includes root_lock, "recording_studio_notifications (0.14.8)"
+    assert_includes root_lock, "tag: v0.13.1"
+    assert_includes root_lock, "recording_studio_notifications (0.13.1)"
     assert_includes root_lock, "recording_studio_notifications (>= 0.3.1, < 1)"
     refute_includes root_lock, "recording_studio_notifications (0.7.0)"
-    assert_includes dummy_lock, "tag: v0.14.8"
-    assert_includes dummy_lock, "recording_studio_notifications (0.14.8)"
+    assert_includes dummy_lock, "tag: v0.13.1"
+    assert_includes dummy_lock, "recording_studio_notifications (0.13.1)"
     refute_includes dummy_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "tag: v6.3.0"
     assert_includes root_lock, "recording_studio (6.3.0)"
@@ -148,6 +148,9 @@ class RecordingStudioMessagesTest < Minitest::Test
 
   def test_message_groups_index_lists_inbox_rows_without_a_custom_acl
     routes = File.read(File.expand_path("../config/routes.rb", __dir__))
+    application_controller = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/application_controller.rb", __dir__)
+    )
     controller = File.read(
       File.expand_path("../app/controllers/recording_studio_messages/message_groups_controller.rb", __dir__)
     )
@@ -175,6 +178,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
 
     assert_includes routes, "%i[index show]"
+    assert_includes application_controller, "include RecordingStudio::ControllerLayout"
     assert_includes controller, "def index"
     assert_includes controller, "viewable_group_recordings"
     assert_includes controller, "authorize_mount_parent!"

@@ -2,6 +2,8 @@
 
 module RecordingStudioMessages
   class ApplicationController < (defined?(::ApplicationController) ? ::ApplicationController : ActionController::Base)
+    include RecordingStudio::ControllerLayout
+
     helper RecordingStudioAccessible::AvatarsHelper if defined?(RecordingStudioAccessible::AvatarsHelper)
     helper RecordingStudioMessages::CopyHelper
     helper RecordingStudioMessages::PanelHelper

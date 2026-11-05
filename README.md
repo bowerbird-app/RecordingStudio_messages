@@ -34,7 +34,7 @@ Add the gem next to Recording Studio 6.1, Accessible, Attachable, Notifications,
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"
-gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.14.8"
+gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"
 gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.341"
 gem "view_component", "4.19.0"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
@@ -66,7 +66,7 @@ bin/rails db:migrate
 Messages `0.11.1` checks Accessible `:view` on the mount parent before the engine desk renders, and refreshes development pins. Gemspec floors stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`.
 
 1. Install Messages `0.11.1`.
-2. Pin Recording Studio `v6.3.0`, Flatpack `v0.1.341`, Accessible `v0.24.1`, Notifications `v0.14.8`, Metrics `v0.7.2`, Logs `v0.7.3`, Trashable `v0.12.2`, and Cache `v0.6.2` (`~> 0.6` on the host Gemfile). Users stays `v0.26.3` (0.27.0 renders sign-in in Default Layout). Root Switchable stays `v0.10.0` (0.11.4 drops `layouts/recording_studio_root_switchable/blank`). Admin stays `v2.6.2`.
+2. Pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Gemfile constraints stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible stays `v0.24.1`. Notifications stays `v0.13.1`, Metrics `v0.6.1`, Logs `v0.7.0`, Trashable `v0.11.3`, Cache `v0.5.1` (`~> 0.5`). Users stays `v0.26.3` (0.27.0 renders sign-in in Default Layout). Root Switchable stays `v0.10.0` (0.11.4 drops `layouts/recording_studio_root_switchable/blank`). Admin stays `v2.6.2`. Terms and Conditions has no tag that allows Recording Studio 6.x, so the dummy still loads `test/support/widen_recording_studio_requirement.rb`.
 3. There is no Messages migration.
 4. Engine `GET /message_groups?mount_id=` 404s without parent view. Conversation `#show` still redirects without a group grant.
 
@@ -406,7 +406,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users stays on `v0.26.3` because `v0.27.0` wraps sign-in in Default Layout. Both require Cache `v0.6.2`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.14.8`. Metrics is on `v0.7.2`. Logs is on `v0.7.3` because Admin loads it. Trashable is on `v0.12.2` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.341`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. The other sibling tags in this dummy still constrain Recording Studio below 5. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users stays on `v0.26.3` because `v0.27.0` wraps sign-in in Default Layout. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.341`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -415,14 +415,14 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio` | `>= 6.1.0` | `v6.3.0` | `6.3.0` |
 | `recording_studio_accessible` | `~> 0.24` | `v0.24.1` | `0.24.1` |
 | `recording_studio_attachable` | `~> 0.13` | `v0.21.1` | `0.21.1` |
-| `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.14.8` | `0.14.8` |
-| `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.7.2` | `0.7.2` |
+| `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.13.1` | `0.13.1` |
+| `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.6.1` | `0.6.1` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.331` | `v0.1.341` | `0.1.341` |
 | `view_component` | `4.19.0` | | `4.19.0` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.26.3` | `0.26.3` |
-| `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.6` | `v0.6.2` | `0.6.2` |
+| `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |
 | `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.6.2` | `2.6.2` |
-| `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.7.3` | `0.7.3` |
+| `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.7.0` | `0.7.0` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
@@ -443,6 +443,10 @@ Conversation titles, message bodies, attachment names, and notification titles w
 ## Out of this version
 
 Realtime, typing, read receipts, email as a notice channel, and Support-specific copy. The dummy host mounts Admin for Site Settings and Terms. Messages itself does not ship an admin screen.
+
+## Documentation
+
+Engine internals stay in `docs/gem_template/` as architectural reference. The README and dummy app are the source of truth for this gem.
 
 ## Cloud Agent boot
 
