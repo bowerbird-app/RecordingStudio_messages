@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-04
+
+Engine index requires Accessible view on the mount parent. Development pins Recording Studio `v6.3.0` and Flatpack `v0.1.341`.
+
+### Security
+
+- `message_groups#index` loads a mount only after Accessible `:view` on the parent recording. Denial is 404. The page title still uses the parent name after that check. Conversation-only grantees (for example Casey on the dummy) now 404 on engine mount pages. That parent-view check is a product decision.
+
+### Changed
+
+- Development and dummy pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Gemfile constraints stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible stays `v0.24.1`. Notifications stays `v0.13.1`, Metrics `v0.6.1`, Logs `v0.7.0`, Trashable `v0.11.3`, Cache `v0.5.1` (`~> 0.5`). Admin stays `v2.6.2`. Users stays `v0.26.3`. Root Switchable stays `v0.10.0`.
+- Engine controllers include `RecordingStudio::ControllerLayout` explicitly.
+
+### Upgrade notes
+
+- Bump to **0.11.1**. No Messages migration.
+- Pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Keep Users `v0.26.3` (`v0.27.0` puts sign-in on Default Layout) and Root Switchable `v0.10.0` (`v0.11.4` removed `layouts/recording_studio_root_switchable/blank`). Gemspec floors stay `recording_studio >= 6.1.0`, `flat_pack >= 0.1.331`, and `recording_studio_accessible ~> 0.24`.
+- Terms and Conditions has no published tag that allows `recording_studio` 6.x (latest `v0.14.2` still `~> 4.2`), so Gemfiles still load `test/support/widen_recording_studio_requirement.rb`.
+- Engine index with `mount_id` now 404s when the actor cannot view the parent, including conversation-only grants. `#show` still redirects when the actor cannot view the conversation.
+
 ## [0.11.0] - 2026-10-30
 
 Flatpack `0.1.331` owns modal Turbo cache close, chat TextArea chrome, and Heading type.

@@ -25,9 +25,21 @@ module RecordingStudioMessages
       return if params[:mount_id].blank?
 
       recording = RecordingStudio::Recording.find(params[:mount_id])
-      return recording if recording.recordable_type == MESSAGE_MOUNT_TYPE
+      raise ActiveRecord::RecordNotFound, "Desk not found" unless recording.recordable_type == MESSAGE_MOUNT_TYPE
 
-      raise ActiveRecord::RecordNotFound, "Desk not found"
+      authorize_mount_parent!(recording)
+      recording
+    end
+
+    def authorize_mount_parent!(mount_recording)
+      parent = mount_recording.parent_recording
+      return if parent.present? && RecordingStudioAccessible.authorized?(
+        actor: current_messages_actor,
+        recording: parent,
+        role: :view
+      )
+
+      raise ActiveRecord::RecordNotFound, "Messages mount not found"
     end
 
     def viewable_groups_for_mount
