@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-11-06
+
+### Security
+
+- Lockfiles resolve Rails `8.1.4.1`, rack `>= 3.2.8`, nokogiri `>= 1.19.5`, loofah `>= 2.25.3`, rails-html-sanitizer `>= 1.7.2`, and dummy `net-ssh >= 7.3.5`. Gemspec floors and git pins are unchanged.
+
+### Upgrade notes
+
+- Bump to **0.11.2**. No Messages migration. Run `bundle update rails rack nokogiri loofah rails-html-sanitizer` (and `net-ssh` in the dummy if locked).
+
 ## [0.11.1] - 2026-11-04
 
 Engine index requires Accessible view on the mount parent. Development pins Recording Studio `v6.3.0` and Flatpack `v0.1.341`.
