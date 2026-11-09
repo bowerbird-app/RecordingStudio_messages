@@ -79,6 +79,7 @@ fr:
         expired: Ce formulaire a expiré. Envoyez-le à nouveau.
         confirm_code: Confirmez d’abord le code e-mail.
         cannot_send: Vous ne pouvez pas envoyer ce message.
+        contact_target_missing: Nous n'avons pas pu envoyer ce message. Commencez-en un nouveau.
         taken_email: Cette adresse a déjà un compte. Essayez de vous connecter.
         rate_limited: Attendez une minute, puis réessayez.
         users_required: Le contact public a besoin des codes e-mail Recording Studio Users.

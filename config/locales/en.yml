@@ -43,6 +43,7 @@ en:
         expired: That contact form expired. Send it again.
         confirm_code: Confirm the email code first.
         cannot_send: You cannot send this message.
+        contact_target_missing: We couldn't send that message. Start a new one.
         taken_email: That email already has an account. Try signing in.
         rate_limited: Give it a minute, then try again.
         users_required: Public contact needs Recording Studio Users email codes.
