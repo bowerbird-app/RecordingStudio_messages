@@ -19,6 +19,7 @@ Layout/LineLength:
 Metrics/ModuleLength:
   Exclude:
     - 'lib/recording_studio_messages.rb'
+    - 'app/helpers/recording_studio_messages/inbox_helper.rb'
 
 Metrics/ClassLength:
   Exclude:
@@ -35,6 +36,7 @@ Metrics/MethodLength:
     - 'lib/recording_studio_messages/services/my_group_recordings.rb'
     - 'lib/recording_studio_messages/services/message_reads.rb'
     - 'lib/recording_studio_messages/services/send_message.rb'
+    - 'app/helpers/recording_studio_messages/inbox_helper.rb'
 
 Metrics/ParameterLists:
   CountKeywordArgs: false

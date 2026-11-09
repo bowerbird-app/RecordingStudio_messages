@@ -14,21 +14,14 @@
 <div class="w-full min-w-0 <%= desk_height_class %>">
   <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
     <% layout.sidebar do %>
-      <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
-        <% if inbox == :my_messages %>
-          <%= render FlatPack::Button::Component.new(
-                text: messages_t("inbox.filter_all"),
-                href: my_messages_path,
-                style: unread_filter ? :secondary : :primary,
-                size: :sm
-              ) %>
-          <%= render FlatPack::Button::Component.new(
-                text: messages_t("inbox.filter_unread"),
-                href: my_messages_path(unread: 1),
-                style: unread_filter ? :primary : :secondary,
-                size: :sm
-              ) %>
+      <% if inbox == :my_messages %>
+        <%= render FlatPack::Chat::Header::Component.new(title: messages_t("inbox.my_title")) do |header| %>
+          <% header.right do %>
+            <%= render FlatPack::Button::Component.new(**messages_unread_filter_button(unread_filter: unread_filter)) %>
+          <% end %>
         <% end %>
+      <% end %>
+      <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
         <% inbox_rows.each do |inbox_row| %>
           <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
         <% end %>

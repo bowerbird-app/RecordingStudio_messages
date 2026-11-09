@@ -67,7 +67,7 @@ Messages `0.15.0` stores a private read cursor per person per conversation. Send
 
 1. Install Messages `0.15.0`.
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
-3. Link `unread_count(actor:)` to a nav badge when you want a number. `/my_messages` already shows a row dot (`1` when unread) and an Unread filter.
+3. Link `unread_count(actor:)` to a nav badge when you want a number. `/my_messages` already shows a row dot when unread and a round unread filter.
 
 The migration creates `recording_studio_message_reads` and backfills current membership as read (`last_read_at = last_message_at`) in batches. After that, a conversation is unread when someone else sends, until that person opens it (`#show`, including a turbo-frame open). Opening the index does not mark the auto-selected conversation read. Opening a conversation also marks that person's unread `:message_received` notices for it. Notifications does not depend on Messages.
 

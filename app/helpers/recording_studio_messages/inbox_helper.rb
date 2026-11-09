@@ -34,15 +34,48 @@ module RecordingStudioMessages
     end
 
     def messages_inbox_row_arguments(group_recording, latest, selected: nil, inbox: nil, page: nil)
+      unread = inbox_unread?(group_recording, page) == true
       {
         chat_group_name: messages_inbox_group_name(group_recording),
         latest_sender: messages_inbox_row_sender(group_recording, latest, inbox: inbox),
         latest_preview: latest&.recordable&.body,
         latest_at: latest && message_timestamp(latest),
-        unread_count: inbox_unread_count(group_recording, page),
-        avatar_items: messages_inbox_avatar_items(group_recording, page: page),
-        active: selected_inbox_row?(group_recording, selected)
+        avatar_items: messages_inbox_avatar_items(group_recording, page: page, unread: unread),
+        active: selected_inbox_row?(group_recording, selected),
+        data: { unread: unread }
       }.merge(messages_inbox_row_link(group_recording, inbox: inbox))
+    end
+
+    def messages_unread_filter_button(unread_filter:)
+      on = ActiveModel::Type::Boolean.new.cast(unread_filter) == true
+      label = messages_unread_filter_label(on)
+      {
+        icon: "funnel",
+        icon_only: true,
+        round: true,
+        size: :sm,
+        style: :ghost,
+        href: messages_unread_filter_href(filtered: !on),
+        current: on,
+        icon_variant: on ? :solid : :outline,
+        title: label,
+        aria: { label: label }
+      }
+    end
+
+    def messages_unread_filter_href(filtered:)
+      query = request.query_parameters.stringify_keys.except("after_id", "unread", "id")
+      query = query.merge("unread" => 1) if filtered
+      if respond_to?(:my_messages_path)
+        my_messages_path(query)
+      else
+        recording_studio_messages.my_messages_path(query)
+      end
+    end
+
+    def messages_unread_filter_label(unread_filter)
+      key = unread_filter ? "inbox.filter_show_all" : "inbox.filter_unread_only"
+      messages_t(key)
     end
 
     def messages_inbox_row_sender(group_recording, latest, inbox: nil)
@@ -93,9 +126,11 @@ module RecordingStudioMessages
       messages_inbox_title(group_recording&.parent_recording)
     end
 
-    def messages_inbox_avatar_items(group_recording, page: nil)
-      inbox_granted_actors(group_recording, page).filter_map do |actor|
-        { name: message_sender_name(actor) }
+    def messages_inbox_avatar_items(group_recording, page: nil, unread: false)
+      inbox_granted_actors(group_recording, page).filter_map.with_index do |actor, index|
+        item = { name: message_sender_name(actor) }
+        item[:status] = :busy if unread && index.zero?
+        item
       end
     end
 
@@ -112,10 +147,8 @@ module RecordingStudioMessages
       nil
     end
 
-    def inbox_unread_count(group_recording, page)
-      return 0 unless page&.unread?(group_recording)
-
-      1
+    def inbox_unread?(group_recording, page)
+      page&.unread?(group_recording)
     end
 
     def inbox_latest_message(group_recording, page)

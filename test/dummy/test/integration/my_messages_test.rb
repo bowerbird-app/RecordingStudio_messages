@@ -138,11 +138,17 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.my_messages_path
 
     assert_response :success
-    assert_includes response.body, "Unread"
-    assert_includes response.body, "All"
+    refute_includes response.body, ">All<"
+    refute_includes response.body, ">Unread<"
+    refute_select ".fp-tabular-nums", text: "1"
     assert RecordingStudioMessages.unread?(group_recording: first, actor: @customer)
     assert RecordingStudioMessages.unread?(group_recording: second, actor: @customer)
-    assert_select "a[href=?]", recording_studio_messages.my_messages_path(unread: 1)
+    assert_select "a[href=?][aria-label=?][title=?]",
+                  recording_studio_messages.my_messages_path(unread: 1),
+                  "Show unread only",
+                  "Show unread only"
+    assert_select "[data-unread=true]", minimum: 2
+    refute_select "a[aria-current=page][aria-label=?]", "Show unread only"
   end
 
   test "explicit show marks read and clears that conversation's notices" do
@@ -173,6 +179,25 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Still unread"
     refute_includes response.body, "Already opened"
     assert_select "a[href=?]", recording_studio_messages.my_message_path(unread)
+    assert_select "a[href=?][aria-label=?][title=?][aria-current=page]",
+                  recording_studio_messages.my_messages_path,
+                  "Show all",
+                  "Show all"
+    assert_select "[data-unread=true]", minimum: 1
+    refute_select ".fp-tabular-nums", text: "1"
+  end
+
+  test "unread filter toggle drops after_id and keeps other query params" do
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(
+      after_id: DummyCatalog.support_group_recording.id,
+      foo: "1"
+    )
+
+    assert_response :success
+    assert_select "a[aria-label=?][href*='unread=1']", "Show unread only"
+    assert_select "a[aria-label=?][href*='foo=1']", "Show unread only"
+    refute_select "a[aria-label=?][href*='after_id']", "Show unread only"
   end
 
   test "stranger cannot open a conversation from my messages" do
