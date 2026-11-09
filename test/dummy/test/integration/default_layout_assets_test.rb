@@ -47,7 +47,12 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?][data-turbo-frame=?]", modal_href, "public_contact", text: "Contact"
     assert_select "[id=?][data-controller=?]", "public-contact-#{mount.id}", "flat-pack--modal"
     assert_includes response.body, "turbo:before-cache"
+    assert_includes response.body, "title.hidden = false"
     assert_includes response.body, "turbo:frame-load"
+    assert_includes response.body, "heading.hidden"
+    refute_includes response.body, "flatPackModalLockCount"
+    refute_includes response.body, 'modal.classList.add("hidden")'
+    refute_includes response.body, "document.body.style.overflow"
     assert_includes response.body, "data-public-contact-step='verify'"
     assert_select "turbo-frame#public_contact"
   end
@@ -59,7 +64,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, "alert-danger-background-color"
 
     # Secondary and ghost button chrome live in Flatpack application CSS
-    # (not Tailwind arbitrary classes) as of flat_pack v0.1.329.
+    # (not Tailwind arbitrary classes) as of flat_pack v0.1.331.
     flatpack_css = Rails.application.assets.load_path.find("flat_pack/application.css").compiled_content
     assert_includes flatpack_css, "--button-secondary-background-color"
     assert_includes flatpack_css, "--button-ghost-background-color"

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.11.0] - 2026-10-29
+## [0.12.0] - 2026-11-09
 
 A conversation can take its tags in the same commit that creates it. Hosts can count those conversations without an actor. Public contact can store the same tags on a pending intent.
 
@@ -20,11 +20,60 @@ A conversation can take its tags in the same commit that creates it. Hosts can c
 
 ### Upgrade notes
 
-- Bump to **0.11.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Bump to **0.12.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Keep the 0.11.1 development pins. Recording Studio `v6.3.0`, Flatpack `v0.1.341`, Accessible `v0.24.1`, Notifications `v0.13.1`, Metrics `v0.6.1`, Users `v0.26.3`, Root Switchable `v0.10.0`. Keep the 0.11.2 lockfile floors for Rails `8.1.4.1` and the CVE gems.
 - Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known. Use `tagged_group_recordings` for a count that has no actor. Keep `viewable_group_recordings` for an actor who can view the mount.
 - Add `tags: nil` or `**` to `public_contact_recipient_resolver` when the desk depends on those recordings. Leave a two-keyword lambda as it is.
 - Leave the intent `tags` column alone. `complete_public_contact` reads it.
 - A failed owner grant now removes the new conversation. In `0.10.0`, `record!` could commit the conversation and a later grant failure could leave it in place.
+
+## [0.11.2] - 2026-11-06
+
+### Security
+
+- Lockfiles resolve Rails `8.1.4.1`, rack `>= 3.2.8`, nokogiri `>= 1.19.5`, loofah `>= 2.25.3`, rails-html-sanitizer `>= 1.7.2`, and dummy `net-ssh >= 7.3.5`. Gemspec floors and git pins are unchanged.
+
+### Upgrade notes
+
+- Bump to **0.11.2**. No Messages migration. Run `bundle update rails rack nokogiri loofah rails-html-sanitizer` (and `net-ssh` in the dummy if locked).
+
+## [0.11.1] - 2026-11-04
+
+Engine index requires Accessible view on the mount parent. Development pins Recording Studio `v6.3.0` and Flatpack `v0.1.341`.
+
+### Security
+
+- `message_groups#index` loads a mount only after Accessible `:view` on the parent recording. Denial is 404. The page title still uses the parent name after that check. Conversation-only grantees (for example Casey on the dummy) now 404 on engine mount pages. That parent-view check is a product decision.
+
+### Changed
+
+- Development and dummy pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Gemfile constraints stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible stays `v0.24.1`. Notifications stays `v0.13.1`, Metrics `v0.6.1`, Logs `v0.7.0`, Trashable `v0.11.3`, Cache `v0.5.1` (`~> 0.5`). Admin stays `v2.6.2`. Users stays `v0.26.3`. Root Switchable stays `v0.10.0`.
+- Engine controllers include `RecordingStudio::ControllerLayout` explicitly.
+
+### Upgrade notes
+
+- Bump to **0.11.1**. No Messages migration.
+- Pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Keep Users `v0.26.3` (`v0.27.0` puts sign-in on Default Layout) and Root Switchable `v0.10.0` (`v0.11.4` removed `layouts/recording_studio_root_switchable/blank`). Gemspec floors stay `recording_studio >= 6.1.0`, `flat_pack >= 0.1.331`, and `recording_studio_accessible ~> 0.24`.
+- Terms and Conditions has no published tag that allows `recording_studio` 6.x (latest `v0.14.2` still `~> 4.2`), so Gemfiles still load `test/support/widen_recording_studio_requirement.rb`.
+- Engine index with `mount_id` now 404s when the actor cannot view the parent, including conversation-only grants. `#show` still redirects when the actor cannot view the conversation.
+
+## [0.11.0] - 2026-10-30
+
+Flatpack `0.1.331` owns modal Turbo cache close, chat TextArea chrome, and Heading type.
+
+### Changed
+
+- Development and dummy pin Flatpack `v0.1.331`. The gemspec floor is `flat_pack >= 0.1.331`.
+- Public contact headings on the form, verify, and sent screens render `FlatPack::Heading::Component` (`level: 1`, size `:xl` or `:"3xl"`).
+- Chat composer TextArea uses `variant: :chat`. Radius follows `--chat-composer-radius`.
+- Public contact modal no longer closes or unlocks scroll on `turbo:before-cache`. Flatpack Modal does that. A small hook still unhides the modal title after verify/sent hid it.
+
+### Upgrade notes
+
+- Bump to **0.11.0**. No Messages migration.
+- Pin Flatpack `v0.1.331` (`flat_pack >= 0.1.331`). Reload kit CSS and JavaScript. Rebuild host Tailwind so Heading `text-[length:var(--text-*)]` utilities and TextArea `rounded-[var(--chat-composer-radius)]` exist.
+- Drop host `turbo:before-cache` close/unlock for Flatpack Modal. Keep a title unhide if you hid the modal `h2` on a later step. Flatpack does not restore `hidden` on that heading.
+- Pass `variant: :chat` on a composer TextArea instead of a long class list.
 
 ## [0.10.0] - 2026-10-29
 

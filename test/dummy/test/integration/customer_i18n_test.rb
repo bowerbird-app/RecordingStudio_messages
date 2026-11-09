@@ -38,6 +38,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Write a message"
     assert_includes response.body, "Studio help"
+    assert_includes response.body, "rounded-[var(--chat-composer-radius)]"
     assert_select "html[lang='en']"
     assert_no_language_selector
   end
