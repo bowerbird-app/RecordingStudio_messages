@@ -24,6 +24,8 @@ en:
         placeholder: Write a message
       inbox:
         title: Conversations
+        my_title: My messages
+        older: Older conversations
         empty_thread: Nothing here yet. Write the first line.
         empty_panel: Nothing here yet.
       panel:

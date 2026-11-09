@@ -17,6 +17,8 @@ require "recording_studio_messages/public_contact"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
 require "recording_studio_messages/services/list_groups"
+require "recording_studio_messages/services/my_group_recordings"
+require "recording_studio_messages/services/inbox_page"
 require "recording_studio_messages/services/live_recording"
 require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
@@ -76,6 +78,10 @@ module RecordingStudioMessages
 
     def viewable_group_recordings(actor:, mount_recording: nil, tags: nil)
       Services::ListGroups.call(actor: actor, mount_recording: mount_recording, tags: tags)
+    end
+
+    def my_group_recordings(...)
+      Services::MyGroupRecordings.call(...)
     end
 
     def message_recordings(group_recording)

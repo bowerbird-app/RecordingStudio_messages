@@ -208,6 +208,8 @@ ensure
   Current.actor = previous_actor
 end
 
+RecordingStudioMessages::Services::MyGroupRecordings.backfill_last_message_at!
+
 puts "Seeded: admin@admin.com / Password (Ada Staff)"
 puts "Seeded: casey@example.com / Password (Casey Patron)"
 puts "Seeded: Workspace '#{workspace.name}' with root recording ##{root_recording.id}"

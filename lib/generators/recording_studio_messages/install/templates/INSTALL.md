@@ -10,3 +10,4 @@ Next steps:
 6. Run `bin/rails tailwindcss:build` if you use Tailwind CSS.
 7. Mount Accessible and Attachable next to this engine. Adjust auth, layout, and current actor integration to match your host app. Auth stays on Accessible.
 8. Keep strict declarations enabled and add `recording_studio_recordable(...)` to every configured recordable before running `RecordingStudio.validate_recordable_declarations!`.
+9. Link to `my_messages_path` for the cross-mount inbox of conversations the current actor was added to.

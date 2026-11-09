@@ -60,6 +60,8 @@ fr:
         placeholder: Écrire un message
       inbox:
         title: Conversations
+        my_title: Mes messages
+        older: Conversations plus anciennes
         empty_thread: Rien ici pour l’instant. Écrivez la première ligne.
         empty_panel: Rien ici pour l’instant.
       panel:
@@ -95,6 +97,7 @@ fr:
       subtitle: Deux bureaux de messages, un seul gem. Cet hôte n’est pas le produit.
       staff_desk: Bureau équipe
       inbox: Boîte de réception
+      my_messages: Mes messages
       admin: Admin
   flatpack:
     chat:

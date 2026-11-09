@@ -61,6 +61,23 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.13.0
+
+Messages `0.13.0` adds a cross-mount inbox of conversations the current actor was added to. Accessible still decides who can open a conversation. The mount desk, `ListGroups`, and `viewable_group_recordings` stay as they are. Keep the 0.11.1 development pins and the 0.11.2 lockfile floors. The Accessible floor stays `~> 0.24`.
+
+1. Install Messages `0.13.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Link to `my_messages_path` from the host. The engine route has no `mount_id`.
+4. Call `my_group_recordings(actor:)` when you need that same list in your own screen. Pass `limit:` and `after:` to page it.
+
+The new migration adds `last_message_at` on `recording_studio_message_groups` and backfills it from each conversation's newest kept message. `send_message` keeps the column current.
+
+Inherited view on a workspace or mount still opens the mount desk. It does not put a conversation in this inbox. Only a kept, effective direct grant on the conversation does. Tags are not involved. Unread stays a placeholder.
+
+```ruby
+RecordingStudioMessages.my_group_recordings(actor: current_actor).limit(50)
+```
+
 ### Upgrading to 0.12.0
 
 Messages `0.12.0` tags a conversation in the same commit that creates it, lists those conversations without an actor, and can pass the same hash into public contact. Accessible still decides who can open a conversation. Keep the 0.11.1 development pins and the 0.11.2 lockfile floors. The Accessible floor stays `~> 0.24`.
@@ -233,6 +250,7 @@ RecordingStudioMessages.viewable_group_recordings(
   mount_recording: mount,
   tags: { "press_center" => press_center }
 )
+RecordingStudioMessages.my_group_recordings(actor: current_actor)
 RecordingStudioMessages.create_group(
   mount,
   title: "Center desk",
@@ -246,6 +264,8 @@ RecordingStudioMessages.tagged_group_recordings(
 ```
 
 `viewable_group_recordings` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. The engine index, the staff desk, and the inbox all use this list.
+
+`my_group_recordings(actor:, after: nil, limit: nil)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
 
 `tag` writes a message group tag row. One group can hold many keys. Each key points at one tagged recording. `untag` deletes that key, or the exact row when you also pass `recording:`. Optional `tags:` on the list is an AND filter over those rows. It does not replace Accessible. Example keys are `press_center` and `press_kit`. This gem does not define a press vocabulary.
 
@@ -419,7 +439,7 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Screens
 
-The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. A named `mount_id` must pass Accessible `:view` on the mount parent or the request 404s before the title reads that parent name. `viewable_group_recordings` fills the sidebar with the kept conversations on that mount that the actor can view. Accessible `recordings_for` supplies those rows (`minimum_role: :view`), and the helper sorts them by latest message time, then title. A request with no mount shows an empty sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.331` supplies a fluid split from `sm`, rounded theme tokens for charcoal Send buttons, and outgoing bubbles on the neutral surface. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
+The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. A named `mount_id` must pass Accessible `:view` on the mount parent or the request 404s before the title reads that parent name. `viewable_group_recordings` fills the sidebar with the kept conversations on that mount that the actor can view. `GET /my_messages` is the same desk without a mount. `my_group_recordings` fills that sidebar from kept direct grants across every mount. Each row names the mount parent. Opening a conversation keeps `/my_messages` in the sidebar and in the back link. Accessible `recordings_for` supplies those rows (`minimum_role: :view`), and the helper sorts them by latest message time, then title. A request with no mount shows an empty sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.331` supplies a fluid split from `sm`, rounded theme tokens for charcoal Send buttons, and outgoing bubbles on the neutral surface. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
 
 The desk fills the viewport under the host's page nav and page title. `Chat::Layout` is `h-full`, so height lives on the wrapper (`h-[calc(100dvh-15.5rem)]`, matching Recording Studio 6.1's top nav, page title, and layout padding). The same wrapper is `w-full min-w-0` so the split can shrink inside core `main`. Messages scroll inside the panel and the composer stays on the bottom edge instead of sitting under the browser chrome. A host with different chrome passes `desk_height_class` to the partial. Do not set the height on `Chat::Layout` itself; its own `h-full` wins.
 

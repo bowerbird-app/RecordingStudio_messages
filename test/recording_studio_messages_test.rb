@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.12.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.13.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -189,12 +189,14 @@ class RecordingStudioMessagesTest < Minitest::Test
     api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
 
     assert_includes routes, "%i[index show]"
+    assert_includes routes, "resources :my_messages, only: %i[index show]"
     assert_includes application_controller, "include RecordingStudio::ControllerLayout"
     assert_includes controller, "def index"
     assert_includes controller, "viewable_group_recordings"
     assert_includes controller, "authorize_mount_parent!"
     assert_includes controller, "authorize_group!(:view)"
     assert_includes api, "def viewable_group_recordings"
+    assert_includes api, "def my_group_recordings"
     assert_includes api, "def tag"
     assert_includes api, "def untag"
     assert_includes list_groups, "RecordingStudioAccessible.recordings_for"
@@ -206,6 +208,21 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes helper, "messages_inbox_row_complete?"
     assert_includes helper, "turbo_frame: messages_desk_panel_id"
     assert_includes helper, "def messages_inbox_row_link"
+    assert_includes helper, "inbox: inbox"
+    assert_includes helper, "messages_inbox_mount_name"
+    my_messages_controller = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/my_messages_controller.rb", __dir__)
+    )
+    assert_includes my_messages_controller, "my_group_recordings"
+    refute_includes my_messages_controller, "viewable_group_recordings"
+    refute_includes my_messages_controller, "authorize_mount_parent!"
+    assert_includes my_messages_controller, "unless turbo_frame_request?"
+    assert_includes my_messages_controller, "inbox_member?"
+    query = File.read(
+      File.expand_path("../lib/recording_studio_messages/services/my_group_recordings.rb", __dir__)
+    )
+    assert_includes query, "AccessRoles"
+    refute_includes query, "ELSE -1"
     assert_includes panel_helper, "def messages_desk_panel_id"
     assert_includes panel_helper, '"messages-desk-panel"'
     assert_includes controller, "turbo_frame_request?"
@@ -353,6 +370,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme_source, "This Rails app exists to prove Recording Studio Messages"
     assert_includes readme_source, "/staff/desk"
     assert_includes readme_source, "/inbox"
+    assert_includes readme_source, "/recording_studio_messages/my_messages"
     assert_includes readme_source, "https://flatpack.bowerbird.io/"
   end
 

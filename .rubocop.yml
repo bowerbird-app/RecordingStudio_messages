@@ -16,16 +16,21 @@ Style/StringLiterals:
 Layout/LineLength:
   Max: 120
 
-# Relax metrics for test files and generators
+Metrics/ModuleLength:
+  Exclude:
+    - 'lib/recording_studio_messages.rb'
+
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
+    - 'lib/recording_studio_messages/services/my_group_recordings.rb'
 
 Metrics/MethodLength:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
     - 'db/migrate/**/*'
+    - 'lib/recording_studio_messages/services/my_group_recordings.rb'
 
 Metrics/ParameterLists:
   CountKeywordArgs: false
