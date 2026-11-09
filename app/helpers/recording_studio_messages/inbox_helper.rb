@@ -12,37 +12,43 @@ module RecordingStudioMessages
       Copy.t("inbox.title")
     end
 
-    def messages_inbox_rows(group_recordings, selected: nil)
+    def messages_inbox_rows(group_recordings, selected: nil, inbox: nil)
       Array(group_recordings).filter_map do |group_recording|
-        row = messages_inbox_row(group_recording, selected: selected)
+        row = messages_inbox_row(group_recording, selected: selected, inbox: inbox)
         row if messages_inbox_row_complete?(row)
       end
     end
 
-    def messages_inbox_row(group_recording, selected: nil)
+    def messages_inbox_row(group_recording, selected: nil, inbox: nil)
       latest = RecordingStudioMessages.message_recordings(group_recording).last
-      messages_inbox_row_arguments(group_recording, latest, selected: selected)
+      messages_inbox_row_arguments(group_recording, latest, selected: selected, inbox: inbox)
     end
 
     def messages_inbox_row_complete?(row)
       row[:chat_group_name].present? && row[:latest_preview].present?
     end
 
-    def messages_inbox_row_arguments(group_recording, latest, selected: nil)
+    def messages_inbox_row_arguments(group_recording, latest, selected: nil, inbox: nil)
       {
         chat_group_name: messages_inbox_group_name(group_recording),
-        latest_sender: messages_inbox_latest_sender(latest),
+        latest_sender: messages_inbox_row_sender(group_recording, latest, inbox: inbox),
         latest_preview: latest&.recordable&.body,
         latest_at: latest && message_timestamp(latest),
         unread_count: 0,
         avatar_items: messages_inbox_avatar_items(group_recording),
         active: selected_inbox_row?(group_recording, selected)
-      }.merge(messages_inbox_row_link(group_recording))
+      }.merge(messages_inbox_row_link(group_recording, inbox: inbox))
     end
 
-    def messages_inbox_row_link(group_recording)
+    def messages_inbox_row_sender(group_recording, latest, inbox: nil)
+      return messages_inbox_mount_name(group_recording) if inbox == :my_messages
+
+      messages_inbox_latest_sender(latest)
+    end
+
+    def messages_inbox_row_link(group_recording, inbox: nil)
       {
-        href: messages_inbox_href(group_recording),
+        href: messages_inbox_href(group_recording, inbox: inbox),
         turbo_frame: messages_desk_panel_id
       }
     end
@@ -60,12 +66,26 @@ module RecordingStudioMessages
       sender && message_sender_name(sender)
     end
 
-    def messages_inbox_href(group_recording)
+    def messages_inbox_href(group_recording, inbox: nil)
+      return my_messages_href(group_recording) if inbox == :my_messages
+
       if respond_to?(:message_group_path)
         message_group_path(group_recording)
       else
         recording_studio_messages.message_group_path(group_recording)
       end
+    end
+
+    def my_messages_href(group_recording)
+      if respond_to?(:my_message_path)
+        my_message_path(group_recording)
+      else
+        recording_studio_messages.my_message_path(group_recording)
+      end
+    end
+
+    def messages_inbox_mount_name(group_recording)
+      messages_inbox_title(group_recording&.parent_recording)
     end
 
     def messages_inbox_avatar_items(group_recording)

@@ -11,6 +11,7 @@ This Rails app exists to prove Recording Studio Messages in a real host. It is n
 - Two keyed mounts at once: `support` on Studio Workspace, `inbox` on the Site mailbox
 - Seeded conversations, people, an agent, lines, and one image attachment
 - Staff desk (`/staff/desk`) and Inbox (`/inbox`) land on Flatpack `Chat::Layout` `:split` (`Chat::InboxRow` sidebar + `Chat::Panel`). A row click targets the `messages-desk-panel` turbo frame and Layout `showPanel` so a phone tap opens the conversation without remounting the list. Send replaces the thread over Turbo so the new line appears without Action Cable
+- My messages (`/recording_studio_messages/my_messages`) lists conversations the signed-in person was added to across both mounts. Opening a row keeps that inbox in the sidebar
 - Home includes a Contact button that opens the Site mailbox public form in a modal. The full page remains `GET /recording_studio_messages/public_contact?mount_id=`
 - Recording Studio 6.1 default layout (back/close chrome), Flatpack CSS/JS, Turbo, and Tailwind source scanning
 - `html data-theme="rounded"` so Flatpack named theme tokens apply
@@ -84,6 +85,7 @@ Use the live Flatpack kit at [https://flatpack.bowerbird.io/](https://flatpack.b
 - `/` - dummy host home page
 - `/staff/desk` - support mount conversation list (Studio help and Launch notes)
 - `/inbox` - inbox mount conversation list
+- `/recording_studio_messages/my_messages` - cross-mount list of conversations the current person was added to
 - `/admin` - Site settings section (name, logos, tab icon) for the current workspace
 - `/admin/sections/terms` - Terms and Conditions
 - `/recording_studio_site_settings` - site name and logos form

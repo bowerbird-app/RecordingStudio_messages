@@ -17,6 +17,12 @@
       size: :md
     ) %>
     <%= render FlatPack::Button::Component.new(
+      text: t("dummy.home.my_messages"),
+      href: recording_studio_messages.my_messages_path,
+      style: :secondary,
+      size: :md
+    ) %>
+    <%= render FlatPack::Button::Component.new(
       text: t("dummy.home.admin"),
       href: recording_studio_admin_admin.root_path,
       style: :secondary,

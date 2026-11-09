@@ -38,11 +38,14 @@ Use the public helpers:
 - `ensure_message_mount` to hang or find a keyed mount
 - `create_group` to open a conversation, grant the first owner, and optionally write tags in that same commit
 - `viewable_group_recordings` to list the kept conversations one actor can view under one mount
+- `my_group_recordings` to list the kept conversations one actor was added to, across every mount
 - `tagged_group_recordings` to list kept conversations on one mount without an actor
 - `tag` / `untag` to join a conversation to a host recording by a host-chosen key
-- `send_message` to write a line, attach files, and notify everyone else who has a grant
+- `send_message` to write a line, attach files, stamp `last_message_at`, and notify everyone else who has a grant
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil)` calls Accessible `recordings_for` with `minimum_role: :view` and the `MessageGroup` type, then sorts by latest message time and title. Pass a mount. A blank actor or a blank mount returns `[]`. Optional `tags:` is a hash of key to tagged recording. Every pair must match a `recording_studio_message_group_tags` row. Tags shrink that Accessible list. They are not an ACL.
+
+`my_group_recordings(actor:, after: nil, limit: nil)` is a relation, not a Ruby array. It joins kept `MessageGroup` recordings to kept `RecordingStudio::Access` children for that actor. Inherited access on a root or mount is ignored. A grant with `depends_on_recording_id` is included only when that manager Access recording is kept, on the same root, and at least as strong. The relation orders by `recording_studio_message_groups.last_message_at` (nulls last), then recording id. `send_message` writes `last_message_at`. The install migration backfills it. Tags are not part of this lookup.
 
 Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. `MessageGroupTags` is the only writer of those rows. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
 
@@ -62,7 +65,9 @@ Rounded is a named Flatpack theme. Recording Studio 6.1's default layout sets `d
 
 Flatpack `>= 0.1.331` (pinned tag `v0.1.341`) keeps rounded primary buttons charcoal, a fluid Chat::Layout split from `sm`, and outgoing bubbles on the neutral surface. Modal closes itself on `turbo:before-cache`. Chat composer TextArea uses `variant: :chat`. Contact headings use `FlatPack::Heading::Component`. `v0.1.319` is not a published tag. This gem requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Development pins Recording Studio `v6.3.0`. `view_component` locks at `4.19.0`. `FlatPack::Card` does not take `style:`.
 
-Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
+`GET /my_messages` is the same split desk with no `mount_id`. Rows come from `my_group_recordings`. Each InboxRow uses the mount parent name as `latest_sender` so a cross-mount list still names the desk. Row links stay on `/my_messages/:id`, so the sidebar does not switch to the mount desk. Back returns to `/my_messages`. Opening still uses Accessible `:view` on the conversation, including inherited view. Inherited-only conversations do not appear as rows.
+
+Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. Home also links to My messages, which lists Casey's direct grants on both desks. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 
 Customer-facing chrome (contact form, composer, empty states, flashes, validation) lives under `recording_studio.messages.*` in `config/locales/en.yml`. The engine ships English only. Hosts translate by copying those keys. Conversation titles and message bodies are stored data and are not translated here.
 

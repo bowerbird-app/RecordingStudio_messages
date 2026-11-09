@@ -5,6 +5,8 @@ RecordingStudioMessages::Engine.routes.draw do
     resources :messages, only: [:create]
   end
 
+  resources :my_messages, only: %i[index show]
+
   get "/public_contact", to: "public_contacts#show", as: :public_contact
   post "/public_contact", to: "public_contacts#create"
   get "/public_contact/verify", to: "public_contacts#verify", as: :public_contact_verify
