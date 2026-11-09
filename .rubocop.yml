@@ -23,7 +23,9 @@ Metrics/ModuleLength:
 Metrics/ClassLength:
   Exclude:
     - 'test/**/*'
+    - 'lib/recording_studio_messages.rb'
     - 'lib/recording_studio_messages/services/my_group_recordings.rb'
+    - 'lib/recording_studio_messages/services/message_reads.rb'
 
 Metrics/MethodLength:
   Exclude:
@@ -31,6 +33,8 @@ Metrics/MethodLength:
     - 'lib/generators/**/*'
     - 'db/migrate/**/*'
     - 'lib/recording_studio_messages/services/my_group_recordings.rb'
+    - 'lib/recording_studio_messages/services/message_reads.rb'
+    - 'lib/recording_studio_messages/services/send_message.rb'
 
 Metrics/ParameterLists:
   CountKeywordArgs: false
@@ -39,6 +43,11 @@ Metrics/AbcSize:
   Exclude:
     - 'test/**/*'
     - 'lib/generators/**/*'
+    - 'lib/recording_studio_messages/services/message_reads.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/recording_studio_messages/services/message_reads.rb'
 
 # Allow empty blocks in tests (common for stubs/mocks)
 Lint/EmptyBlock:

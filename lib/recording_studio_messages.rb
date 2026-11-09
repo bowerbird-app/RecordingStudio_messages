@@ -18,6 +18,7 @@ require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
 require "recording_studio_messages/services/list_groups"
 require "recording_studio_messages/services/my_group_recordings"
+require "recording_studio_messages/services/message_reads"
 require "recording_studio_messages/services/inbox_page"
 require "recording_studio_messages/services/live_recording"
 require "recording_studio_messages/services/recording_subtree"
@@ -83,6 +84,18 @@ module RecordingStudioMessages
 
     def my_group_recordings(...)
       Services::MyGroupRecordings.call(...)
+    end
+
+    def mark_read(...)
+      Services::MessageReads.mark_read(...)
+    end
+
+    def unread?(...)
+      Services::MessageReads.unread?(...)
+    end
+
+    def unread_count(...)
+      Services::MessageReads.unread_count(...)
     end
 
     def message_recordings(group_recording)

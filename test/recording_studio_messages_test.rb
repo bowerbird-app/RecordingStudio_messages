@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.14.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.15.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -200,8 +200,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes controller, "viewable_group_recordings"
     assert_includes controller, "authorize_mount_parent!"
     assert_includes controller, "authorize_group!(:view)"
+    assert_includes controller, "mark_read"
     assert_includes api, "def viewable_group_recordings"
     assert_includes api, "def my_group_recordings"
+    assert_includes api, "def mark_read"
+    assert_includes api, "def unread?"
+    assert_includes api, "def unread_count"
     assert_includes api, "def tag"
     assert_includes api, "def untag"
     assert_includes list_groups, "RecordingStudioAccessible.recordings_for"
@@ -210,6 +214,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes list_groups, "RecordingStudioMessages::MESSAGE_GROUP_TYPE"
     refute_includes list_groups, "authorized?"
     assert_includes helper, "def messages_inbox_rows"
+    assert_includes helper, "inbox_unread_count"
     assert_includes helper, "messages_inbox_row_complete?"
     assert_includes helper, "turbo_frame: messages_desk_panel_id"
     assert_includes helper, "def messages_inbox_row_link"
@@ -219,6 +224,8 @@ class RecordingStudioMessagesTest < Minitest::Test
       File.expand_path("../app/controllers/recording_studio_messages/my_messages_controller.rb", __dir__)
     )
     assert_includes my_messages_controller, "my_group_recordings"
+    assert_includes my_messages_controller, "mark_read"
+    assert_includes my_messages_controller, "unread_filter?"
     refute_includes my_messages_controller, "viewable_group_recordings"
     refute_includes my_messages_controller, "authorize_mount_parent!"
     assert_includes my_messages_controller, "unless turbo_frame_request?"
@@ -227,6 +234,8 @@ class RecordingStudioMessagesTest < Minitest::Test
       File.expand_path("../lib/recording_studio_messages/services/my_group_recordings.rb", __dir__)
     )
     assert_includes query, "AccessRoles"
+    assert_includes query, "unread:"
+    assert_includes query, "apply_unread"
     refute_includes query, "ELSE -1"
     assert_includes panel_helper, "def messages_desk_panel_id"
     assert_includes panel_helper, '"messages-desk-panel"'
@@ -258,6 +267,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
+    assert_includes desk, "inbox.filter_unread"
+    assert_includes desk, "unread_filter"
     assert_includes desk, '<div class="w-full min-w-0 <%= desk_height_class %>">'
     assert_includes desk, "h-[calc(100dvh-15.5rem)]"
     assert_includes desk, "local_assigns[:desk_height_class]"

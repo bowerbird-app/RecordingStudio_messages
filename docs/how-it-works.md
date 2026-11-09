@@ -29,7 +29,7 @@ The dummy host proves that shape with a staff desk and an inbox.
 | Message | A line people wrote |
 | Attachment | Attachable already owns this child |
 
-Notifications are facts, not recordings. They live in the Notifications tables. Participants are not a type — people and agents are actors with Accessible grants on the conversation. Message group tags are also facts. They live in `recording_studio_message_group_tags` and join a conversation recording to a host recording by a host-chosen key.
+Notifications are facts, not recordings. They live in the Notifications tables. Participants are not a type — people and agents are actors with Accessible grants on the conversation. Message group tags are also facts. They live in `recording_studio_message_group_tags` and join a conversation recording to a host recording by a host-chosen key. Per-person read cursors are facts too. They live in `recording_studio_message_reads` (one row per actor per conversation). They never grant access.
 
 ## Writes
 
@@ -41,11 +41,12 @@ Use the public helpers:
 - `my_group_recordings` to list the kept conversations one actor was added to, across every mount
 - `tagged_group_recordings` to list kept conversations on one mount without an actor
 - `tag` / `untag` to join a conversation to a host recording by a host-chosen key
-- `send_message` to write a line, attach files, stamp `last_message_at`, and notify everyone else who has a grant
+- `send_message` to write a line, attach files, stamp `last_message_at`, upsert the sender's read cursor, and notify everyone else who has a grant
+- `mark_read` / `unread?` / `unread_count` for that private cursor
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil)` calls Accessible `recordings_for` with `minimum_role: :view` and the `MessageGroup` type, then sorts by latest message time and title. Pass a mount. A blank actor or a blank mount returns `[]`. Optional `tags:` is a hash of key to tagged recording. Every pair must match a `recording_studio_message_group_tags` row. Tags shrink that Accessible list. They are not an ACL.
 
-`my_group_recordings(actor:, after: nil, limit: nil)` is a relation, not a Ruby array. It joins kept `MessageGroup` recordings to kept `RecordingStudio::Access` children for that actor. Inherited access on a root or mount is ignored. A grant with `depends_on_recording_id` is included only when that manager Access recording is kept, on the same root, and at least as strong. The relation orders by `recording_studio_message_groups.last_message_at` (nulls last), then recording id. `send_message` writes `last_message_at`. The install migration backfills it. Tags are not part of this lookup.
+`my_group_recordings(actor:, after: nil, limit: nil, unread: false)` is a relation, not a Ruby array. It joins kept `MessageGroup` recordings to kept `RecordingStudio::Access` children for that actor. Inherited access on a root or mount is ignored. A grant with `depends_on_recording_id` is included only when that manager Access recording is kept, on the same root, and at least as strong. The relation orders by `recording_studio_message_groups.last_message_at` (nulls last), then recording id. Pass `unread: true` to left-join `recording_studio_message_reads` for that actor and keep conversations whose `last_message_at` is newer than `last_read_at`, or that have a `last_message_at` and no read row. `after:` / `limit:` still keyset that list. `unread_count(actor:)` is that filtered relation counted in one query. `send_message` writes `last_message_at` and the sender's read row. The 0.15.0 install migration backfills existing membership as read. Tags are not part of this lookup. Read rows are never an ACL.
 
 Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. `MessageGroupTags` is the only writer of those rows. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
 
@@ -67,7 +68,9 @@ Rounded is a named Flatpack theme. Recording Studio 6.1's default layout sets `d
 
 Flatpack `>= 0.1.331` (pinned tag `v0.1.341`) keeps rounded primary buttons charcoal, a fluid Chat::Layout split from `sm`, and outgoing bubbles on the neutral surface. Modal closes itself on `turbo:before-cache`. Chat composer TextArea uses `variant: :chat`. Contact headings use `FlatPack::Heading::Component`. `v0.1.319` is not a published tag. This gem requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Development pins Recording Studio `v6.3.0`. `view_component` locks at `4.19.0`. `FlatPack::Card` does not take `style:`.
 
-`GET /my_messages` is the same split desk with no `mount_id`. Rows come from `my_group_recordings`. Each InboxRow uses the mount parent name as `latest_sender` so a cross-mount list still names the desk. Row links stay on `/my_messages/:id`, so the sidebar does not switch to the mount desk. Back returns to `/my_messages`. Opening still uses Accessible `:view` on the conversation, including inherited view. Inherited-only conversations do not appear as rows.
+`GET /my_messages` is the same split desk with no `mount_id`. Rows come from `my_group_recordings`. Each InboxRow uses the mount parent name as `latest_sender` so a cross-mount list still names the desk. An unread row passes `unread_count: 1` (a dot, not a message count). All / Unread buttons filter that list. Row links stay on `/my_messages/:id`, so the sidebar does not switch to the mount desk. Back returns to `/my_messages`. Opening `#show` (including a turbo-frame) marks that conversation read after Accessible `:view` and clears that person's unread `:message_received` notices for it. Index auto-select does not mark read. Inherited-only conversations do not appear as rows.
+
+Dummy screenshots of Casey's inbox (unread badges of 1, All / Unread) live in `docs/screenshots/`.
 
 Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. Home also links to My messages, which lists Casey's direct grants on both desks. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 

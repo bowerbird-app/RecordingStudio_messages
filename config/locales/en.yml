@@ -26,6 +26,8 @@ en:
         title: Conversations
         my_title: My messages
         older: Older conversations
+        filter_all: All
+        filter_unread: Unread
         empty_thread: Nothing here yet. Write the first line.
         empty_panel: Nothing here yet.
       panel:

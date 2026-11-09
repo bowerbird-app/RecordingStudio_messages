@@ -5,8 +5,9 @@ module RecordingStudioMessages
     class InboxPage
       ACCESS_TYPE = "RecordingStudio::Access"
 
-      def initialize(group_recordings)
+      def initialize(group_recordings, actor: nil)
         @group_recordings = Array(group_recordings)
+        @actor = actor
       end
 
       def latest_for(group_recording)
@@ -22,7 +23,15 @@ module RecordingStudioMessages
           latest_for(group_recording)&.recordable&.body.present?
       end
 
+      def unread?(group_recording)
+        unread_ids.include?(group_recording.id)
+      end
+
       private
+
+      def unread_ids
+        @unread_ids ||= load_unread_ids
+      end
 
       def latest_by_id
         @latest_by_id ||= load_latest_by_id
@@ -34,6 +43,14 @@ module RecordingStudioMessages
 
       def group_ids
         @group_ids ||= @group_recordings.map(&:id)
+      end
+
+      def load_unread_ids
+        return Set.new if @actor.blank? || group_ids.empty?
+
+        Set.new(
+          RecordingStudioMessages::Services::MessageReads.unread_ids_among(group_ids, actor: @actor)
+        )
       end
 
       def load_latest_by_id

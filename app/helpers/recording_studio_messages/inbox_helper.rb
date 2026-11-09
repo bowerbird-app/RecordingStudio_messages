@@ -13,11 +13,15 @@ module RecordingStudioMessages
     end
 
     def messages_inbox_rows(group_recordings, selected: nil, inbox: nil)
-      page = my_messages_inbox_page(group_recordings, inbox)
+      page = inbox_page_for(group_recordings)
       Array(group_recordings).filter_map do |group_recording|
         row = messages_inbox_row(group_recording, selected: selected, inbox: inbox, page: page)
         row if messages_inbox_row_complete?(row)
       end
+    end
+
+    def messages_unread_count(actor = current_messages_actor)
+      RecordingStudioMessages.unread_count(actor: actor)
     end
 
     def messages_inbox_row(group_recording, selected: nil, inbox: nil, page: nil)
@@ -35,7 +39,7 @@ module RecordingStudioMessages
         latest_sender: messages_inbox_row_sender(group_recording, latest, inbox: inbox),
         latest_preview: latest&.recordable&.body,
         latest_at: latest && message_timestamp(latest),
-        unread_count: 0,
+        unread_count: inbox_unread_count(group_recording, page),
         avatar_items: messages_inbox_avatar_items(group_recording, page: page),
         active: selected_inbox_row?(group_recording, selected)
       }.merge(messages_inbox_row_link(group_recording, inbox: inbox))
@@ -95,11 +99,23 @@ module RecordingStudioMessages
       end
     end
 
-    def my_messages_inbox_page(group_recordings, inbox)
-      return unless inbox == :my_messages
+    def inbox_page_for(group_recordings)
       return @inbox_page if defined?(@inbox_page) && @inbox_page
 
-      RecordingStudioMessages::Services::InboxPage.new(group_recordings)
+      RecordingStudioMessages::Services::InboxPage.new(group_recordings, actor: inbox_actor)
+    end
+
+    def inbox_actor
+      return current_messages_actor if respond_to?(:current_messages_actor, true)
+      return Current.actor if defined?(Current) && Current.respond_to?(:actor)
+
+      nil
+    end
+
+    def inbox_unread_count(group_recording, page)
+      return 0 unless page&.unread?(group_recording)
+
+      1
     end
 
     def inbox_latest_message(group_recording, page)

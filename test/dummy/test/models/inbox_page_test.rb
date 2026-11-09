@@ -37,7 +37,7 @@ class InboxPageTest < ActiveSupport::TestCase
       )
       group
     end
-    page = RecordingStudioMessages::Services::InboxPage.new(groups)
+    page = RecordingStudioMessages::Services::InboxPage.new(groups, actor: @viewer)
 
     groups.each do |group|
       expected_latest = RecordingStudioMessages.message_recordings(group).last
@@ -46,6 +46,7 @@ class InboxPageTest < ActiveSupport::TestCase
       assert_equal expected_latest.id, page.latest_for(group).id
       assert_equal expected_actors, page.actors_for(group).map(&:id).sort
       assert page.ready?(group)
+      assert page.unread?(group)
     end
   end
 
@@ -102,11 +103,12 @@ class InboxPageTest < ActiveSupport::TestCase
     end
     page = nil
     ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
-      page = RecordingStudioMessages::Services::InboxPage.new(groups)
+      page = RecordingStudioMessages::Services::InboxPage.new(groups, actor: @viewer)
       groups.each do |group|
         page.latest_for(group)
         page.actors_for(group)
         page.ready?(group)
+        page.unread?(group)
       end
     end
     count

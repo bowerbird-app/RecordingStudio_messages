@@ -3,6 +3,7 @@
 <% selected_group = local_assigns[:group_recording] %>
 <% message_recordings = local_assigns[:message_recordings] %>
 <% inbox = local_assigns[:inbox] %>
+<% unread_filter = local_assigns[:unread_filter] %>
 <% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group, inbox: inbox) %>
 <%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
 <% desk_height_class = local_assigns[:desk_height_class].presence || "h-[calc(100dvh-15.5rem)]" %>
@@ -14,6 +15,20 @@
   <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
     <% layout.sidebar do %>
       <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
+        <% if inbox == :my_messages %>
+          <%= render FlatPack::Button::Component.new(
+                text: messages_t("inbox.filter_all"),
+                href: my_messages_path,
+                style: unread_filter ? :secondary : :primary,
+                size: :sm
+              ) %>
+          <%= render FlatPack::Button::Component.new(
+                text: messages_t("inbox.filter_unread"),
+                href: my_messages_path(unread: 1),
+                style: unread_filter ? :primary : :secondary,
+                size: :sm
+              ) %>
+        <% end %>
         <% inbox_rows.each do |inbox_row| %>
           <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
         <% end %>

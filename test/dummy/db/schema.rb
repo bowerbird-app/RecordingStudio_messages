@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_09_040000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -190,6 +190,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_040000) do
     t.datetime "created_at", null: false
     t.string "key", null: false
     t.index ["key"], name: "index_recording_studio_message_mounts_on_key"
+  end
+
+  create_table "recording_studio_message_reads", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "actor_type", null: false
+    t.uuid "actor_id", null: false
+    t.uuid "message_group_recording_id", null: false
+    t.datetime "last_read_at", null: false
+    t.uuid "last_read_message_recording_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_type", "actor_id", "message_group_recording_id"], name: "index_message_reads_on_actor_and_group", unique: true
+    t.index ["message_group_recording_id"], name: "index_message_reads_on_message_group_recording_id"
   end
 
   create_table "recording_studio_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

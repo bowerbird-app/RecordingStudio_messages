@@ -61,6 +61,25 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.15.0
+
+Messages `0.15.0` stores a private read cursor per person per conversation. Sending, delivery, and conversation shape are unchanged. Existing public methods keep the same arguments. Unread is a fact table, not a recording.
+
+1. Install Messages `0.15.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Link `unread_count(actor:)` to a nav badge when you want a number. `/my_messages` already shows a row dot (`1` when unread) and an Unread filter.
+
+The migration creates `recording_studio_message_reads` and backfills current membership as read (`last_read_at = last_message_at`) in batches. After that, a conversation is unread when someone else sends, until that person opens it (`#show`, including a turbo-frame open). Opening the index does not mark the auto-selected conversation read. Opening a conversation also marks that person's unread `:message_received` notices for it. Notifications does not depend on Messages.
+
+Read state is private. There are no read receipts.
+
+```ruby
+RecordingStudioMessages.unread_count(actor: current_actor)
+RecordingStudioMessages.my_group_recordings(actor: current_actor, unread: true, limit: 50)
+RecordingStudioMessages.mark_read(group_recording: group, actor: current_actor)
+RecordingStudioMessages.unread?(group_recording: group, actor: current_actor)
+```
+
 ### Upgrading to 0.14.0
 
 Messages `0.14.0` lets the public contact popup carry the same tag hash as `begin_public_contact`. The helpers sign that hash into `tag_token`. The controller verifies the token, then checks that each tagged recording is live and inside the mount parent's tree. Tags still do not grant access. Keep the 0.13.0 inbox.
@@ -82,7 +101,7 @@ Messages `0.13.0` adds a cross-mount inbox of conversations the current actor wa
 
 The new migration adds `last_message_at` on `recording_studio_message_groups` and backfills it from each conversation's newest kept message. `send_message` keeps the column current.
 
-Inherited view on a workspace or mount still opens the mount desk. It does not put a conversation in this inbox. Only a kept, effective direct grant on the conversation does. Tags are not involved. Unread stays a placeholder.
+Inherited view on a workspace or mount still opens the mount desk. It does not put a conversation in this inbox. Only a kept, effective direct grant on the conversation does. Tags are not involved. Unread is a private cursor as of 0.15.0.
 
 ```ruby
 RecordingStudioMessages.my_group_recordings(actor: current_actor).limit(50)
@@ -261,6 +280,10 @@ RecordingStudioMessages.viewable_group_recordings(
   tags: { "press_center" => press_center }
 )
 RecordingStudioMessages.my_group_recordings(actor: current_actor)
+RecordingStudioMessages.my_group_recordings(actor: current_actor, unread: true)
+RecordingStudioMessages.unread_count(actor: current_actor)
+RecordingStudioMessages.mark_read(group_recording: group, actor: current_actor)
+RecordingStudioMessages.unread?(group_recording: group, actor: current_actor)
 RecordingStudioMessages.create_group(
   mount,
   title: "Center desk",
@@ -275,7 +298,9 @@ RecordingStudioMessages.tagged_group_recordings(
 
 `viewable_group_recordings` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. The engine index, the staff desk, and the inbox all use this list.
 
-`my_group_recordings(actor:, after: nil, limit: nil)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
+`my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
+
+`mark_read(group_recording:, actor:)` upserts that person's cursor (`last_read_at` and the latest message id). It requires Accessible `:view`. It also marks that person's unread `:message_received` notices for that conversation as read, through the Notifications model. It does not grant access. `unread?(group_recording:, actor:)` is true only for a viewer who still has a newer `last_message_at`. `unread_count(actor:)` counts unread rows in `my_group_recordings` with one join. Read rows are private. There are no read receipts. Bell clear-all does not change these cursors.
 
 `tag` writes a message group tag row. One group can hold many keys. Each key points at one tagged recording. `untag` deletes that key, or the exact row when you also pass `recording:`. Optional `tags:` on the list is an AND filter over those rows. It does not replace Accessible. Example keys are `press_center` and `press_kit`. This gem does not define a press vocabulary.
 
@@ -283,7 +308,7 @@ RecordingStudioMessages.tagged_group_recordings(
 
 `tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the desk. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
 
-Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
+Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
 
 `:message_received` stays root-scoped. By default every copy is filed under the conversation's root, so a ticket owner sees it when that workspace is selected. Staff who should see the same notice in the Admin inbox need a host opt-in:
 

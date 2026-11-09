@@ -127,6 +127,54 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Studio help"
   end
 
+  test "index auto-select does not mark the first conversation read" do
+    Current.actor = @staff
+    first = seeded_unread_conversation("First unread")
+    stamp_last_message_at!(first, 2.minutes.from_now)
+    second = seeded_unread_conversation("Second unread")
+    stamp_last_message_at!(second, 3.minutes.from_now)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path
+
+    assert_response :success
+    assert_includes response.body, "Unread"
+    assert_includes response.body, "All"
+    assert RecordingStudioMessages.unread?(group_recording: first, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: second, actor: @customer)
+    assert_select "a[href=?]", recording_studio_messages.my_messages_path(unread: 1)
+  end
+
+  test "explicit show marks read and clears that conversation's notices" do
+    Current.actor = @staff
+    kept = seeded_unread_conversation("Keep notice", notify: true)
+    opened = seeded_unread_conversation("Open notice", notify: true)
+
+    sign_in @customer
+    get recording_studio_messages.my_message_path(opened)
+
+    assert_response :success
+    refute RecordingStudioMessages.unread?(group_recording: opened, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: kept, actor: @customer)
+    assert_not_nil notice_for(opened).read_at
+    assert_nil notice_for(kept).read_at
+  end
+
+  test "unread filter lists only unread conversations" do
+    Current.actor = @staff
+    unread = seeded_unread_conversation("Still unread")
+    read = seeded_unread_conversation("Already opened")
+    RecordingStudioMessages.mark_read(group_recording: read, actor: @customer)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(unread: 1)
+
+    assert_response :success
+    assert_includes response.body, "Still unread"
+    refute_includes response.body, "Already opened"
+    assert_select "a[href=?]", recording_studio_messages.my_message_path(unread)
+  end
+
   test "stranger cannot open a conversation from my messages" do
     stranger = User.create!(
       email: "my-stranger-#{SecureRandom.hex(4)}@example.com",
@@ -143,6 +191,30 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def seeded_unread_conversation(title, notify: false)
+    group = RecordingStudioMessages.create_group(
+      DummyCatalog.support_mount_recording,
+      title: title,
+      actor: @staff
+    )
+    grant_view!(group, @customer)
+    RecordingStudioMessages.send_message(
+      group_recording: group,
+      body: "#{title} body",
+      actor: @staff,
+      notify: notify,
+      url: "/my_messages"
+    )
+    group
+  end
+
+  def notice_for(group)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received",
+      recipient: @customer
+    ).find { |note| note.metadata["message_group_id"] == group.id }
+  end
 
   def grant_view!(recording, actor)
     result = RecordingStudioAccessible.grant_access(
