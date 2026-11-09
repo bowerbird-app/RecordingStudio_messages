@@ -13,7 +13,7 @@ module RecordingStudioMessages
     def show
       @group_recording = find_group_recording
       authorize_group!(:view)
-      load_inbox(selected: @group_recording)
+      load_inbox(selected: @group_recording) unless turbo_frame_request?
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
       render layout: false if turbo_frame_request?
     end
@@ -24,6 +24,7 @@ module RecordingStudioMessages
       page = inbox_page.to_a
       @older_href = older_href_for(page)
       @group_recordings = page
+      @inbox_page = RecordingStudioMessages::Services::InboxPage.new(page)
       @group_recording = selected || selected_group_from_params || first_ready_group
       return if @group_recording.blank?
 
@@ -47,9 +48,16 @@ module RecordingStudioMessages
     end
 
     def after_recording
-      return if params[:after_id].blank?
+      raw = params[:after_id].presence
+      return if raw.blank?
 
-      RecordingStudio::Recording.find_by(id: params[:after_id])
+      recording = RecordingStudio::Recording.find_by(id: raw)
+      return unless recording&.recordable_type == MESSAGE_GROUP_TYPE
+      return unless inbox_member?(recording)
+
+      recording
+    rescue ActiveRecord::StatementInvalid
+      nil
     end
 
     def older_href_for(page)
@@ -82,8 +90,7 @@ module RecordingStudioMessages
     end
 
     def ready_inbox_group?(group)
-      group.recordable&.title.to_s.strip.present? &&
-        RecordingStudioMessages.message_recordings(group).last&.recordable&.body.present?
+      @inbox_page.ready?(group)
     end
   end
 end

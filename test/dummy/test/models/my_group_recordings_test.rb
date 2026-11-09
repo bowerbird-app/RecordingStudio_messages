@@ -157,6 +157,28 @@ class MyGroupRecordingsTest < ActiveSupport::TestCase
     assert sent.created_at >= historic_at
   end
 
+  test "unranked direct grants stay out of the inbox" do
+    ranked = RecordingStudioMessages.create_group(@mount, title: "Ranked view", actor: @owner)
+    unranked = RecordingStudioMessages.create_group(@mount, title: "Download only", actor: @owner)
+    grant!(ranked, @viewer)
+    grant!(unranked, @viewer)
+    stamp_role!(unranked, @viewer, "download")
+
+    assert_equal [ "Ranked view" ], titles(listed(actor: @viewer))
+  end
+
+  test "an unranked depends_on manager stays out of the inbox" do
+    group = RecordingStudioMessages.create_group(@mount, title: "Capped by download", actor: @owner)
+    manager = RecordingStudioAccessible.access_recordings_for_actor(
+      recording: group,
+      actor: @owner
+    ).first
+    grant!(group, @viewer, depends_on: manager)
+    stamp_role!(group, @owner, "download")
+
+    assert_empty titles(listed(actor: @viewer))
+  end
+
   test "a blank actor returns an empty relation" do
     relation = RecordingStudioMessages.my_group_recordings(actor: nil)
 
@@ -194,6 +216,14 @@ class MyGroupRecordingsTest < ActiveSupport::TestCase
       manager_actor: @owner
     )
     raise result.error if result.failure?
+  end
+
+  def stamp_role!(recording, actor, role)
+    access_recording = RecordingStudioAccessible.access_recordings_for_actor(
+      recording: recording,
+      actor: actor
+    ).first
+    RecordingStudio::Access.unscoped.where(id: access_recording.recordable_id).update_all(role: role)
   end
 
   def stamp_last_message_at!(recording, time)

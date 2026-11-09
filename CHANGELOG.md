@@ -17,6 +17,13 @@ An actor can open one inbox of conversations they were added to, across every me
 - `GET /my_messages` and `GET /my_messages/:id`. The split desk reuses `Chat::InboxRow`. Each row shows the mount parent name. Opening a conversation keeps this inbox in the sidebar. Back returns here. Conversation `#show` on a mount is unchanged.
 - `recording_studio_message_groups.last_message_at` (nullable datetime, indexed). `send_message` writes it. The install migration backfills it from each conversation's newest kept message.
 
+### Fixed
+
+- `my_group_recordings` only counts ranked Accessible roles (`view`, `edit`, `admin`). Unranked direct grants and unranked `depends_on` managers stay out of My messages, so index no longer authorizes a grant that `#show` would deny.
+- `GET /my_messages/:id` in a turbo frame authorizes the conversation and skips the inbox query.
+- `after_id` is ignored unless it is a MessageGroup in that actor's inbox.
+- My messages loads latest messages, grant actors, and row readiness once per page.
+
 ### Upgrade notes
 
 - Bump to **0.13.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.

@@ -75,6 +75,58 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
                   "messages-desk-panel"
   end
 
+  test "unranked grants stay off my messages and the index still renders" do
+    Current.actor = @staff
+    group = RecordingStudioMessages.create_group(
+      DummyCatalog.support_mount_recording,
+      title: "Download leak",
+      actor: @staff
+    )
+    grant_view!(group, @customer)
+    RecordingStudioMessages.send_message(
+      group_recording: group,
+      body: "Secret preview",
+      actor: @staff,
+      notify: false
+    )
+    stamp_role!(group, @customer, "download")
+    stamp_last_message_at!(group, 1.day.from_now)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path
+
+    assert_response :success
+    assert_includes response.body, "My messages"
+    assert_includes response.body, "Studio help"
+    refute_includes response.body, "Download leak"
+    refute_includes response.body, "Secret preview"
+  end
+
+  test "a foreign after_id is ignored and the first page still renders" do
+    Current.actor = @staff
+    foreign = RecordingStudioMessages.create_group(
+      DummyCatalog.support_mount_recording,
+      title: "Staff only cursor",
+      actor: @staff
+    )
+    RecordingStudioMessages.send_message(
+      group_recording: foreign,
+      body: "Not in Casey inbox",
+      actor: @staff,
+      notify: false
+    )
+    root = RecordingStudio.root_recording_for(DummyCatalog.studio_workspace)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(after_id: foreign.id)
+    assert_response :success
+    assert_includes response.body, "Studio help"
+
+    get recording_studio_messages.my_messages_path(after_id: root.id)
+    assert_response :success
+    assert_includes response.body, "Studio help"
+  end
+
   test "stranger cannot open a conversation from my messages" do
     stranger = User.create!(
       email: "my-stranger-#{SecureRandom.hex(4)}@example.com",
@@ -88,5 +140,31 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.my_message_path(DummyCatalog.support_group_recording)
 
     assert_redirected_to "/"
+  end
+
+  private
+
+  def grant_view!(recording, actor)
+    result = RecordingStudioAccessible.grant_access(
+      recording: recording,
+      actor: actor,
+      role: :view,
+      manager_actor: @staff
+    )
+    raise result.error if result.failure?
+  end
+
+  def stamp_role!(recording, actor, role)
+    access_recording = RecordingStudioAccessible.access_recordings_for_actor(
+      recording: recording,
+      actor: actor
+    ).first
+    RecordingStudio::Access.unscoped.where(id: access_recording.recordable_id).update_all(role: role)
+  end
+
+  def stamp_last_message_at!(recording, time)
+    RecordingStudioMessages::MessageGroup.unscoped.where(id: recording.recordable_id).update_all(
+      last_message_at: time
+    )
   end
 end

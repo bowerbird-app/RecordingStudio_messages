@@ -216,6 +216,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes my_messages_controller, "my_group_recordings"
     refute_includes my_messages_controller, "viewable_group_recordings"
     refute_includes my_messages_controller, "authorize_mount_parent!"
+    assert_includes my_messages_controller, "unless turbo_frame_request?"
+    assert_includes my_messages_controller, "inbox_member?"
+    query = File.read(
+      File.expand_path("../lib/recording_studio_messages/services/my_group_recordings.rb", __dir__)
+    )
+    assert_includes query, "AccessRoles"
+    refute_includes query, "ELSE -1"
     assert_includes panel_helper, "def messages_desk_panel_id"
     assert_includes panel_helper, '"messages-desk-panel"'
     assert_includes controller, "turbo_frame_request?"

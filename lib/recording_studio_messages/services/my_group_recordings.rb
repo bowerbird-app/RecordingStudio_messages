@@ -53,7 +53,7 @@ module RecordingStudioMessages
         RecordingStudio::Recording.unscoped
                                   .where(recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE, trashed_at: nil)
                                   .joins(access_joins)
-                                  .where(recording_studio_accesses: actor_filter)
+                                  .where(recording_studio_accesses: actor_filter.merge(role: ranked_roles))
                                   .where(dependent_access_sql)
                                   .select("recording_studio_recordings.id")
       end
@@ -81,6 +81,8 @@ module RecordingStudioMessages
             WHERE manager_recordings.id = recording_studio_accesses.depends_on_recording_id
               AND manager_recordings.trashed_at IS NULL
               AND manager_recordings.root_recording_id = access_recordings.root_recording_id
+              AND #{ranked_role_sql('manager_accesses')}
+              AND #{ranked_role_sql('recording_studio_accesses')}
               AND #{role_rank_sql('manager_accesses')} >= #{role_rank_sql('recording_studio_accesses')}
           )
         SQL
@@ -92,9 +94,18 @@ module RecordingStudioMessages
             WHEN 'admin' THEN 2
             WHEN 'edit' THEN 1
             WHEN 'view' THEN 0
-            ELSE -1
           END
         SQL
+      end
+
+      def ranked_role_sql(table)
+        "#{table}.role IN (#{ranked_roles.map { |role| quoted(role) }.join(', ')})"
+      end
+
+      def ranked_roles
+        return [] unless defined?(RecordingStudio::AccessRoles)
+
+        RecordingStudio::AccessRoles::ORDER.keys
       end
 
       def ordered_groups
