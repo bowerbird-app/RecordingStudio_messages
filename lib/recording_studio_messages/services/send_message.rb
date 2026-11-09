@@ -21,6 +21,7 @@ module RecordingStudioMessages
         authorize!
 
         message_recording = record_message
+        stamp_last_message_at!(message_recording)
         attach_files!(message_recording)
         notify_recipients!(message_recording) if @notify
         message_recording
@@ -60,6 +61,16 @@ module RecordingStudioMessages
           parent_recording: @group_recording,
           actor: @actor
         ).recording
+      end
+
+      def stamp_last_message_at!(message_recording)
+        recordable = @group_recording.recordable
+        return unless recordable.respond_to?(:last_message_at)
+
+        RecordingStudioMessages::MessageGroup.unscoped.where(id: recordable.id).update_all(
+          last_message_at: message_recording.created_at
+        )
+        recordable.reload
       end
 
       def attach_files!(message_recording)
