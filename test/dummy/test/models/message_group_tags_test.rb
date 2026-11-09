@@ -267,6 +267,28 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
     refute_includes found.map(&:id), trashed.id
   end
 
+  test "a public contact tag token accepts the parent and a descendant and rejects a sibling tree" do
+    parent = @mount.parent_recording
+    nested = RecordingStudioMessages.create_group(@mount, title: "Nested", actor: @owner)
+    sibling = host_recording("Sibling root")
+
+    token = RecordingStudioMessages::PublicContact::TagToken.generate(
+      mount: @mount,
+      tags: { "press_center" => parent, "press_kit" => nested }
+    )
+    tags = RecordingStudioMessages::PublicContact::TagToken.tags_for(mount: @mount, token: token)
+    assert_equal parent.id, tags["press_center"].id
+    assert_equal nested.id, tags["press_kit"].id
+
+    error = assert_raises(ArgumentError) do
+      RecordingStudioMessages::PublicContact::TagToken.generate(
+        mount: @mount,
+        tags: { "press_center" => sibling }
+      )
+    end
+    assert_equal "tagged recording is outside the contact tree", error.message
+  end
+
   test "create_group and tag reject a stale trashed or destroyed tagged recording" do
     groups_before = RecordingStudioMessages::MessageGroup.count
     tags_before = RecordingStudioMessages::MessageGroupTag.count

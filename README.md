@@ -61,6 +61,16 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.14.0
+
+Messages `0.14.0` lets the public contact popup carry the same tag hash as `begin_public_contact`. The helpers sign that hash into `tag_token`. The controller verifies the token, then checks that each tagged recording is live and inside the mount parent's tree. Tags still do not grant access. Keep the 0.13.0 inbox.
+
+1. Install Messages `0.14.0`. No new migration on top of 0.13.0.
+2. Pass `tags:` to `public_contact_form` or `public_contact_modal` when the host already has the recordings.
+3. Leave `begin_public_contact(tags:)` as it is for host Ruby that does not use the popup.
+
+Omit `tags:` and the popup matches 0.12.0.
+
 ### Upgrading to 0.13.0
 
 Messages `0.13.0` adds a cross-mount inbox of conversations the current actor was added to. Accessible still decides who can open a conversation. The mount desk, `ListGroups`, and `viewable_group_recordings` stay as they are. Keep the 0.11.1 development pins and the 0.11.2 lockfile floors. The Accessible floor stays `~> 0.24`.
@@ -309,6 +319,7 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 ```erb
 <%= public_contact_form(mount) %>
 <%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
+<%= public_contact_form(mount, tags: { "press_center" => press_center }) %>
 ```
 
 `public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. On the code step the heading is "Verify it's you", the button is "Next", "Resend code" is a link, and the Contact title is hidden. A notice or error in the dialog has space under it. On "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
@@ -316,7 +327,10 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 ```erb
 <%= public_contact_modal(mount) %>
 <%= public_contact_modal(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
+<%= public_contact_modal(mount, tags: { "press_center" => press_center }) %>
 ```
+
+`tags:` is the same hash as `begin_public_contact` and `create_group`. A key is a string. A value is any recording. Messages does not know kits. The helper signs the ids into `tag_token` with Rails `MessageVerifier`, a purpose, and a 24-hour expiry. The modal src carries that token as a query param. The form keeps it in a hidden field. Restart keeps it too. The public contact controller verifies the token before `PublicContact.begin`. A tampered or expired token is rejected. Each tagged recording must be live and inside the subtree of the mount's parent recording. That check walks `parent_recording_id` in batches. It does not use recursive SQL. A rejected token does not create a conversation. The visitor sees "We couldn't send that message. Start a new one." Tags never grant access. Omit `tags:` and nothing in the request changes.
 
 One dialog per page. A normal visit to `public_contact_path`, including `presentation=modal` without the frame header, still uses the centered page. The page posts are full document posts. Coming back to the host page does not restore an open dialog.
 
@@ -356,7 +370,7 @@ group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: v
 
 `create_group` and `tag` do the same live reload. An unsaved recording raises `ArgumentError` with `tagged recording must be saved`. A missing or trashed recording raises `ArgumentError` with `tagged recording is missing`. Old tag rows stay. `tagged_group_recordings` still matches those rows by id.
 
-The engine contact form has no tag field. Call `begin_public_contact` from the host when the message should carry a center or a kit.
+The engine contact form has no visible tag field. Pass `tags:` to `public_contact_form` or `public_contact_modal` when the popup should carry them. Call `begin_public_contact` from the host when you already have the hash in Ruby.
 
 Set `public_contact_recipient_resolver` to a callable. When the callable lists `tags:` or a keyrest parameter, `begin` and `complete` pass `tags:` as a hash. Keys are strings. Values are recordings. When there are no tags, that hash is `{}`. A callable that only lists `mount_recording:` and `actor:` is called with those two keywords. A value that does not respond to `call` is ignored. The first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist. There is no file field on this form.
 

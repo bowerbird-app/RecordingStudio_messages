@@ -23,8 +23,13 @@ module RecordingStudioMessages
         body: params[:body],
         current_actor: public_contact_actor,
         request: request,
-        session: session
+        session: session,
+        tags: contact_tags
       )
+    end
+
+    def contact_tags
+      PublicContact::TagToken.tags_for(mount: @mount, token: params[PublicContact::TagToken::PARAM])
     end
 
     def redirect_for(outcome)
@@ -37,15 +42,20 @@ module RecordingStudioMessages
     end
 
     def redirect_to_sent
-      redirect_to public_contact_sent_path(presentation_params)
+      redirect_to public_contact_sent_path(sent_presentation_params)
+    end
+
+    def sent_presentation_params
+      presentation_params.except(PublicContact::TagToken::PARAM, PublicContact::TagToken::PARAM.to_s)
     end
 
     def presentation_params
-      return {} unless modal_presentation?
+      extra = tag_token_query
+      return extra unless modal_presentation?
 
       { presentation: PublicContactHelper::MODAL }.merge(
         modal_display_params(params[:introduction], params[:submit_label])
-      )
+      ).merge(extra)
     end
 
     def resume_verification?

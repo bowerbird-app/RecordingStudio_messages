@@ -23,9 +23,9 @@
       <%= render FlatPack::Button::Component.new(text: messages_t("contact.next"), style: :primary, size: :md, type: "submit", class: "w-full") %>
     <% end %>
 
-    <% resend_query = {} %>
+    <% resend_query = tag_token_query %>
     <% if modal_presentation? %>
-      <% resend_query = { presentation: "modal" }.merge(modal_display_params(params[:introduction], params[:submit_label])) %>
+      <% resend_query = { presentation: "modal" }.merge(modal_display_params(params[:introduction], params[:submit_label])).merge(resend_query) %>
     <% end %>
     <%= render FlatPack::Link::Component.new(
       href: public_contact_resend_path(resend_query),
