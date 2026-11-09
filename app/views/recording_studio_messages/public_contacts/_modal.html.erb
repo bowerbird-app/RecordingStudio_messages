@@ -6,7 +6,7 @@
 
 <%= render FlatPack::Button::Component.new(
   text: title,
-  href: public_contact_modal_src(mount, introduction: introduction, submit_label: submit_label),
+  href: public_contact_modal_src(mount, introduction: introduction, submit_label: submit_label, tag_token: local_assigns[:tag_token]),
   style: :secondary,
   size: :md,
   data: { modal_id: modal_id, turbo_frame: public_contact_frame_id }

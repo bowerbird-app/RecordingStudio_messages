@@ -1130,6 +1130,159 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert RecordingStudioUser.otp_proof(intent.otp_challenge_id).present?
   end
 
+  test "a valid tag token tags the conversation for a signed-in sender" do
+    mailbox = @mount.parent_recording
+    token = contact_tag_token("press_center" => mailbox)
+
+    sign_in @staff
+    assert_difference -> { RecordingStudioMessages::MessageGroupTag.count }, 1 do
+      post contact_path, params: { body: "From the signed-in desk.", tag_token: token }
+    end
+
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    group = last_group_recording
+    row = RecordingStudioMessages::MessageGroupTag.find_by!(
+      message_group_recording_id: group.id,
+      key: "press_center"
+    )
+    assert_equal mailbox.id, row.tagged_recording_id
+  end
+
+  test "a valid tag token tags the conversation after the email code" do
+    mailbox = @mount.parent_recording
+    nested = RecordingStudioMessages.create_group(@mount, title: "Nested target", actor: @staff)
+    token = contact_tag_token("press_center" => mailbox, "press_kit" => nested)
+
+    post contact_path, params: {
+      name: "Ada Lovelace",
+      email: "tagged-token@example.com",
+      body: "Please file this under the mailbox.",
+      tag_token: token
+    }
+    assert_redirected_to recording_studio_messages.public_contact_verify_path(tag_token: token)
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal(
+      { "press_center" => mailbox.id.to_s, "press_kit" => nested.id.to_s },
+      intent.tags
+    )
+
+    post recording_studio_messages.public_contact_verify_path,
+         params: { code: otp_code_for(intent), tag_token: token }
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+
+    group = intent.reload.group_recording
+    rows = RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id)
+    assert_equal mailbox.id, rows.find_by!(key: "press_center").tagged_recording_id
+    assert_equal nested.id, rows.find_by!(key: "press_kit").tagged_recording_id
+  end
+
+  test "a tampered tag token does not create a conversation" do
+    token = contact_tag_token("press_center" => @mount.parent_recording)
+    tampered = "#{token}x"
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post contact_path, params: {
+        name: "Ada Lovelace",
+        email: "tampered-token@example.com",
+        body: "Hello.",
+        tag_token: tampered
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "an expired tag token does not create a conversation" do
+    token = contact_tag_token("press_center" => @mount.parent_recording)
+
+    travel RecordingStudioMessages::PublicContact::TagToken::LIFETIME + 1.second do
+      assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+        post contact_path, params: {
+          name: "Ada Lovelace",
+          email: "expired-token@example.com",
+          body: "Hello.",
+          tag_token: token
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "a tag token for a recording outside the mount parent tree is rejected" do
+    outsider = press_recording("Other workspace")
+    token = outsider_tag_token(@mount, "press_center" => outsider)
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post contact_path, params: {
+        name: "Ada Lovelace",
+        email: "outside-tree@example.com",
+        body: "Hello.",
+        tag_token: token
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "a tag token for a trashed recording is rejected" do
+    nested = RecordingStudioMessages.create_group(@mount, title: "Soon gone", actor: @staff)
+    token = contact_tag_token("press_center" => nested)
+    nested.update!(trashed_at: Time.current)
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post contact_path, params: {
+        name: "Ada Lovelace",
+        email: "trashed-target@example.com",
+        body: "Hello.",
+        tag_token: token
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "modal contact without tags still has no tag token" do
+    get contact_path(presentation: "modal"), headers: modal_headers
+
+    assert_response :success
+    assert_select "input[name=tag_token]", count: 0
+
+    post contact_path, params: modal_message(email: "no-tags-token@example.com"), headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal({}, intent.tags)
+  end
+
+  test "modal src and restart keep a valid tag token" do
+    mailbox = @mount.parent_recording
+    token = contact_tag_token("press_center" => mailbox)
+
+    get contact_path(presentation: "modal", tag_token: token), headers: modal_headers
+    assert_response :success
+    assert_select "input[name=tag_token][value=?]", token
+
+    post contact_path,
+         params: modal_message(email: "restart-token@example.com").merge(tag_token: token),
+         headers: modal_headers
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    intent.update!(expires_at: 1.hour.ago)
+    get recording_studio_messages.public_contact_verify_path(presentation: "modal", tag_token: token),
+        headers: modal_headers
+
+    assert_select "a[href=?]",
+                  contact_path(presentation: "modal", tag_token: token),
+                  text: "Send it again"
+  end
+
   test "complete raises when a tagged recording is gone and leaves the intent open" do
     press = press_recording("Press center")
     outcome = RecordingStudioMessages.begin_public_contact(
@@ -1210,6 +1363,19 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
   def contact_path(**extra)
     recording_studio_messages.public_contact_path({ mount_id: @mount.id }.merge(extra))
+  end
+
+  def contact_tag_token(tags)
+    RecordingStudioMessages::PublicContact::TagToken.generate(mount: @mount, tags: tags)
+  end
+
+  def outsider_tag_token(mount, tags)
+    ids = tags.to_h { |key, recording| [ key.to_s, recording.id.to_s ] }
+    Rails.application.message_verifier(RecordingStudioMessages::PublicContact::TagToken::PURPOSE).generate(
+      { "mount_id" => mount.id.to_s, "tags" => ids },
+      purpose: RecordingStudioMessages::PublicContact::TagToken::PURPOSE,
+      expires_in: RecordingStudioMessages::PublicContact::TagToken::LIFETIME
+    )
   end
 
   def modal_headers

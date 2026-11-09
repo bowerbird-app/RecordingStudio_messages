@@ -15,6 +15,9 @@
 
 <%= form_with url: public_contact_submit_path(mount), method: :post, **public_contact_form_options do %>
   <%= public_contact_modal_fields(introduction: introduction, submit_label: submit_label) %>
+  <% if local_assigns[:tag_token].present? %>
+    <%= hidden_field_tag(RecordingStudioMessages::PublicContact::TagToken::PARAM, local_assigns[:tag_token]) %>
+  <% end %>
   <div class="space-y-4">
     <% if actor %>
       <% if actor.respond_to?(:name) && actor.name.present? %>

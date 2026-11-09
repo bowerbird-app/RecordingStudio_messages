@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-09
+
+The public contact popup can carry generic conversation tags without exposing recording ids in the clear.
+
+### Added
+
+- `public_contact_form`, `public_contact_modal`, and `public_contact_modal_src` take optional `tags:` (a hash of a host key to a `RecordingStudio::Recording`). The helpers encode that hash as a signed, expiring `tag_token` query param and hidden field. Restart keeps the token. Omit `tags:` and the form matches 0.12.0.
+- The public contact controller verifies `tag_token` with Rails `MessageVerifier` (purpose plus expiry). A tampered or expired token is rejected with "We couldn't send that message. Start a new one." No conversation is written. The response is 422, not 500.
+- Verified tags must be live (kept) and inside the subtree of the mount's parent recording. The check uses batched `parent_recording_id` lookups, not recursive SQL. It reuses `MessageGroupTags.normalize_tags` / `tags_from_ids` from 0.12.0. Tags never grant access.
+- `PublicContact.begin(tags:)` still receives the hash on both the signed-in path and the email-code path.
+
+### Upgrade notes
+
+- Bump to **0.14.0**. No Messages migration on top of 0.13.0.
+- Pass `tags:` into `public_contact_form` or `public_contact_modal` when the host already knows the recordings. Keep calling `begin_public_contact(tags:)` from host Ruby when you are not using the popup helpers.
+- Keys stay host vocabulary. This gem still does not know kits.
+
 ## [0.13.0] - 2026-11-09
 
 An actor can open one inbox of conversations they were added to, across every message mount. The mount desk stays as it is.

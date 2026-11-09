@@ -1,29 +1,34 @@
 # frozen_string_literal: true
 
+require_relative "public_contact_tag_helper"
+
 module RecordingStudioMessages
   module PublicContactHelper
     include CopyHelper
+    include PublicContactTagHelper
 
     FRAME_ID = "public_contact"
     MODAL = "modal"
     DEFAULT_TITLE = "Contact"
     DEFAULT_SUBMIT = "Send message"
 
-    def public_contact_form(mount, title: nil, introduction: nil, submit_label: nil, heading: nil)
+    def public_contact_form(mount, title: nil, introduction: nil, submit_label: nil, heading: nil, tags: nil)
       render "recording_studio_messages/public_contacts/form",
              mount: mount,
              title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence || params[:introduction].presence,
              submit_label: submit_label.presence || params[:submit_label].presence || Copy.t("contact.submit"),
-             heading: heading.nil? ? show_public_contact_heading? : heading
+             heading: heading.nil? ? show_public_contact_heading? : heading,
+             tag_token: contact_tag_token(mount, tags)
     end
 
-    def public_contact_modal(mount, title: nil, introduction: nil, submit_label: nil)
+    def public_contact_modal(mount, title: nil, introduction: nil, submit_label: nil, tags: nil)
       render "recording_studio_messages/public_contacts/modal",
              mount: mount,
              title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence,
-             submit_label: submit_label.presence || Copy.t("contact.submit")
+             submit_label: submit_label.presence || Copy.t("contact.submit"),
+             tag_token: contact_tag_token(mount, tags)
     end
 
     def public_contact_frame_id
@@ -52,20 +57,6 @@ module RecordingStudioMessages
         hidden_introduction(introduction),
         hidden_submit_label(submit_label)
       ].compact)
-    end
-
-    def public_contact_restart_path(mount_id)
-      contact_routes.public_contact_path(
-        { mount_id: mount_id, presentation: MODAL }.merge(
-          modal_display_params(params[:introduction], params[:submit_label])
-        )
-      )
-    end
-
-    def public_contact_modal_src(mount, introduction:, submit_label:)
-      contact_routes.public_contact_path(
-        { mount_id: mount.id, presentation: MODAL }.merge(modal_display_params(introduction, submit_label))
-      )
     end
 
     def public_contact_actor
