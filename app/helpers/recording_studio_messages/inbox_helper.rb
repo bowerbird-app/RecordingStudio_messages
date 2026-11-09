@@ -50,7 +50,7 @@ module RecordingStudioMessages
       on = ActiveModel::Type::Boolean.new.cast(unread_filter) == true
       label = messages_unread_filter_label(on)
       {
-        icon: "funnel",
+        icon: "bell-alert",
         icon_only: true,
         round: true,
         size: :sm,

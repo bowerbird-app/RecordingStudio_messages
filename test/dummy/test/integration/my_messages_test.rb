@@ -147,6 +147,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
                   recording_studio_messages.my_messages_path(unread: 1),
                   "Show unread only",
                   "Show unread only"
+    assert_select "svg[data-flat-pack--icon-name-value=?][data-flat-pack--icon-variant-value=?]",
+                  "bell-alert",
+                  "outline"
     assert_select "[data-unread=true]", minimum: 2
     refute_select "a[aria-current=page][aria-label=?]", "Show unread only"
   end
@@ -183,6 +186,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
                   recording_studio_messages.my_messages_path,
                   "Show all",
                   "Show all"
+    assert_select "svg[data-flat-pack--icon-name-value=?][data-flat-pack--icon-variant-value=?]",
+                  "bell-alert",
+                  "solid"
     assert_select "[data-unread=true]", minimum: 1
     refute_select ".fp-tabular-nums", text: "1"
   end

@@ -217,6 +217,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes helper, "inbox_unread?"
     assert_includes helper, "messages_unread_filter_button"
     assert_includes helper, "messages_unread_filter_href"
+    assert_includes helper, 'icon: "bell-alert"'
+    refute_includes helper, "funnel"
     refute_includes helper, "unread_count:"
     assert_includes helper, "messages_inbox_row_complete?"
     assert_includes helper, "turbo_frame: messages_desk_panel_id"
