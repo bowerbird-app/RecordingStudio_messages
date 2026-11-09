@@ -71,7 +71,7 @@ Messages `0.12.0` tags a conversation in the same commit that creates it, lists 
 4. Send counts that have no actor to `tagged_group_recordings`.
 5. Add `tags:` or `**` to the public-contact resolver when the desk depends on those recordings. A lambda that only takes `mount_recording:` and `actor:` keeps working.
 
-The new migration adds `tags` `jsonb` on `recording_studio_messages_public_contact_intents`, not null, default `{}`. Leave that column alone. `complete_public_contact` reads it.
+The new migration adds `tags` `jsonb` on `recording_studio_messages_public_contact_intents`, not null, default `{}`. Leave that column alone. `complete_public_contact` reads it. If a tagged recording or the contact mount is missing or trashed at complete, start a new message.
 
 `tagged_group_recordings` is not an ACL. A conversation with matching tags is included when the caller has no grant. `press_center` and `press_kit` in the samples are examples. A later kit is another key in the same hash.
 
@@ -332,7 +332,9 @@ group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: v
 
 `complete_public_contact` is the host call after the code has been verified. Calling it again returns the same conversation and does not send a second message. The code form calls `RecordingStudioMessages::PublicContact.submit_code!` and `resend!` itself. Those two methods are not on the host facade.
 
-`begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation. If a tagged recording is gone when complete runs, complete raises `RecordingStudioMessages::Error`. The intent stays open. No conversation is written. The visitor message is "We couldn't send that message. Start a new one."
+`begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation. If a tagged recording or the contact mount is missing or trashed when complete or verify runs, the gem reloads that row from the database and raises `RecordingStudioMessages::Error`. The check happens before identity confirmation. The intent stays open. No conversation is written. The visitor message is "We couldn't send that message. Start a new one."
+
+`create_group` and `tag` do the same live reload. An unsaved recording raises `ArgumentError` with `tagged recording must be saved`. A missing or trashed recording raises `ArgumentError` with `tagged recording is missing`. Old tag rows stay. `tagged_group_recordings` still matches those rows by id.
 
 The engine contact form has no tag field. Call `begin_public_contact` from the host when the message should carry a center or a kit.
 

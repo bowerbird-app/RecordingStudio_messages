@@ -1021,6 +1021,115 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal press.id, row.tagged_recording_id
   end
 
+  test "complete raises when a stale trashed tagged recording is gone and does not confirm identity" do
+    press = press_recording("Press center")
+    session = {}
+    outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: "Ada Lovelace",
+      email: "stale-trash-target@example.com",
+      body: "Hello",
+      current_actor: nil,
+      request: nil,
+      session: session,
+      tags: { "press_center" => press }
+    )
+    intent = outcome.intent
+    user = User.find_by!(email: "stale-trash-target@example.com")
+    RecordingStudio::Recording.unscoped.where(id: press.id).update_all(trashed_at: Time.current)
+    assert_nil press.trashed_at
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      error = assert_raises(RecordingStudioMessages::Error) do
+        RecordingStudioMessages.complete_public_contact(intent: intent, actor: user)
+      end
+      assert_equal "We couldn't send that message. Start a new one.", error.message
+    end
+
+    user.reload
+    assert_nil user.confirmed_at
+    intent.reload
+    assert_nil intent.message_group_id
+    assert_equal "Hello", intent.body
+    assert intent.open?
+  end
+
+  test "complete rejects a trashed or destroyed mount before identity confirmation" do
+    session = {}
+    outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: "Ada Lovelace",
+      email: "stale-trash-mount@example.com",
+      body: "Hello",
+      current_actor: nil,
+      request: nil,
+      session: session
+    )
+    intent = outcome.intent
+    user = User.find_by!(email: "stale-trash-mount@example.com")
+    RecordingStudio::Recording.unscoped.where(id: @mount.id).update_all(trashed_at: Time.current)
+    assert_nil @mount.trashed_at
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      error = assert_raises(RecordingStudioMessages::Error) do
+        RecordingStudioMessages.complete_public_contact(intent: intent, actor: user)
+      end
+      assert_equal "We couldn't send that message. Start a new one.", error.message
+    end
+
+    user.reload
+    assert_nil user.confirmed_at
+    intent.reload
+    assert intent.open?
+
+    RecordingStudio::Recording.unscoped.where(id: @mount.id).update_all(trashed_at: nil)
+    destroy_session = {}
+    destroy_outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: "Ada Lovelace",
+      email: "stale-destroy-mount@example.com",
+      body: "Hello",
+      current_actor: nil,
+      request: nil,
+      session: destroy_session
+    )
+    destroy_intent = destroy_outcome.intent
+    destroy_user = User.find_by!(email: "stale-destroy-mount@example.com")
+    destroy_intent.update_column(:mount_recording_id, SecureRandom.uuid)
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      error = assert_raises(RecordingStudioMessages::Error) do
+        RecordingStudioMessages.complete_public_contact(intent: destroy_intent, actor: destroy_user)
+      end
+      assert_equal "We couldn't send that message. Start a new one.", error.message
+    end
+
+    destroy_user.reload
+    assert_nil destroy_user.confirmed_at
+    destroy_intent.reload
+    assert destroy_intent.open?
+  end
+
+  test "submit_code rejects a trashed mount before verifying the code" do
+    post contact_path, params: { name: "Ada Lovelace", email: "verify-trash-mount@example.com", body: "Hello." }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    user = User.find_by!(email: "verify-trash-mount@example.com")
+    code = otp_code_for(intent)
+    RecordingStudio::Recording.unscoped.where(id: @mount.id).update_all(trashed_at: Time.current)
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post recording_studio_messages.public_contact_verify_path, params: { code: code }
+      assert_response :unprocessable_entity
+      assert_select "[role=alert]", text: /couldn't send that message/i
+    end
+
+    user.reload
+    assert_nil user.confirmed_at
+    intent.reload
+    assert intent.open?
+    assert RecordingStudioUser.otp_proof(intent.otp_challenge_id).present?
+  end
+
   test "complete raises when a tagged recording is gone and leaves the intent open" do
     press = press_recording("Press center")
     outcome = RecordingStudioMessages.begin_public_contact(

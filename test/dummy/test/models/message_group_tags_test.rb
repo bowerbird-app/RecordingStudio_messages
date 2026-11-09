@@ -267,6 +267,78 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
     refute_includes found.map(&:id), trashed.id
   end
 
+  test "create_group and tag reject a stale trashed or destroyed tagged recording" do
+    groups_before = RecordingStudioMessages::MessageGroup.count
+    tags_before = RecordingStudioMessages::MessageGroupTag.count
+    group = RecordingStudioMessages.create_group(@mount, title: "Keep", actor: @owner)
+
+    stale_trash = @press_center
+    RecordingStudio::Recording.unscoped.where(id: stale_trash.id).update_all(trashed_at: Time.current)
+    assert_nil stale_trash.trashed_at
+
+    error = assert_raises(ArgumentError) do
+      RecordingStudioMessages.create_group(
+        @mount, title: "Trash", actor: @owner, tags: { "press_center" => stale_trash }
+      )
+    end
+    assert_equal "tagged recording is missing", error.message
+    assert_raises(ArgumentError) { RecordingStudioMessages.tag(group, key: "press_center", recording: stale_trash) }
+
+    stale_gone = @press_kit
+    gone_id = stale_gone.id
+    RecordingStudio::Recording.unscoped.where(id: gone_id).delete_all
+    assert_equal gone_id, stale_gone.id
+
+    assert_raises(ArgumentError) do
+      RecordingStudioMessages.create_group(
+        @mount, title: "Gone", actor: @owner, tags: { "press_kit" => stale_gone }
+      )
+    end
+    assert_raises(ArgumentError) { RecordingStudioMessages.tag(group, key: "press_kit", recording: stale_gone) }
+
+    assert_equal groups_before + 1, RecordingStudioMessages::MessageGroup.count
+    assert_equal tags_before, RecordingStudioMessages::MessageGroupTag.count
+    assert_equal 0, RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id).count
+  end
+
+  test "unsaved tagged recording raises ArgumentError and leaves an open transaction usable" do
+    unsaved = RecordingStudio::Recording.new
+    groups_before = RecordingStudioMessages::MessageGroup.count
+
+    ActiveRecord::Base.transaction do
+      error = assert_raises(ArgumentError) do
+        RecordingStudioMessages.create_group(
+          @mount, title: "Unsaved", actor: @owner, tags: { "press_center" => unsaved }
+        )
+      end
+      assert_equal "tagged recording must be saved", error.message
+
+      tag_error = assert_raises(ArgumentError) do
+        RecordingStudioMessages.tag(@alpha, key: "press_center", recording: unsaved)
+      end
+      assert_equal "tagged recording must be saved", tag_error.message
+
+      recovered = RecordingStudioMessages.create_group(@mount, title: "Recovered", actor: @owner)
+      assert_equal "Recovered", recovered.recordable.title
+    end
+
+    assert_equal groups_before + 1, RecordingStudioMessages::MessageGroup.count
+    refute RecordingStudioMessages::MessageGroup.exists?(title: "Unsaved")
+  end
+
+  test "tagged_group_recordings still matches historical rows for a trashed tagged recording" do
+    tagged = RecordingStudioMessages.create_group(
+      @mount, title: "Historic", actor: @owner, tags: { "press_center" => @press_center }
+    )
+    @press_center.update!(trashed_at: Time.current)
+
+    found = RecordingStudioMessages.tagged_group_recordings(
+      mount_recording: @mount,
+      tags: { "press_center" => @press_center }
+    )
+    assert_equal [tagged.id], found.map(&:id)
+  end
+
   test "a failed owner grant leaves no conversation and no tag rows" do
     configuration = RecordingStudioAccessible.configuration
     previous = configuration.access_actor_types

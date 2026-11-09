@@ -29,12 +29,13 @@ module RecordingStudioMessages
     def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil)
       raise Error, Copy.t("errors.not_enabled") unless enabled?(mount_recording)
 
+      mount = live_contact_mount_id!(mount_recording.id)
       text = normalize_body(body)
       checked = Services::MessageGroupTags.normalize_tags(tags)
-      return send_now(mount_recording, current_actor, text, tags: checked) if current_actor.present?
+      return send_now(mount, current_actor, text, tags: checked) if current_actor.present?
 
       queue_verification(
-        mount: mount_recording, name: name, email: email, text: text,
+        mount: mount, name: name, email: email, text: text,
         request: request, session: session, tags: checked
       )
     end
@@ -42,6 +43,7 @@ module RecordingStudioMessages
     def submit_code!(intent:, code:, session:)
       return finish(intent, session) if intent.fulfilled?
 
+      live_contact_mount_id!(intent.mount_recording_id)
       user = accepted_user(intent, code, session)
       return finish(intent, session) unless user
 

@@ -63,6 +63,7 @@ module RecordingStudioMessages
         raise Error, Copy.t("errors.already_sent") if intent.fulfilled?
         raise Error, Copy.t("errors.expired") if intent.expired?
 
+        live_contact_mount_id!(intent.mount_recording_id)
         issued = resend_live_code(intent, request, session)
         intent.update!(otp_challenge_id: issued.challenge_id)
       end
@@ -82,9 +83,10 @@ module RecordingStudioMessages
         return intent.group_recording if intent.fulfilled?
         raise Error, Copy.t("errors.expired") unless intent_open?(intent)
 
+        mount = live_contact_mount_id!(intent.mount_recording_id)
         tags = tags_for_intent(intent)
         settle_identity!(actor, intent)
-        publish_intent!(intent, actor, tags: tags)
+        publish_intent!(intent, actor, mount: mount, tags: tags)
       end
 
       def tags_for_intent(intent)
@@ -97,8 +99,14 @@ module RecordingStudioMessages
         !intent.expired? && intent.open?
       end
 
-      def publish_intent!(intent, actor, tags:)
-        mount = RecordingStudio::Recording.find(intent.mount_recording_id)
+      def live_contact_mount_id!(id)
+        mount = Services::LiveRecording.find(id)
+        return mount if mount&.recordable_type == MESSAGE_MOUNT_TYPE
+
+        raise Error, Copy.t("errors.contact_target_missing")
+      end
+
+      def publish_intent!(intent, actor, mount:, tags:)
         group = fulfill!(
           mount: mount, contact: actor, title: intent.submitted_name, body: intent.body,
           recipients: recipients_for(mount, actor, tags: tags), tags: tags

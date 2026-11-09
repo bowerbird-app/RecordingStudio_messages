@@ -9,7 +9,7 @@ module RecordingStudioMessages
         upsert_tag(
           group_recording_id!(group_recording),
           normalize_key!(key),
-          tagged_recording_id!(recording)
+          live_tagged_recording!(recording).id
         )
       end
 
@@ -18,7 +18,7 @@ module RecordingStudioMessages
           message_group_recording_id: group_recording_id!(group_recording),
           key: normalize_key!(key)
         )
-        scope = scope.where(tagged_recording_id: tagged_recording_id!(recording)) if recording
+        scope = scope.where(tagged_recording_id: tagged_recording!(recording).id) if recording
         scope.delete_all
       end
 
@@ -32,7 +32,7 @@ module RecordingStudioMessages
       end
 
       def restrict(scope, tags)
-        required = normalize_tags(tags)
+        required = normalize_tags(tags, live: false)
         return scope if required.empty?
 
         required.reduce(scope) do |filtered, (tag_key, recording)|
@@ -57,12 +57,13 @@ module RecordingStudioMessages
         RecordingStudioMessages::MessageGroupTag.find_by!(message_group_recording_id: group_id, key: tag_key)
       end
 
-      def normalize_tags(tags)
+      def normalize_tags(tags, live: true)
         return {} if tags.blank?
         raise ArgumentError, "tags must be a Hash" unless tags.is_a?(Hash)
 
         tags.each_with_object({}) do |(key, recording), normalized|
-          assign_normalized_tag!(normalized, key, tagged_recording!(recording))
+          checked = live ? live_tagged_recording!(recording) : tagged_recording!(recording)
+          assign_normalized_tag!(normalized, key, checked)
         end
       end
 
@@ -74,7 +75,9 @@ module RecordingStudioMessages
         return {} if stored.blank?
         raise ArgumentError, "tags must be a Hash" unless stored.is_a?(Hash)
 
-        found = recordings_by_id(stored.values)
+        found = RecordingStudio::Recording.unscoped.where(id: stored.values, trashed_at: nil).index_by do |recording|
+          recording.id.to_s
+        end
         stored.each_with_object({}) do |(key, id), loaded|
           recording = found.fetch(id.to_s) { raise ArgumentError, "tagged recording is missing" }
           assign_normalized_tag!(loaded, key, recording)
@@ -92,13 +95,14 @@ module RecordingStudioMessages
 
       def tagged_recording!(recording)
         raise ArgumentError, "tagged recording is required" if recording.blank?
-        return recording if recording.is_a?(RecordingStudio::Recording)
+        raise ArgumentError, "tagged recording must be a Recording" unless recording.is_a?(RecordingStudio::Recording)
+        raise ArgumentError, "tagged recording must be saved" if recording.id.blank?
 
-        raise ArgumentError, "tagged recording must be a Recording"
+        recording
       end
 
-      def tagged_recording_id!(recording)
-        tagged_recording!(recording).id
+      def live_tagged_recording!(recording)
+        LiveRecording.find(tagged_recording!(recording).id) || raise(ArgumentError, "tagged recording is missing")
       end
 
       def assign_normalized_tag!(normalized, key, recording)
@@ -107,10 +111,6 @@ module RecordingStudioMessages
         raise ArgumentError, "tag key is repeated" if previous && previous.id != recording.id
 
         normalized[tag_key] = recording
-      end
-
-      def recordings_by_id(ids)
-        RecordingStudio::Recording.where(id: ids).index_by { |recording| recording.id.to_s }
       end
 
       def kept_groups(mount_recording)
@@ -124,7 +124,7 @@ module RecordingStudioMessages
         key.to_s.strip.tap { |tag_key| raise ArgumentError, "tag key is required" if tag_key.blank? }
       end
 
-      private_class_method :assign_normalized_tag!, :recordings_by_id, :kept_groups
+      private_class_method :assign_normalized_tag!, :kept_groups, :tagged_recording!, :live_tagged_recording!
     end
   end
 end

@@ -15,7 +15,8 @@ A conversation can take its tags in the same commit that creates it. Hosts can c
 
 - `create_group(mount_recording, title:, actor:, tags: nil)`. `tags:` is a hash of a host key to a `RecordingStudio::Recording`. `nil` and `{}` write no tag rows. The conversation, the owner grant, and the tag rows commit together. A failed owner grant rolls all three back.
 - `tagged_group_recordings(mount_recording:, tags:)`. Returns an unsorted relation of kept `MessageGroup` children of that mount. It does not take an actor and it does not call Accessible. Empty `tags` adds no filter, so the relation is every kept conversation on the mount. This lookup is not an ACL. `press_center` and `press_kit` in the docs are examples.
-- `begin_public_contact` takes `tags: nil`. A signed-out send stores recording ids on `recording_studio_messages_public_contact_intents.tags` (`jsonb`, not null, default `{}`). `complete_public_contact(intent:, actor:)` reads that column. It still has no `tags:` argument. A missing tagged recording raises `RecordingStudioMessages::Error` with "We couldn't send that message. Start a new one." The intent stays open and no conversation is written.
+- `begin_public_contact` takes `tags: nil`. A signed-out send stores recording ids on `recording_studio_messages_public_contact_intents.tags` (`jsonb`, not null, default `{}`). `complete_public_contact(intent:, actor:)` reads that column. It still has no `tags:` argument. A missing or trashed tagged recording, or a missing or trashed mount, raises `RecordingStudioMessages::Error` with "We couldn't send that message. Start a new one." That check reads the current database row. It does not trust a stale Ruby object. It runs before identity confirmation. The intent stays open and no conversation is written.
+- `create_group` and `tag` reload each tagged recording. An unsaved recording raises `ArgumentError` (`tagged recording must be saved`). A missing or trashed recording raises `ArgumentError` (`tagged recording is missing`). Existing tag rows are left in place.
 - The public-contact resolver receives `tags:` only when its parameters include a `tags` keyword or a keyrest. The value is a duplicate hash. When there are no tags, the resolver receives `{}`. A lambda that only takes `mount_recording:` and `actor:` still works.
 
 ### Upgrade notes
@@ -24,7 +25,7 @@ A conversation can take its tags in the same commit that creates it. Hosts can c
 - Keep the 0.11.1 development pins. Recording Studio `v6.3.0`, Flatpack `v0.1.341`, Accessible `v0.24.1`, Notifications `v0.13.1`, Metrics `v0.6.1`, Users `v0.26.3`, Root Switchable `v0.10.0`. Keep the 0.11.2 lockfile floors for Rails `8.1.4.1` and the CVE gems.
 - Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known. Use `tagged_group_recordings` for a count that has no actor. Keep `viewable_group_recordings` for an actor who can view the mount.
 - Add `tags: nil` or `**` to `public_contact_recipient_resolver` when the desk depends on those recordings. Leave a two-keyword lambda as it is.
-- Leave the intent `tags` column alone. `complete_public_contact` reads it.
+- Leave the intent `tags` column alone. `complete_public_contact` reads it. If a tagged recording or the contact mount is missing or trashed at complete, start a new message. The visitor is not confirmed and no conversation is written.
 - A failed owner grant now removes the new conversation. In `0.10.0`, `record!` could commit the conversation and a later grant failure could leave it in place.
 
 ## [0.11.2] - 2026-11-06
