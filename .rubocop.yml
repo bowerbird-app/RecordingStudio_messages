@@ -16,7 +16,6 @@ Style/StringLiterals:
 Layout/LineLength:
   Max: 120
 
-# Relax metrics for test files and generators
 Metrics/ModuleLength:
   Exclude:
     - 'lib/recording_studio_messages.rb'
