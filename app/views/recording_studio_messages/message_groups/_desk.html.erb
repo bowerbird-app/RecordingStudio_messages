@@ -4,6 +4,9 @@
 <% message_recordings = local_assigns[:message_recordings] %>
 <% inbox = local_assigns[:inbox] %>
 <% unread_filter = local_assigns[:unread_filter] %>
+<% mount_recording = local_assigns[:mount_recording] %>
+<% list_toolbar = messages_list_toolbar(mount: mount_recording, actor: current_actor) %>
+<% sidebar_title = inbox == :my_messages ? messages_t("inbox.my_title") : messages_inbox_title(mount_recording) %>
 <% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group, inbox: inbox) %>
 <%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
 <% desk_height_class = local_assigns[:desk_height_class].presence || "h-[calc(100dvh-15.5rem)]" %>
@@ -14,14 +17,12 @@
 <div class="w-full min-w-0 <%= desk_height_class %>">
   <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
     <% layout.sidebar do %>
-      <% if inbox == :my_messages %>
-        <%= render FlatPack::Chat::Header::Component.new(title: messages_t("inbox.my_title")) do |header| %>
-          <% header.right do %>
-            <%= render "recording_studio_messages/message_groups/unread_badge",
-                       unread_count: messages_unread_count %>
-            <%= render FlatPack::Button::Component.new(**messages_unread_filter_button(unread_filter: unread_filter)) %>
-          <% end %>
-
+      <%= render FlatPack::Chat::Header::Component.new(title: sidebar_title) do |header| %>
+        <% header.right do %>
+          <%= render "recording_studio_messages/message_groups/list_toolbar",
+                     inbox: inbox,
+                     unread_filter: unread_filter,
+                     list_toolbar: list_toolbar %>
         <% end %>
       <% end %>
       <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>

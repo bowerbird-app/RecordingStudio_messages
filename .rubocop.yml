@@ -28,6 +28,7 @@ Metrics/ClassLength:
     - 'lib/recording_studio_messages.rb'
     - 'lib/recording_studio_messages/services/my_group_recordings.rb'
     - 'lib/recording_studio_messages/services/message_reads.rb'
+    - 'app/controllers/recording_studio_messages/message_groups_controller.rb'
 
 Metrics/MethodLength:
   Exclude:

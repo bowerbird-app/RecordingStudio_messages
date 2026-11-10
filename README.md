@@ -61,6 +61,29 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.19.0
+
+Messages `0.19.0` filters a mount inbox to unread conversations and opens the list header as a host toolbar slot. The v0.17 panel header hooks, the v0.18 rename, unread cursors, and seen faces stay as they are.
+
+1. Install Messages `0.19.0`. No new migration on top of 0.18.0.
+2. Mount desks and `/my_messages` both show the round unread toggle above the conversation list. `/my_messages` still shows the unread badge next to it.
+3. Define `messages_list_toolbar(mount:, actor:)` when the host needs a control beside that toggle. Check Accessible in the host. Messages does not. `mount` is nil on `/my_messages`.
+
+```ruby
+def messages_list_toolbar(mount:, actor:)
+  return unless mount&.recordable&.key.to_s == "support"
+  return unless RecordingStudioAccessible.authorized?(
+    actor: actor,
+    recording: mount.parent_recording,
+    role: :view
+  )
+
+  render "support/new_conversation", mount: mount, actor: actor
+end
+```
+
+`viewable_group_recordings(..., unread: true)` is the same filter the mount toggle uses. `after:` and `limit:` still page that list.
+
 ### Upgrading to 0.18.0
 
 Messages `0.18.0` lets people with Accessible edit access rename the open conversation from the panel header. The name is still `MessageGroup#title`. Sending, unread cursors, seen faces, and the v0.17 header hooks stay as they are.
@@ -345,7 +368,8 @@ RecordingStudioMessages.untag(group, key: "press_center")
 RecordingStudioMessages.viewable_group_recordings(
   actor: current_actor,
   mount_recording: mount,
-  tags: { "press_center" => press_center }
+  tags: { "press_center" => press_center },
+  unread: true
 )
 RecordingStudioMessages.my_group_recordings(actor: current_actor)
 RecordingStudioMessages.my_group_recordings(actor: current_actor, unread: true)
@@ -365,7 +389,7 @@ RecordingStudioMessages.tagged_group_recordings(
 )
 ```
 
-`viewable_group_recordings` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. The engine index, the staff desk, and the inbox all use this list.
+`viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff desk, and the inbox all use this list.
 
 `my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
 
@@ -556,8 +580,9 @@ The open conversation panel calls three hooks. Each takes the open conversation,
 | `messages_panel_right_header(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header`. Alone, the part is `flex` at every width. When the mobile hook also returns content, this part is `hidden sm:flex` (shown at 640px and up). |
 | `messages_panel_right_header_mobile(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header_mobile`. Shown below `sm` (`flex sm:hidden`). |
 | `messages_panel_after(group_recording, actor:, mount:)` | Once, after the panel, inside the `messages-desk-panel` turbo frame. Use a fixed modal. |
+| `messages_list_toolbar(mount:, actor:)` | Beside the unread toggle in the conversation list header, after the toggle. `mount` is the desk's `MessageMount` recording, or nil on `/my_messages`. Desktop and stacked (mobile) list headers both render this slot. |
 
-A nil or blank return omits that piece, and the panel markup stays as it is without the hook. The panel passes a right-header slot only when that hook returns content (`panel.right_header` and `panel.right_header_mobile`). Each filled slot wraps the host markup in `flex items-center gap-2 whitespace-nowrap p-4`, matching Flatpack's documented `Chat::Panel` actions and `Chat::Header`'s `p-4`. Flatpack 0.1.341's right-header parts have no padding of their own. On Flatpack 0.1.341, `right_header` is `hidden sm:flex` only when `right_header_mobile` is also supplied. A lone `right_header` stays `flex` at every width. When both return content, both slots are in the DOM and CSS hides one, so their ids, Stimulus targets, and `aria-controls` targets must differ. Pass only the mobile hook and the compact actions show below `sm`.
+A nil or blank panel-hook return omits that piece, and the panel markup stays as it is without the hook. The list toolbar hook is the same. A blank return leaves only the unread toggle. The panel passes a right-header slot only when that hook returns content (`panel.right_header` and `panel.right_header_mobile`). Each filled slot wraps the host markup in `flex items-center gap-2 whitespace-nowrap p-4`, matching Flatpack's documented `Chat::Panel` actions and `Chat::Header`'s `p-4`. Flatpack 0.1.341's right-header parts have no padding of their own. On Flatpack 0.1.341, `right_header` is `hidden sm:flex` only when `right_header_mobile` is also supplied. A lone `right_header` stays `flex` at every width. When both return content, both slots are in the DOM and CSS hides one, so their ids, Stimulus targets, and `aria-controls` targets must differ. Pass only the mobile hook and the compact actions show below `sm`.
 
 The same partial renders on the staff desk, `/my_messages`, and the `/my_messages/:id` Turbo stream that replaces the panel. A host header updates whenever that panel updates. Sending a line still replaces only the message list and composer.
 
