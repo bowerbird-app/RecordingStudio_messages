@@ -78,6 +78,9 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_includes css, ".min-h-dvh"
     assert_includes css, ".gap-\\[var\\(--stack-gap-lg\\)\\]{gap:var(--stack-gap-lg)}"
     assert_includes css, ".mb-\\[var\\(--stack-gap-lg\\)\\]{margin-bottom:var(--stack-gap-lg)}"
+    assert_includes css, ".rounded-\\[var\\(--chat-message-radius\\)\\]"
+    assert_includes css, ".px-\\[var\\(--chat-message-padding-x\\)\\]"
+    assert_includes css, ".py-\\[var\\(--chat-message-padding-y\\)\\]"
   end
 
   test "Users profile screens render in the core default layout" do

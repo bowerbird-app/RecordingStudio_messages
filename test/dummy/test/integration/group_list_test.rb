@@ -66,6 +66,9 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name='message[body]'][rows='1']"
     assert_includes response.body, "rounded-[var(--chat-composer-radius)]"
     assert_includes response.body, "min-h-[var(--chat-composer-control-height)]"
+    assert_includes response.body, "rounded-[var(--chat-message-radius)]"
+    assert_includes response.body, "px-[var(--chat-message-padding-x)]"
+    assert_includes response.body, "py-[var(--chat-message-padding-y)]"
     refute_includes response.body, "rounded-lg border-[var(--chat-input-border-color)]"
   end
 
