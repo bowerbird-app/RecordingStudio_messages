@@ -142,6 +142,7 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "bin/rails db:migrate"
     assert_includes install_guide, "auth, layout, and current actor integration"
     assert_includes install_guide, "my_messages_path"
+    assert_includes install_guide, "`flat_pack/copy`"
   end
 
   private

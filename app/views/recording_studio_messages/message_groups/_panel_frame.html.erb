@@ -5,7 +5,8 @@
                message_recordings: local_assigns[:message_recordings],
                current_actor: local_assigns.fetch(:current_actor),
                form_url: local_assigns[:form_url],
-               return_to: local_assigns[:return_to] %>
+               return_to: local_assigns[:return_to],
+               inbox: local_assigns[:inbox] %>
   <% else %>
     <%= render FlatPack::Chat::SystemMessage::Component.new do %>
       <%= messages_t("inbox.empty_panel") %>

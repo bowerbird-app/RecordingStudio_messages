@@ -16,6 +16,48 @@ module RecordingStudioMessages
       end
     end
 
+    def messages_group_rename_url(group_recording, inbox: nil)
+      path = if respond_to?(:rename_message_group_path)
+               rename_message_group_path(group_recording)
+             else
+               recording_studio_messages.rename_message_group_path(group_recording)
+             end
+      return path unless inbox == :my_messages
+
+      "#{path}?inbox=my_messages"
+    end
+
+    def messages_can_rename_group?(group_recording, actor: nil)
+      actor ||= current_messages_actor if respond_to?(:current_messages_actor, true)
+      return false if group_recording.blank? || actor.blank?
+
+      RecordingStudioAccessible.authorized?(
+        actor: actor,
+        recording: group_recording,
+        role: :edit
+      )
+    end
+
+    def messages_panel_header_title(group_recording, actor:, inbox: nil)
+      title = group_recording.recordable.title
+      return title unless messages_can_rename_group?(group_recording, actor: actor)
+
+      render FlatPack::InlineEdit::Component.new(
+        **inline_edit_title_arguments(group_recording, title, inbox: inbox)
+      )
+    end
+
+    def inline_edit_title_arguments(group_recording, title, inbox: nil)
+      {
+        name: "message_group[title]", value: title, tag: :span,
+        update_url: messages_group_rename_url(group_recording, inbox: inbox),
+        method: :patch, maxlength: RecordingStudioMessages::MessageGroup::TITLE_MAX,
+        required: true, save_on_blur: true,
+        label: Copy.t("panel.title_label"),
+        placeholder: Copy.t("panel.title_placeholder")
+      }
+    end
+
     def messages_panel_return_to
       request.fullpath
     end

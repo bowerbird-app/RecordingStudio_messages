@@ -1,0 +1,9 @@
+<%= turbo_stream.update messages_inbox_title_id(@group_recording) do %>
+  <%= render FlatPack::Chat::InboxRow::Component.new(
+        **messages_inbox_row(
+          @group_recording,
+          selected: @group_recording,
+          inbox: @rename_inbox
+        ).except(:title_frame_id)
+      ) %>
+<% end %>

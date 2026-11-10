@@ -2,7 +2,8 @@
   <%= render "recording_studio_messages/message_groups/panel",
              group_recording: @group_recording,
              message_recordings: @message_recordings,
-             current_actor: current_messages_actor %>
+             current_actor: current_messages_actor,
+             inbox: :my_messages %>
 <% end %>
 
 <%= turbo_stream.update messages_inbox_unread_dot_id(@group_recording) do %>

@@ -2,6 +2,7 @@
 
 RecordingStudioMessages::Engine.routes.draw do
   resources :message_groups, only: %i[index show] do
+    patch :rename, on: :member
     resources :messages, only: [:create]
   end
 

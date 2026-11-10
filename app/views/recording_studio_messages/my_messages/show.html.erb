@@ -2,7 +2,8 @@
   <%= render "recording_studio_messages/message_groups/panel_frame",
              group_recording: @group_recording,
              message_recordings: @message_recordings,
-             current_actor: current_messages_actor %>
+             current_actor: current_messages_actor,
+             inbox: :my_messages %>
 <% else %>
   <% content_for :title, messages_t("inbox.my_title") %>
   <% flat_pack_page_nav(

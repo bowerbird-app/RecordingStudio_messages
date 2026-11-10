@@ -32,6 +32,10 @@ module RecordingStudioMessages
       "messages-unread-dot-#{group_recording.id}"
     end
 
+    def messages_inbox_title_id(group_recording)
+      "messages-inbox-title-#{group_recording.id}"
+    end
+
     def messages_inbox_row(group_recording, selected: nil, inbox: nil, page: nil)
       latest = inbox_latest_message(group_recording, page)
       messages_inbox_row_arguments(group_recording, latest, selected: selected, inbox: inbox, page: page)
@@ -52,7 +56,8 @@ module RecordingStudioMessages
         avatar_items: messages_inbox_avatar_items(group_recording, page: page, unread: unread),
         leading: messages_inbox_unread_dot(group_recording, unread: unread, page: page),
         active: active,
-        data: { unread: unread }
+        data: { unread: unread },
+        title_frame_id: messages_inbox_title_id(group_recording)
       }.merge(messages_inbox_row_link(group_recording, inbox: inbox, active: active))
     end
 
