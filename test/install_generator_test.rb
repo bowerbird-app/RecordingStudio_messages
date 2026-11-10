@@ -143,6 +143,8 @@ class InstallGeneratorTest < Minitest::Test
     assert_includes install_guide, "auth, layout, and current actor integration"
     assert_includes install_guide, "my_messages_path"
     assert_includes install_guide, "`flat_pack/copy`"
+    assert_includes install_guide, "flat-pack--chat-timestamp-reveal"
+    assert_includes install_guide, "build_stimulus.js"
   end
 
   private

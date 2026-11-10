@@ -8,12 +8,21 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_merge_updates_known_attributes
-    @configuration.merge!(api_key: "abc123", timeout: 9, enable_feature_x: true, read_receipts: true)
+    @configuration.merge!(
+      api_key: "abc123", timeout: 9, enable_feature_x: true, read_receipts: true, time_break_after: 20
+    )
 
     assert_equal "abc123", @configuration.api_key
     assert_equal 9, @configuration.timeout
     assert_equal true, @configuration.enable_feature_x
     assert_equal true, @configuration.read_receipts
+    assert_equal 20.minutes, @configuration.time_break_after
+  end
+
+  def test_time_break_after_accepts_a_duration
+    @configuration.time_break_after = 8.minutes
+
+    assert_equal 8.minutes, @configuration.time_break_after
   end
 
   def test_merge_ignores_unknown_keys
@@ -50,6 +59,7 @@ class ConfigurationTest < Minitest::Test
     assert_nil configuration.public_contact_success_redirect_url
     assert_nil configuration.public_contact_success_redirect_label
     assert_equal false, configuration.read_receipts
+    assert_equal 15.minutes, configuration.time_break_after
     assert_nil configuration.layout
     assert_instance_of RecordingStudio::Hooks, configuration.hooks
   ensure

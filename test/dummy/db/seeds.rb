@@ -169,6 +169,18 @@ begin
     RecordingStudio::Recording.find_by(recordable: recordable, parent_recording: support_group, trashed_at: nil)
   end
   if support_messages.size >= 3
+    origin = Time.zone.now.change(hour: 10, min: 0, sec: 0)
+    origin -= 1.day if origin > Time.current
+    [ 0, 5, 25 ].each_with_index do |minutes, index|
+      recording = support_messages[index]
+      stamped = origin + minutes.minutes
+      recording.update_columns(created_at: stamped, updated_at: stamped)
+    end
+    support_messages = support_messages.map(&:reload)
+    RecordingStudioMessages::MessageGroup.unscoped.where(id: support_group.recordable_id).update_all(
+      last_message_at: support_messages.last.created_at
+    )
+
     pin_seen = lambda do |actor, message|
       RecordingStudioMessages::Services::MessageReads.new(actor: actor).upsert_cursor(
         group_recording: support_group,

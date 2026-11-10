@@ -89,8 +89,17 @@ module RecordingStudioMessages
     end
 
     def message_sender_for(message_recording)
-      created = message_recording.events.where(action: "created").order(:occurred_at, :created_at).first
-      created&.actor
+      created_event_for(message_recording)&.actor
+    end
+
+    def created_event_for(message_recording)
+      association = message_recording.association(:events)
+      unless association.loaded?
+        return association.scope.where(action: "created").order(:occurred_at, :created_at).first
+      end
+
+      created = association.target.select { |event| event.action == "created" }
+      created.min_by { |event| [event.occurred_at || event.created_at, event.created_at] }
     end
 
     def message_sender_name(actor)
@@ -131,10 +140,27 @@ module RecordingStudioMessages
     end
 
     def message_clock(message_recording)
-      time = message_timestamp(message_recording)
+      format_message_clock(message_timestamp(message_recording))
+    end
+
+    def format_message_clock(time)
       return time.to_s unless time.respond_to?(:strftime)
 
       time.strftime("%l:%M %p").strip
+    end
+
+    def message_day_break?(previous, current)
+      previous.blank? || message_timestamp(previous).to_date != message_timestamp(current).to_date
+    end
+
+    def message_time_break?(previous, current)
+      return false if previous.blank? || message_day_break?(previous, current)
+
+      previous_at = message_timestamp(previous)
+      current_at = message_timestamp(current)
+      return false if previous_at.blank? || current_at.blank?
+
+      (current_at - previous_at) > RecordingStudioMessages.configuration.time_break_after
     end
 
     def message_seen_by(group_recording, viewer:, latest_message: nil)
