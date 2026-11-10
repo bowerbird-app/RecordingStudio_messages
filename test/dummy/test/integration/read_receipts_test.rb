@@ -55,11 +55,24 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     first_seen = css_select("[data-messages-seen-for='#{first.id}']").to_s
     second_seen = css_select("[data-messages-seen-for='#{second.id}']").to_s
     assert_includes first_seen, "Jules"
+    assert_includes first_seen, "justify-start"
     assert_includes second_seen, "+1"
+    assert_includes second_seen, "justify-start"
+    refute_includes first_seen, "-space-x-"
+    refute_includes second_seen, "-space-x-"
     refute_includes first_seen, "Casey Patron"
     refute_includes second_seen, "Casey Patron"
     assert_includes response.body, "Seen by"
     refute_includes response.body, SENT_CHECK_PATH
+
+    sign_in @owner
+    Current.actor = @owner
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    owner_first = css_select("[data-messages-seen-for='#{first.id}']").to_s
+    assert_includes owner_first, "justify-end"
+    refute_includes owner_first, "Ada Staff"
   end
 
   private

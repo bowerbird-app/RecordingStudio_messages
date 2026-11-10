@@ -85,10 +85,6 @@ module RecordingStudioMessages
       )
     end
 
-    def message_seen_items(actors)
-      Array(actors).map { |actor| { name: message_sender_name(actor) } }
-    end
-
     def message_seen_label(actors)
       names = Array(actors).map { |actor| message_sender_name(actor) }.join(", ")
       Copy.t("panel.seen_by", names: names)

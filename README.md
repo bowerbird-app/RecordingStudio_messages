@@ -67,7 +67,7 @@ Messages `0.16.0` can show who has seen which line. Unread cursors, `#show` mark
 
 1. Install Messages `0.16.0`. No new migration on top of 0.15.0.
 2. Leave `read_receipts` off (the default) if seen faces should stay hidden.
-3. Set `RecordingStudioMessages.configure { |c| c.read_receipts = true }` to show up to three `AvatarGroup` faces under each person's last-read line, then `+N`.
+3. Set `RecordingStudioMessages.configure { |c| c.read_receipts = true }` to show up to three `Avatar` faces under each person's last-read line, then `+N`. Flatpack `AvatarGroup` always overlaps, so the row is a `Cluster` of `Avatar`s instead.
 
 `readers_by_message(group_recording:, viewer:)` is the same lookup the thread uses. It only includes people who currently have a ranked Accessible grant on that conversation. Tags never grant access. Opening a conversation still marks that person read on `#show` only. Other open windows pick up new faces on the next render.
 

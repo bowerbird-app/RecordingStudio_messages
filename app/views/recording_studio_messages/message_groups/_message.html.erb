@@ -63,8 +63,13 @@
         <%= message_recording.recordable&.body %>
       <% end %>
     <% end %>
+    <% if readers.any? %>
+      <% group.message do %>
+        <%= render "recording_studio_messages/message_groups/message_seen",
+                   message_recording: message_recording,
+                   actors: readers,
+                   outgoing: outgoing %>
+      <% end %>
+    <% end %>
   <% end %>
-  <%= render "recording_studio_messages/message_groups/message_seen",
-             message_recording: message_recording,
-             actors: readers %>
 </div>

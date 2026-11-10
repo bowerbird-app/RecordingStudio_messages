@@ -1,19 +1,30 @@
 <% actors = local_assigns.fetch(:actors) %>
 <% message_recording = local_assigns.fetch(:message_recording) %>
-<% items = message_seen_items(actors) %>
-<% unless items.empty? %>
+<% outgoing = local_assigns.fetch(:outgoing) %>
+<% visible = Array(actors).take(3) %>
+<% overflow = Array(actors).size - visible.size %>
+<% unless visible.empty? %>
   <%= render FlatPack::Cluster::Component.new(
     gap: :sm,
     align: :center,
-    justify: :end,
-    data: { messages_seen_for: message_recording.id }
+    justify: outgoing ? :end : :start,
+    data: { messages_seen_for: message_recording.id },
+    aria: { label: message_seen_label(actors) }
   ) do %>
-    <%= render FlatPack::AvatarGroup::Component.new(
-      items: items,
-      max: 3,
-      size: :xs,
-      overlap: :sm,
-      aria: { label: message_seen_label(actors) }
-    ) %>
+    <% visible.each do |actor| %>
+      <%= render FlatPack::Avatar::Component.new(
+        name: message_sender_name(actor),
+        size: :xs,
+        shape: :circle
+      ) %>
+    <% end %>
+    <% if overflow.positive? %>
+      <%= render FlatPack::Avatar::Component.new(
+        initials: "+#{overflow}",
+        alt: message_seen_label(Array(actors).drop(3)),
+        size: :xs,
+        shape: :circle
+      ) %>
+    <% end %>
   <% end %>
 <% end %>

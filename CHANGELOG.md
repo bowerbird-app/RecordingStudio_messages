@@ -19,7 +19,7 @@ A conversation shows who has seen which line when the host turns that on. The fa
 
 - `RecordingStudioMessages.configure { |c| c.read_receipts = true }`. Default is `false`. Read cursors stay private until the host opts in.
 - `readers_by_message(group_recording:, viewer:, messages: nil)` returns a hash of message recording id to actors. It uses `recording_studio_message_reads`, keeps people who currently have a ranked Accessible grant on that conversation, and drops the viewer. One batched lookup per conversation render. No new table.
-- When the setting is on, each of those people shows as a small `AvatarGroup` face under the newest line they have read. At most three faces, then `+N`. Names go in the group label and tooltip. Faces update on the next render. Opening a conversation does not broadcast seen faces to other open windows.
+- When the setting is on, each of those people shows as a small `Avatar` under the newest line they have read. Faces sit in a `Cluster` (no overlap) in the same column as the bubble, right for outgoing and left for incoming. At most three faces, then a `+N` avatar. Names go in the group label and tooltip. Faces update on the next render. Opening a conversation does not broadcast seen faces to other open windows.
 
 ### Upgrade notes
 
