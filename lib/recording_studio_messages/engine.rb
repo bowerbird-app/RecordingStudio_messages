@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
+require_relative "engine_frontend"
+
 module RecordingStudioMessages
   class Engine < ::Rails::Engine
     isolate_namespace RecordingStudioMessages
+    include EngineFrontend
 
     class << self
       def apply_model_extensions(target)
@@ -51,7 +54,6 @@ module RecordingStudioMessages
       end
     end
 
-    # Run before_initialize hooks
     initializer "recording_studio_messages.before_initialize", before: "recording_studio_messages.load_config" do |_app|
       RecordingStudioMessages.configuration.hooks.run(:before_initialize, self)
     end
@@ -110,11 +112,6 @@ module RecordingStudioMessages
       end
     end
 
-    initializer "recording_studio_messages.metrics" do
-      config.to_prepare { RecordingStudioMessages::Metrics.register! }
-    end
-
-    # Apply model extensions when models are loaded
     initializer "recording_studio_messages.apply_model_extensions" do
       config.to_prepare do
         next unless defined?(ActiveRecord::Base)
@@ -127,7 +124,6 @@ module RecordingStudioMessages
       end
     end
 
-    # Apply controller extensions
     initializer "recording_studio_messages.apply_controller_extensions" do
       config.to_prepare do
         next unless defined?(ActionController::Base)

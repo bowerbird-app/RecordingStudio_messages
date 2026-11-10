@@ -7,6 +7,7 @@
      viewer: current_actor,
      latest_message: latest_message
    ) %>
+<% visible_references = message_references_visible(message_recordings, actor: current_actor) %>
 
 <%= render FlatPack::Chat::MessageList::Component.new(
   stick_to_bottom: true,
@@ -28,7 +29,8 @@
                  message_recording: message_recording,
                  current_actor: current_actor,
                  last_message: message_recording == latest_message,
-                 readers: message_recording == latest_message ? seen_by : [] %>
+                 readers: message_recording == latest_message ? seen_by : [],
+                 visible_references: visible_references[message_recording.id.to_s] %>
       <% previous = message_recording %>
     <% end %>
   <% end %>

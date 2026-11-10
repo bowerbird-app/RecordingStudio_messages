@@ -88,6 +88,35 @@ module RecordingStudioMessages
       "conversation-#{group_recording.id}-composer"
     end
 
+    def messages_composer_actions(group_recording, actor:, mount:)
+      RecordingStudioMessages.composer_actions_for(group_recording, actor, mount)
+    end
+
+    def messages_composer_action_modal_id(action)
+      "messages-composer-action-#{action.key}"
+    end
+
+    def linked_message_body(text)
+      RecordingStudioMessages.auto_link(text).html_safe
+    end
+
+    def message_references_visible(message_recordings, actor:)
+      RecordingStudioMessages.visible_message_references(message_recordings, actor: actor)
+    end
+
+    def message_reference_title(recording)
+      recordable = recording&.recordable
+      return Copy.t("composer.linked_item") if recordable.blank?
+      return recordable.title if recordable.respond_to?(:title) && recordable.title.present?
+      return recordable.name if recordable.respond_to?(:name) && recordable.name.present?
+
+      Copy.t("composer.linked_item")
+    end
+
+    def message_embed_partial_for(recording)
+      RecordingStudioMessages.message_embed_partial(recording.recordable_type)
+    end
+
     def message_sender_for(message_recording)
       created_event_for(message_recording)&.actor
     end

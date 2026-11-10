@@ -1,0 +1,31 @@
+<% modal_id = local_assigns.fetch(:modal_id) %>
+<% mount = local_assigns[:mount] %>
+<% actor = local_assigns[:actor] %>
+<% pages = dummy_attachable_pages(actor: actor, mount: mount) %>
+
+<%= render FlatPack::Modal::Component.new(id: modal_id, title: t("dummy.composer.attach_page"), size: :sm) do |modal| %>
+  <% modal.body do %>
+    <div class="flex flex-col gap-2" data-controller="page-picker">
+      <% if pages.empty? %>
+        <%= render FlatPack::Text::Component.new(text: t("dummy.composer.no_pages"), size: :sm) %>
+      <% else %>
+        <% pages.each do |page_recording| %>
+          <% title = message_reference_title(page_recording) %>
+          <% url = dummy_page_href(page_recording) %>
+          <%= render FlatPack::Button::Component.new(
+            text: title,
+            style: :secondary,
+            size: :md,
+            type: :button,
+            data: {
+              action: "click->page-picker#insert",
+              recording_id: page_recording.id,
+              title: title,
+              url: url
+            }
+          ) %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

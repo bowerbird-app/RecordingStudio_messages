@@ -22,6 +22,7 @@ en:
         add_file: Add a file
         upload: Upload files or images
         placeholder: Write a message
+        linked_item: Linked item
       inbox:
         title: Conversations
         my_title: My messages
@@ -62,3 +63,4 @@ en:
         cannot_send_conversation: You cannot send to this conversation
         attach_failed: Could not attach that file
         not_a_conversation: Messages must be sent in a conversation
+        cannot_attach_item: You can't attach that

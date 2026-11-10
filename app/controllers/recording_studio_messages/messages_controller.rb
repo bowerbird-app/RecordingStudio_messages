@@ -21,7 +21,8 @@ module RecordingStudioMessages
         body: message_params[:body],
         actor: current_messages_actor,
         files: uploaded_files,
-        url: panel_url
+        url: panel_url,
+        references: submitted_references
       )
     end
 
@@ -37,11 +38,24 @@ module RecordingStudioMessages
     end
 
     def message_params
-      params.fetch(:message, {}).permit(:body, files: [])
+      params.fetch(:message, {}).permit(:body, files: [], references: %i[recording_id title url])
     end
 
     def uploaded_files
       Array(message_params[:files]).compact_blank
+    end
+
+    def submitted_references
+      raw = params.dig(:message, :references)
+      return [] if raw.blank?
+
+      items = raw.is_a?(Array) ? raw : raw.to_unsafe_h.values
+      items.filter_map do |item|
+        next if item.blank?
+
+        permitted = item.respond_to?(:permit) ? item.permit(:recording_id, :title, :url) : item
+        permitted.to_h.symbolize_keys
+      end
     end
 
     def panel_url

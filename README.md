@@ -23,7 +23,7 @@ Two desks are two mounts of this gem, not two gems.
 | `MessageGroup` | A conversation | Accessible |
 | `Message` | A line in that conversation | Attachable |
 
-Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency. Message group tags are a join table next to this tree, not children. Hosts choose the keys.
+Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency. Message group tags are a join table next to this tree, not children. Hosts choose the keys. Message references are the same kind of fact table. They point a line at another recording. They are not children.
 
 ## Install
 
@@ -60,6 +60,62 @@ bin/rails generate recording_studio_attachable:migrations
 bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
+
+### Composer actions and message cards
+
+Other gems can add a + menu item and a card under a line. This gem does not name those gems. Register in a host or gem initializer.
+
+`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the desk mount. A missing `if:` keeps the item. The + menu renders every item that returns true. Each item's `partial` is a modal or popover. That partial inserts into the composer with a document event:
+
+```js
+window.dispatchEvent(new CustomEvent("messages:composer-insert", {
+  bubbles: true,
+  detail: {
+    text: "Brand notes\n/pages/…",
+    reference: { recording_id: "…", title: "Brand notes", url: "/pages/…" }
+  }
+}))
+```
+
+The composer appends `text` to the box, stores pending references in hidden fields, and submits them with the line. Do not parse references out of the body.
+
+`send_message(..., references:)` writes those rows in the same commit as the line. Each value may be a recording, an id, or `{ recording_id:, title:, url: }`. The sender must have Accessible `:view` on the target. The target must sit in the subtree of the mount's parent (the messages-enabled recording). The helper appends title plus URL to the body when that URL is not already there, so notices, mail, and search still read as plain text.
+
+`register_message_embed` chooses the card partial for a recordable class name. An unregistered type falls back to Flatpack `Chat::Attachment` (`type: :file`). Render loads one page of references in one query, then filters with Accessible `recordings_for` on each distinct parent. Missing, trashed, and unseen targets render nothing. They do not leak a title.
+
+```ruby
+RecordingStudioMessages.register_composer_action(
+  :attach_page,
+  label: "Attach a page",
+  icon: "document-text",
+  partial: "dummy/page_picker",
+  if: ->(_group, actor, mount) { actor.present? && mount.present? }
+)
+
+RecordingStudioMessages.register_message_embed("Page", partial: "dummy/page_embed")
+
+RecordingStudioMessages.send_message(
+  group_recording: group,
+  body: "See this page.",
+  actor: current_actor,
+  references: [{ recording_id: page.id, title: "Brand notes", url: "/pages/#{page.id}" }]
+)
+```
+
+Pin `recording_studio_messages/controllers` in the host importmap so `recording-studio-messages--composer` loads. The dummy pin sits next to the Admin pin. Message bodies auto-link `http` and `https` only. The helper escapes first, then wraps. `javascript:` and `data:` stay text.
+
+The dummy staff desk proves the + item, the picker, and a Brand notes card. Screenshots live in `docs/screenshots/composer-plus-menu-desktop.png`, `docs/screenshots/composer-page-picker-desktop.png`, `docs/screenshots/message-page-card-desktop.png`, and the matching `*-mobile.png` files.
+
+### Upgrading to 0.21.0
+
+Messages `0.21.0` adds composer actions, typed recording references, and safe URL auto-linking. Conversation desks, unread cursors, seen faces, and the v0.17–v0.19 host slots stay as they are.
+
+1. Install Messages `0.21.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Pin `app/javascript/recording_studio_messages/controllers` in the host importmap (`under: "controllers/recording_studio_messages"`).
+4. Call `register_composer_action` and `register_message_embed` from a host or gem initializer when you need a + item or a typed card. Leave them unregistered to keep the upload-only + menu. Auto-linking still runs.
+
+The migration creates `recording_studio_message_references` (`message_recording_id`, `target_recording_id`, unique pair). Tags never grant access. Accessible does not learn about Messages.
 
 ### Upgrading to 0.20.1
 

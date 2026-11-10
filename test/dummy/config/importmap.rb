@@ -13,5 +13,6 @@ if defined?(FlatPack::Engine)
   pin "flat_pack/copy", to: "flat_pack/copy.js", preload: false
 end
 
+pin_all_from RecordingStudioMessages::Engine.root.join("app/javascript/recording_studio_messages/controllers"), under: "controllers/recording_studio_messages", to: "recording_studio_messages/controllers", preload: false
 pin_all_from RecordingStudioAdmin::Engine.root.join("app/javascript/recording_studio_admin/controllers"), under: "controllers/recording_studio_admin", to: "recording_studio_admin/controllers", preload: false
 pin_all_from RecordingStudioTermsAndConditions::Engine.root.join("app/javascript/recording_studio_terms_and_conditions/controllers"), under: "controllers/recording_studio_terms_and_conditions", to: "recording_studio_terms_and_conditions/controllers", preload: false

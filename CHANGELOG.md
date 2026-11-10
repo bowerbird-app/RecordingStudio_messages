@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-10
+
+Composer + menu items and typed recording cards are host/gem registries. Message bodies auto-link `http` and `https` after HTML escape. Conversation desks, unread, seen faces, and the v0.17–v0.19 slots stay as they are.
+
+### Added
+
+- `register_composer_action(key, label:, icon:, partial:, if:)`. The + menu lists upload plus every registered item whose `if` returns true. The item's partial inserts with `messages:composer-insert` (`text`, `reference: { recording_id, title, url }`). The composer keeps pending references in hidden fields.
+- `register_message_embed(recordable_type, partial:)`. Unregistered types use Flatpack `Chat::Attachment` (`type: :file`). Flatpack has no dedicated chat link or embed card. Ask Flatpack for one if a typed card should look like a chat attachment instead of a host `Card`.
+- `send_message(..., references:)` writes `recording_studio_message_references` in the same commit. The sender needs Accessible `:view` on the target. The target must sit under the mount parent. Title plus URL is appended to the body when missing.
+- Thread render loads one page of references in a batched query, then `recordings_for` per distinct parent. Unseen, trashed, and missing targets render nothing.
+- `http`/`https` auto-link with `rel="noopener noreferrer nofollow"` and `target=_blank`.
+
+### Upgrade notes
+
+- Bump to **0.21.0**.
+- Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Pin `recording_studio_messages/controllers` in the host importmap.
+- Register composer actions and embeds from the host or another gem. Defaults stay no-ops aside from auto-linking.
+
 ## [0.20.1] - 2026-11-10
 
 The conversation list header no longer shows the mount parent name (or "My messages") by default. Unread controls, the host toolbar slot, and the open conversation header stay as they are.

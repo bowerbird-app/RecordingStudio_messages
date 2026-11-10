@@ -32,6 +32,24 @@ module DummyMessagesPanelHelper
     )
   end
 
+  def dummy_attachable_pages(actor:, mount:)
+    parent = mount&.parent_recording
+    return [] if actor.blank? || parent.blank?
+
+    RecordingStudioAccessible.recordings_for(
+      actor: actor,
+      parent_recording: parent,
+      minimum_role: :view,
+      recordable_type: "Page"
+    ).includes(:recordable)
+  end
+
+  def dummy_page_href(recording)
+    return if recording.blank?
+
+    "/pages/#{recording.id}"
+  end
+
   def dummy_support_thread_header?(group_recording, actor:, mount:)
     return if actor.blank?
     return unless mount&.recordable&.key.to_s == DummyCatalog::SUPPORT_KEY

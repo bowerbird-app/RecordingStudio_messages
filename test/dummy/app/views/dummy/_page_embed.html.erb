@@ -1,0 +1,13 @@
+<% recording = local_assigns.fetch(:recording) %>
+<% title = message_reference_title(recording) %>
+<% href = dummy_page_href(recording) %>
+<%= render FlatPack::Card::Component.new(
+  href: href,
+  clickable: href.present?,
+  padding: :sm,
+  hover: :subtle
+) do |card| %>
+  <% card.body do %>
+    <%= render FlatPack::Text::Component.new(text: title, size: :sm, weight: :medium) %>
+  <% end %>
+<% end %>

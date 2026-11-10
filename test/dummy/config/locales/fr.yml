@@ -58,6 +58,7 @@ fr:
         add_file: Ajouter un fichier
         upload: Envoyer des fichiers ou des images
         placeholder: Écrire un message
+        linked_item: Élément lié
       inbox:
         title: Conversations
         my_title: Mes messages
@@ -98,6 +99,7 @@ fr:
         cannot_send_conversation: Vous ne pouvez pas envoyer dans cette conversation
         attach_failed: Impossible de joindre ce fichier
         not_a_conversation: Les messages s’envoient dans une conversation
+        cannot_attach_item: Vous ne pouvez pas joindre cela
   dummy:
     home:
       title: Hôte dummy
@@ -106,6 +108,9 @@ fr:
       inbox: Boîte de réception
       my_messages: Mes messages
       admin: Admin
+    composer:
+      attach_page: Joindre une page
+      no_pages: Aucune page à joindre pour l’instant.
   flatpack:
     chat:
       placeholder: Écrire un message…

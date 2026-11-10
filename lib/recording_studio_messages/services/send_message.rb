@@ -7,36 +7,54 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(group_recording:, body:, actor:, files: [], url: nil, notify: true)
+      def initialize(group_recording:, body:, actor:, files: [], url: nil, notify: true, references: [])
         @group_recording = group_recording
         @body = body.to_s
         @actor = actor
         @files = Array(files)
         @url = url
         @notify = notify
+        @reference_items = Array(references)
       end
 
       def call
         validate!
         authorize!
-
-        message_recording = record_message
-        stamp_last_message_at!(message_recording)
-        mark_sender_read!(message_recording)
-        attach_files!(message_recording)
-        notify_recipients!(message_recording) if @notify
-        message_recording
+        @checked_references = checked_references
+        @body = MessageReferences.fallback_body(@body, @reference_items)
+        validate_content!
+        persist!
       end
 
       private
+
+      def persist!
+        SendMessagePersist.new(
+          group_recording: @group_recording,
+          actor: @actor,
+          body: @body,
+          files: @files,
+          url: @url,
+          notify: @notify,
+          references: @checked_references
+        ).call
+      end
 
       def validate!
         raise ArgumentError, "group recording is required" if @group_recording.blank?
         raise ArgumentError, "actor is required" if @actor.blank?
         raise RecordingStudioMessages::Error, Copy.t("errors.not_a_conversation") unless group_recordable?
-        return if @body.present? || @files.any?
+      end
+
+      def validate_content!
+        return if @body.present? || @files.any? || @checked_references.any?
 
         raise RecordingStudioMessages::Error, Copy.t("errors.write_or_attach")
+      end
+
+      def checked_references
+        checker = MessageReferences.new(group_recording: @group_recording, actor: @actor)
+        @reference_items.map { |item| checker.live_target!(item) }.uniq(&:id)
       end
 
       def authorize!
@@ -51,63 +69,6 @@ module RecordingStudioMessages
 
       def group_recordable?
         @group_recording.recordable_type == "RecordingStudioMessages::MessageGroup"
-      end
-
-      def record_message
-        message = RecordingStudioMessages::Message.new(body: @body)
-        RecordingStudio.record!(
-          action: "created",
-          recordable: message,
-          root_recording: @group_recording.root_recording || @group_recording,
-          parent_recording: @group_recording,
-          actor: @actor
-        ).recording
-      end
-
-      def stamp_last_message_at!(message_recording)
-        recordable = @group_recording.recordable
-        return unless recordable.respond_to?(:last_message_at)
-
-        RecordingStudioMessages::MessageGroup.unscoped.where(id: recordable.id).update_all(
-          last_message_at: message_recording.created_at
-        )
-        recordable.reload
-      end
-
-      def mark_sender_read!(message_recording)
-        RecordingStudioMessages::Services::MessageReads.new(actor: @actor).upsert_cursor(
-          group_recording: @group_recording,
-          last_read_at: message_recording.created_at,
-          last_read_message_recording_id: message_recording.id
-        )
-      end
-
-      def attach_files!(message_recording)
-        @files.each { |file| attach_file!(message_recording, file) }
-      end
-
-      def attach_file!(message_recording, file)
-        uploaded = UploadedFile.new(file)
-        result = message_recording.import_attachment(
-          io: uploaded.io,
-          filename: uploaded.filename,
-          content_type: uploaded.content_type,
-          actor: @actor,
-          name: uploaded.name
-        )
-        return if result.present?
-
-        raise RecordingStudioMessages::Error, Copy.t("errors.attach_failed")
-      end
-
-      def notify_recipients!(message_recording)
-        NotifyGrantedActors.call(
-          group_recording: @group_recording,
-          message_recording: message_recording,
-          actor: @actor,
-          body: @body,
-          url: @url
-        )
       end
     end
   end

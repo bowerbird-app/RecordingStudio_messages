@@ -9,5 +9,7 @@
   <%= render "recording_studio_messages/message_groups/composer",
              group_recording: @group_recording,
              form_url: messages_panel_form_url(@group_recording),
-             return_to: params[:return_to].presence || message_group_path(@group_recording) %>
+             return_to: params[:return_to].presence || message_group_path(@group_recording),
+             mount: @group_recording.parent_recording,
+             actor: current_messages_actor %>
 <% end %>

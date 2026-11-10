@@ -77,6 +77,8 @@ begin
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
   find_or_record_child.call(page, root_recording, folder_recording)
+  brand_page = Page.find_or_create_by!(title: "Brand notes")
+  find_or_record_child.call(brand_page, root_recording, root_recording)
   mailbox_recording = find_or_record_child.call(mailbox, root_recording, root_recording)
 
   find_or_grant.call(root_recording, staff, :admin, staff)

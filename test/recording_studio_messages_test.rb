@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.20.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.21.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -19,6 +19,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil)"
     assert_includes api, "def rename_group(group_recording:, title:, actor:)"
     assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
+    assert_includes api, "def register_composer_action"
+    assert_includes api, "def register_message_embed"
+    assert_includes api, "def send_message(...)"
     assert_includes flow, "tags: contact_tags"
     assert_includes helper, "tags: nil"
     assert_includes helper, "tag_token:"
@@ -421,6 +424,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes importmap, 'pin "flat_pack/copy", to: "flat_pack/copy.js"'
     assert_includes importmap, "pin_all_from FlatPack::Engine.root.join(\"app/javascript/flat_pack/controllers\")"
     assert_includes importmap, "flat-pack--chat-timestamp-reveal"
+    assert_includes importmap, "recording_studio_messages/controllers"
   end
 
   def test_dummy_tailwind_keeps_flatpack_theme_selection_in_flatpack
@@ -601,6 +605,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes sent, 'size: :"3xl"'
     refute_includes sent, 'h1 class="text-3xl font-semibold"'
     assert_includes composer, "variant: :chat"
+    assert_includes composer, "recording-studio-messages--composer"
+    assert_includes composer, "messages_composer_actions"
     refute_includes composer, "min-h-[var(--chat-composer-control-height)]"
     refute_includes composer, "rounded-lg"
   end

@@ -8,6 +8,7 @@ require "recording_studio_notifications"
 require "flat_pack"
 require "recording_studio_messages/version"
 require "recording_studio_messages/copy"
+require "recording_studio_messages/engine_frontend"
 require "recording_studio_messages/engine"
 require "recording_studio_messages/metrics"
 require "recording_studio_messages/configuration"
@@ -27,6 +28,12 @@ require "recording_studio_messages/services/recording_subtree"
 require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
 require "recording_studio_messages/services/notify_granted_actors"
+require "recording_studio_messages/composer_action"
+require "recording_studio_messages/services/auto_link"
+require "recording_studio_messages/services/message_reference_fallback"
+require "recording_studio_messages/services/visible_message_references"
+require "recording_studio_messages/services/message_references"
+require "recording_studio_messages/services/send_message_persist"
 require "recording_studio_messages/services/send_message"
 
 module RecordingStudioMessages
@@ -65,6 +72,36 @@ module RecordingStudioMessages
 
     def send_message(...)
       Services::SendMessage.call(...)
+    end
+
+    def register_composer_action(key, label:, icon:, partial:, if: nil)
+      configuration.composer_actions[key.to_s] = ComposerAction.new(
+        key: key.to_s,
+        label: label,
+        icon: icon,
+        partial: partial,
+        condition: binding.local_variable_get(:if)
+      )
+    end
+
+    def register_message_embed(recordable_type, partial:)
+      configuration.message_embeds[embed_type_name(recordable_type)] = partial
+    end
+
+    def composer_actions_for(group, actor, mount)
+      configuration.composer_actions.values.select { |action| action.allowed?(group, actor, mount) }
+    end
+
+    def message_embed_partial(recordable_type)
+      configuration.message_embeds[embed_type_name(recordable_type)]
+    end
+
+    def visible_message_references(...)
+      Services::MessageReferences.visible_for(...)
+    end
+
+    def auto_link(text)
+      Services::AutoLink.call(text)
     end
 
     def granted_actors(group_recording)
@@ -171,6 +208,12 @@ module RecordingStudioMessages
         MESSAGE_RECEIVED_TYPE,
         **message_received_type_options
       )
+    end
+
+    def embed_type_name(recordable_type)
+      return recordable_type.name if recordable_type.is_a?(Class)
+
+      recordable_type.to_s
     end
 
     def message_received_type_options
