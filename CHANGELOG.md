@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-11-10
+
+Chat bubbles on the rounded theme pick up Flatpack's message radius and padding tokens. Default theme values stay as they were.
+
+### Changed
+
+- Development and dummy pin Flatpack `v0.1.346`. The gemspec floor stays `flat_pack >= 0.1.331`. Rounded `--chat-message-radius` is 18px. `--chat-message-padding-x` is 14px. `--chat-message-padding-y` is 10px.
+
+### Upgrade notes
+
+- Bump to **0.17.1**. No Messages migration on top of 0.17.0.
+- Pin Flatpack git tag `v0.1.346`. Rebuild host Tailwind so `rounded-[var(--chat-message-radius)]`, `px-[var(--chat-message-padding-x)]`, and `py-[var(--chat-message-padding-y)]` exist.
+
 ## [0.17.0] - 2026-11-10
 
 Hosts can put their own controls in the open conversation header. Messages still does not know about tickets.

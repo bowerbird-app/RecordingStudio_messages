@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.17.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.17.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -69,7 +69,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.346"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
     assert_equal "~> 2.1", gemfile_constraint(gemfile, "recording_studio_admin")
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
@@ -102,7 +102,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.341"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.346"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.1.7"'
     assert_includes gemfile, "widen_recording_studio_requirement"
@@ -129,10 +129,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes dummy_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "tag: v6.3.0"
     assert_includes root_lock, "recording_studio (6.3.0)"
-    assert_includes root_lock, "tag: v0.1.341"
-    assert_includes root_lock, "flat_pack (0.1.341)"
-    assert_includes dummy_lock, "tag: v0.1.341"
-    assert_includes dummy_lock, "flat_pack (0.1.341)"
+    assert_includes root_lock, "tag: v0.1.346"
+    assert_includes root_lock, "flat_pack (0.1.346)"
+    assert_includes dummy_lock, "tag: v0.1.346"
+    assert_includes dummy_lock, "flat_pack (0.1.346)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
