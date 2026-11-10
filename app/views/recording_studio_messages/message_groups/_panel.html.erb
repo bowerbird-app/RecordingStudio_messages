@@ -4,6 +4,10 @@
 <% form_url = local_assigns[:form_url].presence || messages_panel_form_url(group_recording) %>
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 <% membership_open = !RecordingStudioMessages.membership_locked_for_group?(group_recording) %>
+<% hook_mount = group_recording.parent_recording %>
+<% right_header = messages_panel_right_header(group_recording, actor: current_actor, mount: hook_mount) %>
+<% right_header_mobile = messages_panel_right_header_mobile(group_recording, actor: current_actor, mount: hook_mount) %>
+<% panel_after = messages_panel_after(group_recording, actor: current_actor, mount: hook_mount) %>
 
 <%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
   <% panel.header do %>
@@ -15,6 +19,22 @@
           <%= recording_studio_accessible_avatars(group_recording, button_style: :ghost) %>
         <% end %>
       <% end %>
+    <% end %>
+  <% end %>
+
+  <% if right_header.present? %>
+    <% panel.right_header do %>
+      <div class="flex items-center gap-2 whitespace-nowrap p-4">
+        <%= right_header %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if right_header_mobile.present? %>
+    <% panel.right_header_mobile do %>
+      <div class="flex items-center gap-2 whitespace-nowrap p-4">
+        <%= right_header_mobile %>
+      </div>
     <% end %>
   <% end %>
 
@@ -31,4 +51,4 @@
                form_url: form_url,
                return_to: return_to %>
   <% end %>
-<% end %>
+<% end %><% if panel_after.present? %><%= panel_after %><% end %>

@@ -20,6 +20,7 @@ Metrics/ModuleLength:
   Exclude:
     - 'lib/recording_studio_messages.rb'
     - 'app/helpers/recording_studio_messages/inbox_helper.rb'
+    - 'app/helpers/recording_studio_messages/panel_helper.rb'
 
 Metrics/ClassLength:
   Exclude:
