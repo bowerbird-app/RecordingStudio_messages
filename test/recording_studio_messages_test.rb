@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.16.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.17.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -268,6 +268,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
     assert_includes panel, "membership_locked_for_group?"
+    assert_includes panel, "messages_panel_right_header(group_recording, actor: current_actor, mount:"
+    assert_includes panel, "messages_panel_right_header_mobile(group_recording, actor: current_actor, mount:"
+    assert_includes panel, "messages_panel_after(group_recording, actor: current_actor, mount:"
+    assert_includes panel, "panel.right_header do"
+    assert_includes panel, "panel.right_header_mobile do"
+    assert_includes panel, "if right_header.present?"
+    assert_includes panel, "if right_header_mobile.present?"
+    assert_includes panel_helper, "def messages_panel_right_header(group_recording, actor:, mount:)"
+    assert_includes panel_helper, "def messages_panel_right_header_mobile(group_recording, actor:, mount:)"
+    assert_includes panel_helper, "def messages_panel_after(group_recording, actor:, mount:)"
     assert_includes panel, "if membership_open"
     assert_includes panel, "recording_studio_accessible_avatars"
     refute_includes panel, "show_access:"

@@ -20,6 +20,24 @@ module RecordingStudioMessages
       request.fullpath
     end
 
+    def messages_panel_right_header(group_recording, actor:, mount:)
+      return unless group_recording && actor && mount
+
+      nil
+    end
+
+    def messages_panel_right_header_mobile(group_recording, actor:, mount:)
+      return unless group_recording && actor && mount
+
+      nil
+    end
+
+    def messages_panel_after(group_recording, actor:, mount:)
+      return unless group_recording && actor && mount
+
+      nil
+    end
+
     def messages_panel_list_id(group_recording)
       "conversation-#{group_recording.id}-messages"
     end

@@ -61,6 +61,29 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.17.0
+
+Messages `0.17.0` adds three overridable panel helpers. Conversation desks, unread cursors, and seen faces stay as they are.
+
+1. Install Messages `0.17.0`. No new migration on top of 0.16.0.
+2. Leave the helpers undefined if the open conversation header should stay as it is.
+3. Define a helper with the same name when the host needs a control in that slot. Check Accessible in the host. Messages does not.
+
+```ruby
+def messages_panel_right_header(group_recording, actor:, mount:)
+  return unless mount&.recordable&.key.to_s == "support"
+  return unless RecordingStudioAccessible.authorized?(
+    actor: actor,
+    recording: ticket_for(group_recording),
+    role: :view
+  )
+
+  render "support/ticket_status", group_recording: group_recording, actor: actor
+end
+```
+
+`ticket_for` is host code. This gem has no ticket type.
+
 ### Upgrading to 0.16.0
 
 Messages `0.16.0` can show who has caught up to the latest line. Unread cursors, `#show` mark-read, and tags stay as they are. The check mark next to every timestamp is gone.
@@ -494,6 +517,46 @@ form
 The pending row expires 24 hours after `begin`. An expired row does not send. Once the conversation exists, the body is cleared and `message_group_id` is set in the same write as the group, the grants, and the message. A retry of that intent returns the conversation. It cannot send twice. The form does not accept attachments.
 
 Header faces come from `recording_studio_accessible_avatars`. That helper shows **+ Access** only when the grant list is empty. On a `membership_locked` mount the header omits that control and Accessible refuses membership changes (see Enablement).
+
+## Overridable helpers
+
+A host helper with the same name replaces the engine helper. Support does this for `messages_inbox_href(group_recording)` so staff desk links stay on the messages mount.
+
+The open conversation panel calls three hooks. Each takes the open conversation, the current actor, and the conversation's parent mount recording. All three return `nil` until a host overrides them. Return html-safe markup. These hooks add no strings of their own. They grant no access. The host must check Accessible before it renders anything that should stay private.
+
+| Helper | When it shows |
+|---|---|
+| `messages_panel_right_header(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header`. Alone, the part is `flex` at every width. When the mobile hook also returns content, this part is `hidden sm:flex` (shown at 640px and up). |
+| `messages_panel_right_header_mobile(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header_mobile`. Shown below `sm` (`flex sm:hidden`). |
+| `messages_panel_after(group_recording, actor:, mount:)` | Once, after the panel, inside the `messages-desk-panel` turbo frame. Use a fixed modal. |
+
+A nil or blank return omits that piece, and the panel markup stays as it is without the hook. The panel passes a right-header slot only when that hook returns content (`panel.right_header` and `panel.right_header_mobile`). On Flatpack 0.1.341, `right_header` is `hidden sm:flex` only when `right_header_mobile` is also supplied. A lone `right_header` stays `flex` at every width. When both return content, both slots are in the DOM and CSS hides one, so their ids, Stimulus targets, and `aria-controls` targets must differ. Pass only the mobile hook and the compact actions show below `sm`.
+
+The same partial renders on the staff desk, `/my_messages`, and the `/my_messages/:id` Turbo stream that replaces the panel. A host header updates whenever that panel updates. Sending a line still replaces only the message list and composer.
+
+`messages_panel_after` is a sibling after the panel, still inside the `h-full` turbo frame. That frame sits in `Chat::Layout`'s `overflow-hidden` panel column, so in-flow markup is clipped. Flatpack's modal backdrop is `fixed inset-0`, so a modal is not clipped and does not add height in the frame.
+
+Branch on the mount when the host has more than one desk:
+
+```ruby
+def messages_panel_right_header(group_recording, actor:, mount:)
+  return unless mount&.recordable&.key.to_s == "support"
+
+  render "support/ticket_status", group_recording: group_recording, actor: actor
+end
+
+def messages_panel_right_header_mobile(group_recording, actor:, mount:)
+  messages_panel_right_header(group_recording, actor: actor, mount: mount)
+end
+
+def messages_panel_after(group_recording, actor:, mount:)
+  return unless mount&.recordable&.key.to_s == "support"
+
+  render "support/ticket_status_modal", group_recording: group_recording, actor: actor
+end
+```
+
+Compare `mount` itself when the host has several recordings that share a key, such as one press-center mount per site plus `:support`.
 
 ## Screens
 

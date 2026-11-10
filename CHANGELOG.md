@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-11-10
+
+Hosts can put their own controls in the open conversation header. Messages still does not know about tickets.
+
+### Added
+
+- Hosts can override `messages_panel_right_header(group_recording, actor:, mount:)`, `messages_panel_right_header_mobile(group_recording, actor:, mount:)`, and `messages_panel_after(group_recording, actor:, mount:)`. Each default returns nil. The panel fills Flatpack `Chat::Panel` `right_header` and `right_header_mobile` only when that hook returns content, and renders `messages_panel_after` once after the panel inside the desk turbo frame. A blank return leaves the panel markup unchanged. `mount` is the conversation's parent `MessageMount` recording. The hooks grant no access. The host must run its own Accessible check.
+
+### Upgrade notes
+
+- Bump to **0.17.0**. No Messages migration on top of 0.16.0.
+- Existing desks stay the same until a host defines one of those helpers.
+- Return html-safe markup. Branch on `mount.recordable.key` when the host has more than one mount.
+
 ## [0.16.0] - 2026-11-10
 
 A conversation can show who has caught up to the latest line when the host turns that on. The fake sent check is gone.
