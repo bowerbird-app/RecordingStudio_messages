@@ -1,5 +1,6 @@
 <% message_recording = local_assigns.fetch(:message_recording) %>
 <% current_actor = local_assigns.fetch(:current_actor) %>
+<% readers = local_assigns[:readers] || [] %>
 <% sender = message_sender_for(message_recording) %>
 <% outgoing = outgoing_message?(message_recording, actor: current_actor) %>
 <% direction = outgoing ? :outgoing : :incoming %>
@@ -25,7 +26,7 @@
       <% end %>
     <% end %>
     <% group.message do %>
-      <%= render bubble.new(state: :sent) do |message| %>
+      <%= render bubble.new do |message| %>
         <% attachments.each do |attachment_recording| %>
           <% attachment = attachment_recording.recordable %>
           <% next if attachment.blank? %>
@@ -51,13 +52,19 @@
           <% end %>
         <% end %>
         <% message.meta do %>
-          <%= render FlatPack::Chat::MessageMeta::Component.new(
-            timestamp: message_timestamp(message_recording),
-            state: :sent
+          <%= render FlatPack::Text::Component.new(
+            text: message_clock(message_recording),
+            size: :xs,
+            style: :muted,
+            as: :span,
+            class: "text-[var(--chat-message-meta-color)]"
           ) %>
         <% end %>
         <%= message_recording.recordable&.body %>
       <% end %>
     <% end %>
   <% end %>
+  <%= render "recording_studio_messages/message_groups/message_seen",
+             message_recording: message_recording,
+             actors: readers %>
 </div>

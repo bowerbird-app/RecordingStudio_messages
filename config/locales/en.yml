@@ -32,6 +32,7 @@ en:
         empty_panel: Nothing here yet.
       panel:
         someone: Someone
+        seen_by: "Seen by %{names}"
       flashes:
         sent: Sent.
         code_resent: Fresh code on the way.

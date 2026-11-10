@@ -68,6 +68,7 @@ fr:
         empty_panel: Rien ici pour l’instant.
       panel:
         someone: Quelqu’un
+        seen_by: "Vu par %{names}"
       flashes:
         sent: Envoyé.
         code_resent: Nouveau code en route.

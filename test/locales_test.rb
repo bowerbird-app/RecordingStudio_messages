@@ -34,6 +34,7 @@ class LocalesTest < Minitest::Test
       assert_equal "Older conversations", Copy.t("inbox.older")
       assert_equal "Show unread only", Copy.t("inbox.filter_unread_only")
       assert_equal "Show all", Copy.t("inbox.filter_show_all")
+      assert_equal "Seen by Ada, Casey", Copy.t("panel.seen_by", names: "Ada, Casey")
       assert_equal "Sent.", Copy.t("flashes.sent")
       assert_equal "Fresh code on the way.", Copy.t("flashes.code_resent")
       assert_equal "Enter your name.", Copy.t("errors.enter_name")

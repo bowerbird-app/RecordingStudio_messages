@@ -1,6 +1,11 @@
 <% current_actor = local_assigns.fetch(:current_actor) %>
 <% group_recording = local_assigns.fetch(:group_recording) %>
 <% message_recordings = local_assigns.fetch(:message_recordings) %>
+<% readers_by_message = message_readers_by_message(
+     group_recording,
+     viewer: current_actor,
+     messages: message_recordings
+   ) %>
 
 <%= render FlatPack::Chat::MessageList::Component.new(
   stick_to_bottom: true,
@@ -16,7 +21,8 @@
       <% recordings.each do |message_recording| %>
         <%= render "recording_studio_messages/message_groups/message",
                    message_recording: message_recording,
-                   current_actor: current_actor %>
+                   current_actor: current_actor,
+                   readers: readers_by_message[message_recording.id] || [] %>
       <% end %>
     <% end %>
   <% end %>

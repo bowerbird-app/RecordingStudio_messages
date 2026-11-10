@@ -70,6 +70,30 @@ module RecordingStudioMessages
       message_recording.created_at
     end
 
+    def message_clock(message_recording)
+      time = message_timestamp(message_recording)
+      return time.to_s unless time.respond_to?(:strftime)
+
+      time.strftime("%l:%M %p").strip
+    end
+
+    def message_readers_by_message(group_recording, viewer:, messages: nil)
+      RecordingStudioMessages.readers_by_message(
+        group_recording: group_recording,
+        viewer: viewer,
+        messages: messages
+      )
+    end
+
+    def message_seen_items(actors)
+      Array(actors).map { |actor| { name: message_sender_name(actor) } }
+    end
+
+    def message_seen_label(actors)
+      names = Array(actors).map { |actor| message_sender_name(actor) }.join(", ")
+      Copy.t("panel.seen_by", names: names)
+    end
+
     def message_day_label(date)
       Copy.l(date, format: "%-d %b %Y")
     end
