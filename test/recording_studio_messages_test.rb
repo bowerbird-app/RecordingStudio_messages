@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.18.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.19.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -180,6 +180,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     desk = File.read(
       File.expand_path("../app/views/recording_studio_messages/message_groups/_desk.html.erb", __dir__)
     )
+    list_toolbar = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_list_toolbar.html.erb", __dir__)
+    )
     panel = File.read(
       File.expand_path("../app/views/recording_studio_messages/message_groups/_panel.html.erb", __dir__)
     )
@@ -200,6 +203,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes application_controller, "include RecordingStudio::ControllerLayout"
     assert_includes controller, "def index"
     assert_includes controller, "viewable_group_recordings"
+    assert_includes controller, "unread_filter?"
+    assert_includes controller, "older_href_for"
     assert_includes controller, "authorize_mount_parent!"
     assert_includes controller, "authorize_group!(:view)"
     assert_includes controller, "include MessageGroupsRename"
@@ -215,6 +220,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes controller, "mark_read"
     assert_includes api, "def rename_group"
     assert_includes api, "def viewable_group_recordings"
+    assert_includes api, "unread: false"
     assert_includes api, "def my_group_recordings"
     assert_includes api, "def mark_read"
     assert_includes api, "def unread?"
@@ -226,11 +232,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes list_groups, "MessageGroupTags.restrict"
     assert_includes list_groups, "minimum_role: :view"
     assert_includes list_groups, "RecordingStudioMessages::MESSAGE_GROUP_TYPE"
+    assert_includes list_groups, "unread: false"
+    assert_includes list_groups, "unread_ids_among"
     refute_includes list_groups, "authorized?"
+    refute_includes list_groups, "WITH RECURSIVE"
     assert_includes helper, "def messages_inbox_rows"
     assert_includes helper, "inbox_unread?"
     assert_includes helper, "messages_unread_filter_button"
     assert_includes helper, "messages_unread_filter_href"
+    assert_includes helper, "def messages_list_toolbar(mount:, actor:)"
+    assert_includes helper, "messages_unread_filter_index_path"
     assert_includes helper, 'icon: "bell-alert"'
     refute_includes helper, "funnel"
     refute_includes helper, "unread_count:"
@@ -286,7 +297,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "layout.panel"
     assert_includes desk, "messages_inbox_rows"
     assert_includes desk, "turbo_frame_tag inbox_row[:title_frame_id]"
-    assert_includes desk, "unread_badge"
+    assert_includes list_toolbar, "unread_badge"
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
     assert_includes panel, "membership_locked_for_group?"
@@ -323,8 +334,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes panel, "back_href"
     assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
-    assert_includes desk, "messages_unread_filter_button"
     assert_includes desk, "unread_filter"
+    assert_includes desk, "messages_list_toolbar(mount: mount_recording, actor: current_actor)"
+    assert_includes desk, "list_toolbar"
+    assert_includes list_toolbar, "messages_unread_filter_button"
+    assert_includes list_toolbar, "unread_filter"
+    assert_includes list_toolbar, "list_toolbar.present?"
     assert_includes desk, "FlatPack::Chat::Header::Component"
     refute_includes desk, "inbox.filter_all"
     refute_includes desk, "filter_unread"

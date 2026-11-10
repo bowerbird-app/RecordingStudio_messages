@@ -79,13 +79,27 @@ module RecordingStudioMessages
     end
 
     def messages_unread_filter_href(filtered:)
-      query = request.query_parameters.stringify_keys.except("after_id", "unread", "id")
+      query = request.query_parameters.stringify_keys.except("after_id", "unread", "id", "group_id")
       query = query.merge("unread" => 1) if filtered
-      if respond_to?(:my_messages_path)
+      messages_unread_filter_index_path(query)
+    end
+
+    def messages_unread_filter_index_path(query)
+      case controller_name
+      when "my_messages"
         my_messages_path(query)
+      when "message_groups"
+        query = query.merge("mount_id" => query["mount_id"].presence || @mount_recording&.id)
+        message_groups_path(query)
       else
-        recording_studio_messages.my_messages_path(query)
+        url_for(query.merge(only_path: true))
       end
+    end
+
+    def messages_list_toolbar(mount:, actor:)
+      return unless actor && (mount || mount.nil?)
+
+      nil
     end
 
     def messages_unread_filter_label(unread_filter)

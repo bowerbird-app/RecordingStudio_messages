@@ -88,6 +88,72 @@ class ListGroupsTest < ActiveSupport::TestCase
     assert_equal [ "Alpha" ], titles(listed(actor: @viewer, mount_recording: @mount))
   end
 
+  test "unread filter keeps conversations the actor can view on that mount" do
+    read = RecordingStudioMessages.create_group(@mount, title: "Already opened", actor: @owner)
+    unread = RecordingStudioMessages.create_group(@mount, title: "Still unread", actor: @owner)
+    hidden = RecordingStudioMessages.create_group(@other_mount, title: "Other unread", actor: @owner)
+    grant!(read, @viewer)
+    grant!(unread, @viewer)
+    grant!(hidden, @viewer)
+    send_line(read, "Read line")
+    send_line(unread, "Unread line")
+    send_line(hidden, "Hidden line")
+    RecordingStudioMessages.mark_read(group_recording: read, actor: @viewer)
+
+    recordings = listed(actor: @viewer, mount_recording: @mount, unread: true)
+
+    assert_equal [ "Still unread" ], titles(recordings)
+    refute_includes titles(recordings), "Already opened"
+    refute_includes titles(recordings), "Other unread"
+    refute_includes titles(recordings), "Alpha"
+  end
+
+  test "unread filter still requires an Accessible view grant" do
+    unread = RecordingStudioMessages.create_group(@mount, title: "No grant unread", actor: @owner)
+    send_line(unread, "Secret line")
+
+    assert_equal [], titles(listed(actor: @viewer, mount_recording: @mount, unread: true))
+    assert_equal [], titles(listed(actor: @stranger, mount_recording: @mount, unread: true))
+  end
+
+  test "unread filter keeps after_id paging" do
+    groups = Array.new(3) do |index|
+      group = RecordingStudioMessages.create_group(@mount, title: "U#{index}", actor: @owner)
+      grant!(group, @viewer)
+      send_line(group, "Line #{index}")
+      stamp_last_message_at!(group, Time.zone.parse("2026-06-01 12:0#{index}:00"))
+      group
+    end
+    RecordingStudioMessages.mark_read(group_recording: groups[1], actor: @viewer)
+
+    page = listed(actor: @viewer, mount_recording: @mount, unread: true, limit: 1)
+    rest = listed(actor: @viewer, mount_recording: @mount, unread: true, limit: 1, after: page.last)
+
+    assert_equal [ "U2" ], titles(page)
+    assert_equal [ "U0" ], titles(rest)
+  end
+
+  test "unread listing does not query each conversation's messages" do
+    unread = RecordingStudioMessages.create_group(@mount, title: "Batch unread", actor: @owner)
+    grant!(unread, @viewer)
+    send_line(unread, "Stay unread")
+
+    sql = []
+    callback = lambda do |*_args, payload|
+      query = payload[:sql].to_s
+      next if payload[:name].to_s.include?("SCHEMA")
+      next if payload[:name].to_s == "CACHE"
+
+      sql << query
+    end
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      listed(actor: @viewer, mount_recording: @mount, unread: true)
+    end
+
+    refute sql.any? { |query| query.include?("recording_studio_messages") && query.include?("parent_recording_id") },
+           sql.join("\n")
+  end
+
   private
 
   def support_mount(prefix)
@@ -109,8 +175,28 @@ class ListGroupsTest < ActiveSupport::TestCase
     raise result.error if result.failure?
   end
 
-  def listed(actor:, mount_recording:)
-    RecordingStudioMessages.viewable_group_recordings(actor: actor, mount_recording: mount_recording)
+  def listed(actor:, mount_recording:, **options)
+    RecordingStudioMessages.viewable_group_recordings(
+      actor: actor,
+      mount_recording: mount_recording,
+      **options
+    )
+  end
+
+  def send_line(group, body)
+    RecordingStudioMessages.send_message(
+      group_recording: group,
+      body: body,
+      actor: @owner,
+      notify: false
+    )
+  end
+
+  def stamp_last_message_at!(recording, time)
+    RecordingStudioMessages::MessageGroup.unscoped.where(id: recording.recordable_id).update_all(
+      last_message_at: time
+    )
+    recording.recordable.reload
   end
 
   def titles(recordings)

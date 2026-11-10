@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-10
+
+Unread filtering works on a mount inbox, and the list header is a host toolbar slot. The v0.17 panel header hooks and the v0.18 rename stay as they are.
+
+### Added
+
+- `viewable_group_recordings` / `ListGroups` take optional `unread: false`. Pass `true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. The filter runs after Accessible `recordings_for` and optional `tags:`. It uses the same `recording_studio_message_reads` cursors as `my_group_recordings(unread: true)` (`unread_ids_among`). Tags never grant access. Optional `after:` and `limit:` still page that filtered list.
+- `MessageGroupsController` index and show read `params[:unread]` the same way `/my_messages` does. The Turbo panel stay as they are. Pagination and the unread toggle keep `unread` and drop `after_id`.
+- Hosts can override `messages_list_toolbar(mount:, actor:)`. The default returns nil. The list header renders the built-in unread toggle first, then that host markup beside it, on the mount desk and on `/my_messages` (`mount:` is nil there). The hook grants no access.
+
+### Upgrade notes
+
+- Bump to **0.19.0**. No Messages migration on top of 0.18.0.
+- Existing mount desks show the unread toggle in the list header. Leave `messages_list_toolbar` undefined if that slot should stay empty beside the toggle.
+- Pass `unread: true` to `viewable_group_recordings` when a host list should match the mount toggle.
+
 ## [0.18.0] - 2026-11-10
 
 People with edit access can rename an open conversation in place. The list row title follows without remounting the desk.

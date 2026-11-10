@@ -4,6 +4,7 @@ module Customer
   class InboxesController < ApplicationController
     def show
       @mount_recording = DummyCatalog.inbox_mount_recording
+      @unread_filter = ActiveModel::Type::Boolean.new.cast(params[:unread])
       @group_recordings = viewable_groups_on_mount
       return redirect_to root_path, alert: RecordingStudioMessages::Copy.t("flashes.cannot_open") if @group_recordings.blank?
 
@@ -15,7 +16,8 @@ module Customer
     def viewable_groups_on_mount
       RecordingStudioMessages.viewable_group_recordings(
         actor: Current.actor || current_user,
-        mount_recording: @mount_recording
+        mount_recording: @mount_recording,
+        unread: @unread_filter
       )
     end
 

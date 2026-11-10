@@ -84,8 +84,15 @@ module RecordingStudioMessages
       Services::MessageGroupTags.untag(group_recording, key: key, recording: recording)
     end
 
-    def viewable_group_recordings(actor:, mount_recording: nil, tags: nil)
-      Services::ListGroups.call(actor: actor, mount_recording: mount_recording, tags: tags)
+    def viewable_group_recordings(actor:, mount_recording: nil, tags: nil, unread: false, after: nil, limit: nil)
+      Services::ListGroups.call(
+        actor: actor,
+        mount_recording: mount_recording,
+        tags: tags,
+        unread: unread,
+        after: after,
+        limit: limit
+      )
     end
 
     def my_group_recordings(...)
