@@ -273,6 +273,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes panel, "messages_panel_after(group_recording, actor: current_actor, mount:"
     assert_includes panel, "panel.right_header do"
     assert_includes panel, "panel.right_header_mobile do"
+    assert_includes panel, "flex items-center gap-2 whitespace-nowrap p-4"
     assert_includes panel, "if right_header.present?"
     assert_includes panel, "if right_header_mobile.present?"
     assert_includes panel_helper, "def messages_panel_right_header(group_recording, actor:, mount:)"

@@ -24,13 +24,17 @@
 
   <% if right_header.present? %>
     <% panel.right_header do %>
-      <%= right_header %>
+      <div class="flex items-center gap-2 whitespace-nowrap p-4">
+        <%= right_header %>
+      </div>
     <% end %>
   <% end %>
 
   <% if right_header_mobile.present? %>
     <% panel.right_header_mobile do %>
-      <%= right_header_mobile %>
+      <div class="flex items-center gap-2 whitespace-nowrap p-4">
+        <%= right_header_mobile %>
+      </div>
     <% end %>
   <% end %>
 

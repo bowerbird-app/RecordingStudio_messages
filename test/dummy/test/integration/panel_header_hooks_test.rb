@@ -137,8 +137,9 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
     mount = DummyCatalog.support_mount_recording
     assert_equal [[@group, @staff, mount], [@group, @staff, mount], [@group, @staff, mount]], seen
     assert_select ".flat-pack--chat-panel" do
-      assert_select '[data-flat-pack-chat-panel-part="right-header"] #messages-panel-right-header', text: "hook-right"
-      assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] #messages-panel-right-header-mobile',
+      assert_select '[data-flat-pack-chat-panel-part="right-header"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #messages-panel-right-header',
+                    text: "hook-right"
+      assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #messages-panel-right-header-mobile',
                     text: "hook-mobile"
       assert_select "#messages-panel-after", count: 0
     end
@@ -177,7 +178,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
     assert_select '[data-flat-pack-chat-panel-part="header"]'
     part = css_select('[data-flat-pack-chat-panel-part="right-header"]').first
     assert_equal "flex shrink-0 w-min items-center justify-end", part["class"]
-    assert_select '[data-flat-pack-chat-panel-part="right-header"] #messages-panel-right-header',
+    assert_select '[data-flat-pack-chat-panel-part="right-header"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #messages-panel-right-header',
                   text: "hook-right"
     refute_includes response.body, "hidden sm:flex"
     refute_includes response.body, "messages-panel-after"
@@ -194,7 +195,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
 
     assert_select '[data-flat-pack-chat-panel-part="right-header"]', count: 0
     assert_select '[data-flat-pack-chat-panel-part="header"]'
-    assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] #messages-panel-right-header-mobile',
+    assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #messages-panel-right-header-mobile',
                   text: "hook-mobile"
     assert_includes response.body, "flex sm:hidden"
     refute_includes response.body, "hidden sm:flex"
@@ -207,8 +208,10 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
         headers: { "Turbo-Frame" => "messages-desk-panel" }
 
     assert_response :success
-    assert_select '[data-flat-pack-chat-panel-part="right-header"] #dummy-thread-status', text: "Open"
-    assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] #dummy-thread-status-mobile', text: "Open"
+    assert_select '[data-flat-pack-chat-panel-part="right-header"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #dummy-thread-status',
+                  text: "Open"
+    assert_select '[data-flat-pack-chat-panel-part="right-header-mobile"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #dummy-thread-status-mobile',
+                  text: "Open"
 
     get recording_studio_messages.message_group_path(DummyCatalog.inbox_group_recording),
         headers: { "Turbo-Frame" => "messages-desk-panel" }

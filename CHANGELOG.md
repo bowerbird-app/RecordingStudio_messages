@@ -14,6 +14,7 @@ Hosts can put their own controls in the open conversation header. Messages still
 ### Added
 
 - Hosts can override `messages_panel_right_header(group_recording, actor:, mount:)`, `messages_panel_right_header_mobile(group_recording, actor:, mount:)`, and `messages_panel_after(group_recording, actor:, mount:)`. Each default returns nil. The panel fills Flatpack `Chat::Panel` `right_header` and `right_header_mobile` only when that hook returns content, and renders `messages_panel_after` once after the panel inside the desk turbo frame. A blank return leaves the panel markup unchanged. `mount` is the conversation's parent `MessageMount` recording. The hooks grant no access. The host must run its own Accessible check.
+- Filled right-header slots wrap host markup in `flex items-center gap-2 whitespace-nowrap p-4`. That is the inset Flatpack documents around `Chat::Panel` actions and the same `p-4` as `Chat::Header`. Flatpack 0.1.341's right-header parts have no padding of their own, so the wrap lives in Messages.
 
 ### Upgrade notes
 
