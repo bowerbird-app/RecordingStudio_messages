@@ -17,8 +17,11 @@
       <% if inbox == :my_messages %>
         <%= render FlatPack::Chat::Header::Component.new(title: messages_t("inbox.my_title")) do |header| %>
           <% header.right do %>
+            <%= render "recording_studio_messages/message_groups/unread_badge",
+                       unread_count: messages_unread_count %>
             <%= render FlatPack::Button::Component.new(**messages_unread_filter_button(unread_filter: unread_filter)) %>
           <% end %>
+
         <% end %>
       <% end %>
       <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>

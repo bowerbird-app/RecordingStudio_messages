@@ -222,6 +222,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes helper, "unread_count:"
     assert_includes helper, "messages_inbox_row_complete?"
     assert_includes helper, "turbo_frame: messages_desk_panel_id"
+    assert_includes helper, "turbo_stream: true"
+    assert_includes helper, "def messages_unread_badge_id"
+    assert_includes helper, "def messages_inbox_unread_dot_id"
     assert_includes helper, "def messages_inbox_row_link"
     assert_includes helper, "inbox: inbox"
     assert_includes helper, "messages_inbox_mount_name"
@@ -234,7 +237,15 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes my_messages_controller, "viewable_group_recordings"
     refute_includes my_messages_controller, "authorize_mount_parent!"
     assert_includes my_messages_controller, "unless turbo_frame_request?"
+    assert_includes my_messages_controller, "format.turbo_stream"
     assert_includes my_messages_controller, "inbox_member?"
+    my_messages_stream = File.read(
+      File.expand_path("../app/views/recording_studio_messages/my_messages/show.turbo_stream.erb", __dir__)
+    )
+    assert_includes my_messages_stream, "turbo_stream.update messages_desk_panel_id"
+    assert_includes my_messages_stream, "turbo_stream.update messages_inbox_unread_dot_id"
+    assert_includes my_messages_stream, "turbo_stream.update messages_unread_badge_id"
+    refute_includes my_messages_stream, "messages_inbox_rows"
     query = File.read(
       File.expand_path("../lib/recording_studio_messages/services/my_group_recordings.rb", __dir__)
     )
@@ -252,6 +263,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "layout.sidebar"
     assert_includes desk, "layout.panel"
     assert_includes desk, "messages_inbox_rows"
+    assert_includes desk, "unread_badge"
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
     assert_includes panel, "membership_locked_for_group?"

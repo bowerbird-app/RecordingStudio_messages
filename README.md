@@ -67,9 +67,9 @@ Messages `0.15.0` stores a private read cursor per person per conversation. Send
 
 1. Install Messages `0.15.0`.
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
-3. Link `unread_count(actor:)` to a nav badge when you want a number. `/my_messages` already shows a row dot when unread and a round unread filter.
+3. Link `unread_count(actor:)` to a nav badge when you want a number. `/my_messages` already shows a row dot when unread, a round unread filter, and `messages-unread-badge`. An explicit conversation open updates that row's avatar and the badge over Turbo. It does not remount the list.
 
-The migration creates `recording_studio_message_reads` and backfills current membership as read (`last_read_at = last_message_at`) in batches. After that, a conversation is unread when someone else sends, until that person opens it (`#show`, including a turbo-frame open). Opening the index does not mark the auto-selected conversation read. Opening a conversation also marks that person's unread `:message_received` notices for it. Notifications does not depend on Messages.
+The migration creates `recording_studio_message_reads` and backfills current membership as read (`last_read_at = last_message_at`) in batches. After that, a conversation is unread when someone else sends, until that person opens it (`#show`). A `/my_messages` row click requests a Turbo stream. The stream marks the conversation read, then updates that row's unread avatar and `messages-unread-badge`. A turbo-frame open still marks read. Opening the index does not mark the auto-selected conversation read. Opening a conversation also marks that person's unread `:message_received` notices for it. Notifications does not depend on Messages.
 
 Read state is private. There are no read receipts.
 

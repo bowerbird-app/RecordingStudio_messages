@@ -22,13 +22,8 @@
       style: :secondary,
       size: :md
     ) %>
-    <% if @messages_unread_count.to_i.positive? %>
-      <%= render FlatPack::Badge::Component.new(
-            text: @messages_unread_count.to_s,
-            style: :primary,
-            size: :sm
-          ) %>
-    <% end %>
+    <%= render "recording_studio_messages/message_groups/unread_badge",
+               unread_count: @messages_unread_count %>
     <%= render FlatPack::Button::Component.new(
       text: t("dummy.home.admin"),
       href: recording_studio_admin_admin.root_path,

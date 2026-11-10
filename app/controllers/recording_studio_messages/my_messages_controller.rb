@@ -14,12 +14,21 @@ module RecordingStudioMessages
       @group_recording = find_group_recording
       authorize_group!(:view)
       RecordingStudioMessages.mark_read(group_recording: @group_recording, actor: current_messages_actor)
-      load_inbox(selected: @group_recording) unless turbo_frame_request?
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
-      render layout: false if turbo_frame_request?
+      respond_after_show
     end
 
     private
+
+    def respond_after_show
+      respond_to do |format|
+        format.turbo_stream
+        format.html do
+          load_inbox(selected: @group_recording) unless turbo_frame_request?
+          render layout: false if turbo_frame_request?
+        end
+      end
+    end
 
     def load_inbox(selected: nil)
       page = inbox_page.to_a

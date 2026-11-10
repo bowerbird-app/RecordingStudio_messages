@@ -24,11 +24,12 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Site inbox"
     assert_includes response.body, DummyCatalog.studio_workspace.name
     assert_includes response.body, DummyCatalog.mailbox.name
-    assert_select "a[href=?][data-turbo-frame=?]",
+    assert_select "a[href=?][data-turbo-stream]",
+                  recording_studio_messages.my_message_path(DummyCatalog.support_group_recording)
+    assert_select "a[href=?][data-turbo-stream]",
+                  recording_studio_messages.my_message_path(DummyCatalog.inbox_group_recording)
+    refute_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.my_message_path(DummyCatalog.support_group_recording),
-                  "messages-desk-panel"
-    assert_select "a[href=?][data-turbo-frame=?]",
-                  recording_studio_messages.my_message_path(DummyCatalog.inbox_group_recording),
                   "messages-desk-panel"
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
   end
@@ -152,6 +153,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
                   "outline"
     assert_select "[data-unread=true]", minimum: 2
     refute_select "a[aria-current=page][aria-label=?]", "Show unread only"
+    assert_select "turbo-frame#messages-unread-badge"
+    assert_select "turbo-frame#messages-unread-dot-#{first.id}"
+    assert_select "turbo-frame#messages-unread-dot-#{first.id} [class*='avatar-status-busy']"
   end
 
   test "explicit show marks read and clears that conversation's notices" do
@@ -167,6 +171,44 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert RecordingStudioMessages.unread?(group_recording: kept, actor: @customer)
     assert_not_nil notice_for(opened).read_at
     assert_nil notice_for(kept).read_at
+  end
+
+  test "explicit turbo show updates that row's unread dot and the badge without remounting the unread list" do
+    Current.actor = @staff
+    kept = seeded_unread_conversation("Keep unread")
+    opened = seeded_unread_conversation("Open from unread")
+    before = RecordingStudioMessages.unread_count(actor: @customer)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(unread: 1)
+
+    assert_response :success
+    assert_includes response.body, "Open from unread"
+    assert_includes response.body, "Keep unread"
+    assert_select "turbo-frame#messages-unread-badge", text: before.to_s
+    assert_select "a[href=?][data-turbo-stream]", recording_studio_messages.my_message_path(opened)
+
+    get recording_studio_messages.my_message_path(opened), as: :turbo_stream
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream], response.media_type
+    refute RecordingStudioMessages.unread?(group_recording: opened, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: kept, actor: @customer)
+    assert_equal before - 1, RecordingStudioMessages.unread_count(actor: @customer)
+    targets = css_select("turbo-stream").map { |node| node["target"] }
+    assert_equal(
+      [
+        "messages-desk-panel",
+        "messages-unread-dot-#{opened.id}",
+        "messages-unread-badge"
+      ].sort,
+      targets.sort
+    )
+    assert_includes stream_html("messages-desk-panel"), "Open from unread"
+    refute_includes stream_html("messages-unread-dot-#{opened.id}"), "avatar-status-busy-color"
+    assert_match(/>#{Regexp.escape((before - 1).to_s)}</, stream_html("messages-unread-badge"))
+    refute_includes response.body, "flat-pack--chat-layout"
+    refute_includes response.body, "Keep unread"
   end
 
   test "unread filter lists only unread conversations" do
@@ -269,5 +311,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages::MessageGroup.unscoped.where(id: recording.recordable_id).update_all(
       last_message_at: time
     )
+  end
+
+  def stream_html(target)
+    Nokogiri::HTML.fragment(response.body).at_css("turbo-stream[target='#{target}']")&.inner_html.to_s
   end
 end

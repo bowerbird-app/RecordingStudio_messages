@@ -19,6 +19,7 @@ Each person gets a private read cursor per conversation. Sending and conversatio
 - `send_message` upserts the sender's cursor so a line you sent is never unread for you.
 - `MyMessagesController#show` and `MessageGroupsController#show` mark the conversation read after Accessible `:view`. Index auto-select does not. Marking read also sets `read_at` on that actor's unread `:message_received` notices for that conversation. The Notifications gem is unchanged. Bell clear-all does not touch read cursors.
 - Inbox rows mark unread with a Flatpack avatar status dot, not a count. `/my_messages` has one round `bell-alert` button that toggles unread-only. `unread_count(actor:)` is the nav badge number. Other people's read state is never shown.
+- An explicit `/my_messages/:id` Turbo visit marks the conversation read, then updates that row's unread avatar and `messages-unread-badge`. It does not replace the inbox list, so an unread-filtered row stays until the filter changes or the page reloads.
 
 ### Upgrade notes
 

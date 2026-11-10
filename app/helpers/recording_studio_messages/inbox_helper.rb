@@ -24,6 +24,14 @@ module RecordingStudioMessages
       RecordingStudioMessages.unread_count(actor: actor)
     end
 
+    def messages_unread_badge_id
+      "messages-unread-badge"
+    end
+
+    def messages_inbox_unread_dot_id(group_recording)
+      "messages-unread-dot-#{group_recording.id}"
+    end
+
     def messages_inbox_row(group_recording, selected: nil, inbox: nil, page: nil)
       latest = inbox_latest_message(group_recording, page)
       messages_inbox_row_arguments(group_recording, latest, selected: selected, inbox: inbox, page: page)
@@ -35,15 +43,17 @@ module RecordingStudioMessages
 
     def messages_inbox_row_arguments(group_recording, latest, selected: nil, inbox: nil, page: nil)
       unread = inbox_unread?(group_recording, page) == true
+      active = selected_inbox_row?(group_recording, selected)
       {
         chat_group_name: messages_inbox_group_name(group_recording),
         latest_sender: messages_inbox_row_sender(group_recording, latest, inbox: inbox),
         latest_preview: latest&.recordable&.body,
         latest_at: latest && message_timestamp(latest),
         avatar_items: messages_inbox_avatar_items(group_recording, page: page, unread: unread),
-        active: selected_inbox_row?(group_recording, selected),
+        leading: messages_inbox_unread_dot(group_recording, unread: unread, page: page),
+        active: active,
         data: { unread: unread }
-      }.merge(messages_inbox_row_link(group_recording, inbox: inbox))
+      }.merge(messages_inbox_row_link(group_recording, inbox: inbox, active: active))
     end
 
     def messages_unread_filter_button(unread_filter:)
@@ -84,11 +94,26 @@ module RecordingStudioMessages
       messages_inbox_latest_sender(latest)
     end
 
-    def messages_inbox_row_link(group_recording, inbox: nil)
+    def messages_inbox_row_link(group_recording, inbox: nil, active: false)
+      href = messages_inbox_href(group_recording, inbox: inbox)
+      return { href: href, turbo_frame: messages_desk_panel_id } unless inbox == :my_messages
+
       {
-        href: messages_inbox_href(group_recording, inbox: inbox),
-        turbo_frame: messages_desk_panel_id
+        href: href,
+        link_arguments: {
+          data: { turbo_stream: true },
+          aria: { current: (active ? "page" : nil) }
+        }
       }
+    end
+
+    def messages_inbox_unread_dot(group_recording, unread:, page: nil)
+      render(
+        "recording_studio_messages/message_groups/inbox_unread_dot",
+        group_recording: group_recording,
+        unread: unread,
+        page: page
+      )
     end
 
     def selected_inbox_row?(group_recording, selected)
