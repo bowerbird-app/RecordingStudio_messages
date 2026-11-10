@@ -12,9 +12,13 @@ end
 Rails.application.config.to_prepare do
   RecordingStudioMessages.register_composer_action(
     :attach_page,
-    label: I18n.t("dummy.composer.attach_page"),
+    label: "Attach a page",
     icon: "document-text",
-    partial: "dummy/page_picker",
+    src: ->(_group, _actor, mount) {
+      next if mount.blank?
+
+      Rails.application.routes.url_helpers.dummy_page_picker_path(mount_id: mount.id)
+    },
     if: ->(_group, actor, mount) {
       mount&.recordable&.key.to_s == DummyCatalog::SUPPORT_KEY && actor.present?
     }

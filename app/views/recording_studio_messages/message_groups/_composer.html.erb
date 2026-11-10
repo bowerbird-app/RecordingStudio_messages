@@ -63,12 +63,11 @@
       ) %>
     <% end %>
   <% end %>
-  <% composer_actions.each do |action| %>
-    <%= render action.partial,
-               group_recording: group_recording,
-               actor: actor,
-               mount: mount,
-               action: action,
-               modal_id: messages_composer_action_modal_id(action) %>
-  <% end %>
+<% end %>
+<% composer_actions.each do |action| %>
+  <%= render "recording_studio_messages/message_groups/composer_action_modal",
+             group_recording: group_recording,
+             actor: actor,
+             mount: mount,
+             action: action %>
 <% end %>

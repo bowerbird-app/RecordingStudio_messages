@@ -96,6 +96,10 @@ module RecordingStudioMessages
       "messages-composer-action-#{action.key}"
     end
 
+    def messages_composer_action_frame_id(action)
+      "#{messages_composer_action_modal_id(action)}-frame"
+    end
+
     def linked_message_body(text)
       RecordingStudioMessages.auto_link(text).html_safe
     end

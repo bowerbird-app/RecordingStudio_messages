@@ -34,16 +34,73 @@ class ComposerActionsTest < ActionDispatch::IntegrationTest
     Current.actor = @previous_actor
   end
 
-  test "support desk plus menu includes the dummy attach-page item and picker" do
+  test "support desk plus menu includes the dummy attach-page item and a lazy modal shell" do
     sign_in @staff
 
     get recording_studio_messages.message_group_path(@group)
 
     assert_response :success
     assert_includes response.body, "Attach a page"
-    assert_includes response.body, "Brand notes"
     assert_includes response.body, "messages-composer-action-attach_page"
+    assert_includes response.body, "messages-composer-action-attach_page-frame"
+    assert_includes response.body, 'loading="lazy"'
+    assert_includes response.body, "/dummy/page_picker?mount_id=#{@mount.id}"
     assert_includes response.body, "recording-studio-messages--composer"
+    refute_includes response.body, "Brand notes"
+    refute_includes response.body, "Find a page"
+  end
+
+  test "page picker loads through the lazy frame and filters by search" do
+    Current.actor = @staff
+    RecordingStudio.record!(
+      action: "created",
+      recordable: Page.create!(title: "Launch copy"),
+      root_recording: @root,
+      parent_recording: @root,
+      actor: @staff
+    )
+    sign_in @staff
+
+    get dummy_page_picker_path(mount_id: @mount.id)
+
+    assert_response :success
+    assert_includes response.body, "Find a page"
+    assert_includes response.body, "Brand notes"
+    assert_includes response.body, "Launch copy"
+    assert_includes response.body, "messages-composer-action-attach_page-frame"
+    refute_includes response.body, "fp-modal"
+
+    get dummy_page_picker_path(mount_id: @mount.id, q: "brand")
+
+    assert_response :success
+    assert_includes response.body, "Brand notes"
+    refute_includes response.body, "Launch copy"
+
+    get dummy_page_picker_path(mount_id: @mount.id, q: "zzzz")
+
+    assert_response :success
+    assert_includes response.body, "No pages to attach yet."
+    refute_includes response.body, "Brand notes"
+  end
+
+  test "page picker hides pages the viewer cannot see" do
+    sign_in @staff
+    get dummy_page_picker_path(mount_id: @mount.id)
+    assert_response :success
+    assert_includes response.body, "Brand notes"
+
+    outsider = User.create!(
+      email: "picker-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Outsider",
+      confirmed_at: Time.current
+    )
+    sign_in outsider
+
+    get dummy_page_picker_path(mount_id: @mount.id)
+
+    assert_response :not_found
   end
 
   test "composer post writes indexed references from hidden fields" do

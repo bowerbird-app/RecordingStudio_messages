@@ -16,6 +16,16 @@ export default class extends Controller {
     const detail = event.detail || {}
     if (detail.text) this.appendText(detail.text)
     if (detail.reference) this.addReference(detail.reference)
+    this.closeOpenActionModal()
+  }
+
+  closeOpenActionModal() {
+    document.querySelectorAll("[id^='messages-composer-action-']").forEach((modal) => {
+      if (!modal.matches("[data-controller~='flat-pack--modal']")) return
+      if (modal.classList.contains("hidden")) return
+
+      modal.querySelector("[data-action='flat-pack--modal#close']")?.click()
+    })
   }
 
   appendText(text) {

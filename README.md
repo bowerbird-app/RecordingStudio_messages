@@ -65,7 +65,11 @@ bin/rails db:migrate
 
 Other gems can add a + menu item and a card under a line. This gem does not name those gems. Register in a host or gem initializer.
 
-`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the desk mount. A missing `if:` keeps the item. The + menu renders every item that returns true. Each item's `partial` is a modal or popover. That partial inserts into the composer with a document event:
+`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the desk mount. A missing `if:` keeps the item. The + menu renders every item that returns true.
+
+Messages owns the modal. It renders one Flatpack modal per item (id, title from `title:` or `label`, close control, `size:` default `:sm`). Pass exactly one of `partial:` or `src:`. `partial:` is a light body. `src:` is a URL (or a proc of `(group, actor, mount)` that returns one). Search and pickers should use `src:` with their own endpoint and their own Accessible checks. The shell loads that URL in a Turbo frame with `loading: lazy` when the modal opens. The body receives `group_recording`, `actor`, `mount`, and `action`. Do not render `FlatPack::Modal` or match a `modal_id` in the gem.
+
+The body inserts into the composer with a document event. The composer closes the open action modal when that event fires:
 
 ```js
 window.dispatchEvent(new CustomEvent("messages:composer-insert", {
@@ -88,7 +92,7 @@ RecordingStudioMessages.register_composer_action(
   :attach_page,
   label: "Attach a page",
   icon: "document-text",
-  partial: "dummy/page_picker",
+  src: ->(_group, _actor, mount) { dummy_page_picker_path(mount_id: mount.id) },
   if: ->(_group, actor, mount) { actor.present? && mount.present? }
 )
 
@@ -104,7 +108,7 @@ RecordingStudioMessages.send_message(
 
 Pin `recording_studio_messages/controllers` in the host importmap so `recording-studio-messages--composer` loads. The dummy pin sits next to the Admin pin. Message bodies auto-link `http` and `https` only. The helper escapes first, then wraps. `javascript:` and `data:` stay text.
 
-The dummy staff desk proves the + item, the picker, and a Brand notes card. Screenshots live in `docs/screenshots/composer-plus-menu-desktop.png`, `docs/screenshots/composer-page-picker-desktop.png`, `docs/screenshots/message-page-card-desktop.png`, and the matching `*-mobile.png` files.
+The dummy staff desk proves the + item, a lazy picker with **Find a page**, and a Brand notes card. Screenshots live in `docs/screenshots/composer-plus-menu-desktop.png`, `docs/screenshots/composer-page-picker-desktop.png`, `docs/screenshots/message-page-card-desktop.png`, and the matching `*-mobile.png` files.
 
 ### Upgrading to 0.21.0
 
@@ -113,7 +117,7 @@ Messages `0.21.0` adds composer actions, typed recording references, and safe UR
 1. Install Messages `0.21.0`.
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
 3. Pin `app/javascript/recording_studio_messages/controllers` in the host importmap (`under: "controllers/recording_studio_messages"`).
-4. Call `register_composer_action` and `register_message_embed` from a host or gem initializer when you need a + item or a typed card. Leave them unregistered to keep the upload-only + menu. Auto-linking still runs.
+4. Call `register_composer_action` and `register_message_embed` from a host or gem initializer when you need a + item or a typed card. Use `src:` for search and pickers. Leave them unregistered to keep the upload-only + menu. Auto-linking still runs.
 
 The migration creates `recording_studio_message_references` (`message_recording_id`, `target_recording_id`, unique pair). Tags never grant access. Accessible does not learn about Messages.
 

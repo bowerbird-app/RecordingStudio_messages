@@ -74,14 +74,8 @@ module RecordingStudioMessages
       Services::SendMessage.call(...)
     end
 
-    def register_composer_action(key, label:, icon:, partial:, if: nil)
-      configuration.composer_actions[key.to_s] = ComposerAction.new(
-        key: key.to_s,
-        label: label,
-        icon: icon,
-        partial: partial,
-        condition: binding.local_variable_get(:if)
-      )
+    def register_composer_action(key, **)
+      configuration.composer_actions[key.to_s] = ComposerAction.from_register(key, **)
     end
 
     def register_message_embed(recordable_type, partial:)

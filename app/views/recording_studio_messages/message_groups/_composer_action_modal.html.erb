@@ -1,0 +1,25 @@
+<% action = local_assigns.fetch(:action) %>
+<% group_recording = local_assigns.fetch(:group_recording) %>
+<% actor = local_assigns[:actor] %>
+<% mount = local_assigns[:mount] %>
+<% modal_id = messages_composer_action_modal_id(action) %>
+
+<%= render FlatPack::Modal::Component.new(
+  id: modal_id,
+  title: action.modal_title,
+  size: action.modal_size
+) do |modal| %>
+  <% modal.body do %>
+    <% if action.lazy? %>
+      <%= turbo_frame_tag messages_composer_action_frame_id(action),
+            src: action.resolved_src(group_recording, actor, mount),
+            loading: :lazy %>
+    <% else %>
+      <%= render action.partial,
+                 group_recording: group_recording,
+                 actor: actor,
+                 mount: mount,
+                 action: action %>
+    <% end %>
+  <% end %>
+<% end %>

@@ -607,8 +607,27 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes composer, "variant: :chat"
     assert_includes composer, "recording-studio-messages--composer"
     assert_includes composer, "messages_composer_actions"
+    assert_includes composer, "composer_action_modal"
+    refute_includes composer, "action.partial"
     refute_includes composer, "min-h-[var(--chat-composer-control-height)]"
     refute_includes composer, "rounded-lg"
+
+    action_modal = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_composer_action_modal.html.erb", __dir__)
+    )
+    composer_js = File.read(
+      File.expand_path("../app/javascript/recording_studio_messages/controllers/composer_controller.js", __dir__)
+    )
+    assert_includes action_modal, "FlatPack::Modal::Component"
+    assert_includes action_modal, "loading: :lazy"
+    assert_includes action_modal, "action.partial"
+    assert_includes action_modal, "group_recording"
+    assert_includes action_modal, "actor"
+    assert_includes action_modal, "mount"
+    assert_includes action_modal, "action"
+    assert_includes composer_js, "closeOpenActionModal"
+    assert_includes composer_js, "messages:composer-insert"
+    assert_includes composer_js, "[id^='messages-composer-action-']"
   end
 
   def test_public_contact_page_loads_flatpack_application_styles

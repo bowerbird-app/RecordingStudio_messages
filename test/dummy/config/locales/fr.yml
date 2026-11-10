@@ -110,7 +110,9 @@ fr:
       admin: Admin
     composer:
       attach_page: Joindre une page
+      find_a_page: Trouver une page
       no_pages: Aucune page à joindre pour l’instant.
+      untitled_page: Page sans titre
   flatpack:
     chat:
       placeholder: Écrire un message…
