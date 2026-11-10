@@ -19,21 +19,9 @@ module RecordingStudioMessages
       end
 
       def call
-        return [] unless enabled?
-        return [] unless conversation?
-        return [] if latest.blank?
+        return [] unless enabled? && conversation? && latest.present?
 
-        actors_by_key = current_actors_by_key
-        return [] if actors_by_key.empty?
-
-        pairs = reads.filter_map do |read|
-          actor = actors_by_key[read_key(read)]
-          next if actor.blank?
-          next unless reached_latest?(read)
-
-          [read.last_read_at, actor]
-        end
-        sort_readers(pairs)
+        collect_readers
       end
 
       private
@@ -47,9 +35,25 @@ module RecordingStudioMessages
           @group_recording.recordable_type == RecordingStudioMessages::MESSAGE_GROUP_TYPE
       end
 
+      def collect_readers
+        actors_by_key = current_actors_by_key
+        return [] if actors_by_key.empty?
+
+        sort_readers(reader_pairs(actors_by_key))
+      end
+
+      def reader_pairs(actors_by_key)
+        reads.filter_map do |read|
+          actor = actors_by_key[read_key(read)]
+          next if actor.blank?
+          next unless reached_latest?(read)
+
+          [read.last_read_at, actor]
+        end
+      end
+
       def latest
-        @resolved_latest ||= @latest_message.presence ||
-          RecordingStudioMessages.message_recordings(@group_recording).last
+        @latest ||= @latest_message.presence || RecordingStudioMessages.message_recordings(@group_recording).last
       end
 
       def current_actors_by_key
