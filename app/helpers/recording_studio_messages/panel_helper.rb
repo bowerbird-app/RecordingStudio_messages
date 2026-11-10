@@ -77,11 +77,11 @@ module RecordingStudioMessages
       time.strftime("%l:%M %p").strip
     end
 
-    def message_readers_by_message(group_recording, viewer:, messages: nil)
-      RecordingStudioMessages.readers_by_message(
+    def message_seen_by(group_recording, viewer:, latest_message: nil)
+      RecordingStudioMessages.seen_by(
         group_recording: group_recording,
         viewer: viewer,
-        messages: messages
+        latest_message: latest_message
       )
     end
 

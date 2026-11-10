@@ -54,13 +54,12 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     assert_response :success
     first_seen = css_select("[data-messages-seen-for='#{first.id}']").to_s
     second_seen = css_select("[data-messages-seen-for='#{second.id}']").to_s
-    assert_includes first_seen, "Jules"
-    assert_includes first_seen, "justify-start"
+    assert_equal "", first_seen
     assert_includes second_seen, "+1"
     assert_includes second_seen, "justify-start"
-    refute_includes first_seen, "-space-x-"
+    assert_includes second_seen, "Ann"
+    refute_includes second_seen, "Jules"
     refute_includes second_seen, "-space-x-"
-    refute_includes first_seen, "Casey Patron"
     refute_includes second_seen, "Casey Patron"
     assert_includes response.body, "Seen by"
     refute_includes response.body, SENT_CHECK_PATH
@@ -71,8 +70,10 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     owner_first = css_select("[data-messages-seen-for='#{first.id}']").to_s
-    assert_includes owner_first, "justify-end"
-    refute_includes owner_first, "Ada Staff"
+    owner_last = css_select("[data-messages-seen-for='#{second.id}']").to_s
+    assert_equal "", owner_first
+    assert_includes owner_last, "justify-end"
+    refute_includes owner_last, "Ada Staff"
   end
 
   private

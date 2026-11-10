@@ -2,7 +2,7 @@
 
 module RecordingStudioMessages
   module Services
-    class ReadersByMessage
+    class SeenBy
       ACCESS_JOIN = <<~SQL.squish
         INNER JOIN recording_studio_accesses
           ON recording_studio_accesses.id = recording_studio_recordings.recordable_id
@@ -12,20 +12,28 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(group_recording:, viewer:, messages: nil)
+      def initialize(group_recording:, viewer:, latest_message: nil)
         @group_recording = group_recording
         @viewer = viewer
-        @messages = messages
+        @latest_message = latest_message
       end
 
       def call
-        return {} unless enabled?
-        return {} unless conversation?
+        return [] unless enabled?
+        return [] unless conversation?
+        return [] if latest.blank?
 
         actors_by_key = current_actors_by_key
-        return {} if actors_by_key.empty?
+        return [] if actors_by_key.empty?
 
-        group_reads(actors_by_key)
+        pairs = reads.filter_map do |read|
+          actor = actors_by_key[read_key(read)]
+          next if actor.blank?
+          next unless reached_latest?(read)
+
+          [read.last_read_at, actor]
+        end
+        sort_readers(pairs)
       end
 
       private
@@ -37,6 +45,11 @@ module RecordingStudioMessages
       def conversation?
         @group_recording.present? &&
           @group_recording.recordable_type == RecordingStudioMessages::MESSAGE_GROUP_TYPE
+      end
+
+      def latest
+        @resolved_latest ||= @latest_message.presence ||
+          RecordingStudioMessages.message_recordings(@group_recording).last
       end
 
       def current_actors_by_key
@@ -59,47 +72,15 @@ module RecordingStudioMessages
                                  .includes(recordable: :actor)
       end
 
-      def group_reads(actors_by_key)
-        grouped = Hash.new { |hash, key| hash[key] = [] }
-
-        reads.each do |read|
-          actor = actors_by_key[read_key(read)]
-          next if actor.blank?
-
-          message_id = message_id_for(read)
-          next if message_id.blank?
-
-          grouped[message_id] << [read.last_read_at, actor]
-        end
-
-        grouped.transform_values { |pairs| sort_readers(pairs) }
-      end
-
       def reads
         RecordingStudioMessages::MessageRead.where(message_group_recording_id: @group_recording.id)
       end
 
-      def message_id_for(read)
-        id = read.last_read_message_recording_id
-        matched = messages_by_id[id.to_s]
-        return matched.id if matched
+      def reached_latest?(read)
+        return true if read.last_read_message_recording_id.to_s == latest.id.to_s
+        return false if read.last_read_at.blank?
 
-        fallback_message_id(read.last_read_at)
-      end
-
-      def fallback_message_id(last_read_at)
-        return if last_read_at.blank?
-
-        match = loaded_messages.reverse_each.find { |message| message.created_at <= last_read_at }
-        match&.id
-      end
-
-      def loaded_messages
-        @loaded_messages ||= Array(@messages.presence || RecordingStudioMessages.message_recordings(@group_recording))
-      end
-
-      def messages_by_id
-        @messages_by_id ||= loaded_messages.index_by { |message| message.id.to_s }
+        read.last_read_at >= latest.created_at
       end
 
       def sort_readers(pairs)

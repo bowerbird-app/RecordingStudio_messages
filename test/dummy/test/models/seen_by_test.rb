@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class ReadersByMessageTest < ActiveSupport::TestCase
+class SeenByTest < ActiveSupport::TestCase
   setup do
     @previous_actor = Current.actor
     @previous_receipts = RecordingStudioMessages.configuration.read_receipts
@@ -20,13 +20,13 @@ class ReadersByMessageTest < ActiveSupport::TestCase
   end
 
   test "returns no readers when the host leaves read receipts off" do
-    group, first, _second = conversation_with_two_lines
-    pin_read(@other, group, first)
+    group, _first, second = conversation_with_two_lines
+    pin_read(@other, group, second)
 
-    assert_equal({}, RecordingStudioMessages.readers_by_message(group_recording: group, viewer: @viewer))
+    assert_equal [], RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
   end
 
-  test "places each remaining viewer under the message they last read" do
+  test "returns people whose cursor has reached the latest message" do
     RecordingStudioMessages.configuration.read_receipts = true
     group, first, second = conversation_with_two_lines
     late = create_user("Late")
@@ -35,38 +35,61 @@ class ReadersByMessageTest < ActiveSupport::TestCase
     pin_read(late, group, second)
     pin_read(@viewer, group, second)
 
-    result = RecordingStudioMessages.readers_by_message(group_recording: group, viewer: @viewer)
+    result = RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
 
-    assert_equal [ @other.id ], result.fetch(first.id).map(&:id)
-    assert_equal [ late.id, @owner.id ], result.fetch(second.id).map(&:id)
-    refute_includes result.values.flatten.map(&:id), @viewer.id
+    assert_equal [ late.id, @owner.id ], result.map(&:id)
+    refute_includes result.map(&:id), @other.id
+    refute_includes result.map(&:id), @viewer.id
+  end
+
+  test "counts a cursor that matches the latest id or is at least as new as that line" do
+    RecordingStudioMessages.configuration.read_receipts = true
+    group, _first, second = conversation_with_two_lines
+    by_id = create_user("By Id")
+    by_time = create_user("By Time")
+    grant!(group, by_id)
+    grant!(group, by_time)
+    RecordingStudioMessages::Services::MessageReads.new(actor: by_id).upsert_cursor(
+      group_recording: group,
+      last_read_at: second.created_at - 1.minute,
+      last_read_message_recording_id: second.id
+    )
+    RecordingStudioMessages::Services::MessageReads.new(actor: by_time).upsert_cursor(
+      group_recording: group,
+      last_read_at: second.created_at + 1.minute,
+      last_read_message_recording_id: nil
+    )
+
+    result = RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
+
+    assert_includes result.map(&:id), by_id.id
+    assert_includes result.map(&:id), by_time.id
   end
 
   test "hides a reader after their conversation grant is trashed" do
     RecordingStudioMessages.configuration.read_receipts = true
-    group, first, _second = conversation_with_two_lines
-    pin_read(@other, group, first)
+    group, _first, second = conversation_with_two_lines
+    pin_read(@other, group, second)
     trash_grant!(group, @other)
 
-    result = RecordingStudioMessages.readers_by_message(group_recording: group, viewer: @viewer)
-    remaining = result.values.flatten.map(&:id)
+    result = RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
 
-    refute_includes remaining, @other.id
-    refute_includes remaining, @viewer.id
+    refute_includes result.map(&:id), @other.id
+    refute_includes result.map(&:id), @viewer.id
   end
 
   test "query count stays flat as more readers join" do
     RecordingStudioMessages.configuration.read_receipts = true
-    group, first, second = conversation_with_two_lines
-    2.times { |index| add_reader(group, first, "Early #{index}") }
+    group, _first, second = conversation_with_two_lines
+    2.times { |index| add_reader(group, second, "Caught #{index}") }
     small = snapshot_reader_queries(group)
-    2.times { |index| add_reader(group, second, "Late #{index}") }
+    2.times { |index| add_reader(group, second, "Later #{index}") }
     large = snapshot_reader_queries(group)
-    result = RecordingStudioMessages.readers_by_message(group_recording: group, viewer: @viewer)
+    result = RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
 
     assert_equal small, large
-    assert_equal 2, result.fetch(first.id).count { |actor| actor.name.start_with?("Early") }
-    assert_equal 2, result.fetch(second.id).count { |actor| actor.name.start_with?("Late") }
+    assert_equal 2, result.count { |actor| actor.name.start_with?("Caught") }
+    assert_equal 2, result.count { |actor| actor.name.start_with?("Later") }
   end
 
   private
@@ -152,7 +175,7 @@ class ReadersByMessageTest < ActiveSupport::TestCase
       count += 1
     end
     ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
-      RecordingStudioMessages.readers_by_message(group_recording: group, viewer: @viewer)
+      RecordingStudioMessages.seen_by(group_recording: group, viewer: @viewer)
     end
     count
   end

@@ -206,7 +206,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def mark_read"
     assert_includes api, "def unread?"
     assert_includes api, "def unread_count"
-    assert_includes api, "def readers_by_message"
+    assert_includes api, "def seen_by"
     assert_includes api, "def tag"
     assert_includes api, "def untag"
     assert_includes list_groups, "RecordingStudioAccessible.recordings_for"
@@ -459,7 +459,7 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes controller, "format.turbo_stream"
     assert_includes helper, "messages_panel_list_id"
-    assert_includes helper, "def message_readers_by_message"
+    assert_includes helper, "def message_seen_by"
     assert_includes stream, "turbo_stream.replace messages_panel_list_id"
     assert_includes stream, "turbo_stream.replace messages_panel_composer_id"
     refute_includes controller, "ActionCable"
@@ -474,7 +474,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes message, "state: :sent"
     refute_includes message, "MessageMeta"
     assert_includes message, "message_groups/message_seen"
-    assert_includes list, "message_readers_by_message"
+    assert_includes list, "message_seen_by"
   end
 
   def test_public_contact_does_not_reference_users_otp_internals
