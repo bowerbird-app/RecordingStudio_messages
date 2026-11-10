@@ -8,11 +8,12 @@ class ConfigurationTest < Minitest::Test
   end
 
   def test_merge_updates_known_attributes
-    @configuration.merge!(api_key: "abc123", timeout: 9, enable_feature_x: true)
+    @configuration.merge!(api_key: "abc123", timeout: 9, enable_feature_x: true, read_receipts: true)
 
     assert_equal "abc123", @configuration.api_key
     assert_equal 9, @configuration.timeout
     assert_equal true, @configuration.enable_feature_x
+    assert_equal true, @configuration.read_receipts
   end
 
   def test_merge_ignores_unknown_keys
@@ -48,6 +49,7 @@ class ConfigurationTest < Minitest::Test
     assert_equal false, configuration.public_contact_sign_in_after_verification
     assert_nil configuration.public_contact_success_redirect_url
     assert_nil configuration.public_contact_success_redirect_label
+    assert_equal false, configuration.read_receipts
     assert_nil configuration.layout
     assert_instance_of RecordingStudio::Hooks, configuration.hooks
   ensure

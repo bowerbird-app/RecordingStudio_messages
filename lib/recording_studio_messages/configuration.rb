@@ -7,7 +7,7 @@ module RecordingStudioMessages
                   :public_contact_recipient_resolver, :public_contact_sent_icon,
                   :public_contact_sign_in_after_verification,
                   :public_contact_success_redirect_url, :public_contact_success_redirect_label
-    attr_reader :hooks, :layout
+    attr_reader :hooks, :layout, :read_receipts
 
     def initialize
       @api_key = ENV.fetch("RECORDING_STUDIO_MESSAGES_API_KEY", nil)
@@ -17,9 +17,13 @@ module RecordingStudioMessages
       @public_contact_recipient_resolver = nil
       @public_contact_sent_icon = "rocket-launch"
       @public_contact_sign_in_after_verification = false
-      @public_contact_success_redirect_url = nil
-      @public_contact_success_redirect_label = nil
+      @public_contact_success_redirect_url = @public_contact_success_redirect_label = nil
+      @read_receipts = false
       @hooks = RecordingStudio::Hooks.new
+    end
+
+    def read_receipts=(value)
+      @read_receipts = ActiveModel::Type::Boolean.new.cast(value)
     end
 
     def layout=(value)

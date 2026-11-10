@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-11-10
+
+A conversation can show who has caught up to the latest line when the host turns that on. The fake sent check is gone.
+
+### Changed
+
+- Message bubbles keep the time and no longer pass `state: :sent` into Flatpack `Chat::MessageMeta`. Flatpack has no "no status" state, so the time is `FlatPack::Text` in the meta slot.
+
+### Added
+
+- `RecordingStudioMessages.configure { |c| c.read_receipts = true }`. Default is `false`. Read cursors stay private until the host opts in.
+- `seen_by(group_recording:, viewer:)` returns the actors whose cursor has reached the latest message. It uses `recording_studio_message_reads`, keeps people who currently have a ranked Accessible grant on that conversation, and drops the viewer. One batched lookup per conversation render. No new table.
+- When the setting is on, those people show as small `Avatar`s under the latest line only. Earlier lines have none. Faces sit in a `Cluster` (no overlap) in the same column as the bubble, right for outgoing and left for incoming. At most three faces, then a `+N` avatar. Names go in the group label and tooltip. Faces update on the next render. Opening a conversation does not broadcast seen faces to other open windows.
+
+### Upgrade notes
+
+- Bump to **0.16.0**. No Messages migration on top of 0.15.0.
+- Leave the setting off if you want the same private unread cursors as 0.15.0, minus the check mark.
+- Set `config.read_receipts = true` to show seen faces under the latest line. Call `seen_by` if you render your own thread.
+
 ## [0.15.0] - 2026-11-09
 
 Each person gets a private read cursor per conversation. Sending and conversation shape stay the same.

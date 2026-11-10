@@ -148,6 +148,39 @@ begin
     )
   end
 
+  seed_seen_reader = lambda do |name, email|
+    user = User.find_or_create_by!(email: email) do |record|
+      record.password = "Password"
+      record.password_confirmation = "Password"
+      record.confirmed_at = Time.current if record.class.column_names.include?("confirmed_at")
+    end
+    user.update!(name: name) if user.name != name
+    find_or_grant.call(support_group, user, :view, staff)
+    user
+  end
+  jules = seed_seen_reader.call("Jules Early", "jules@example.com")
+  riley = seed_seen_reader.call("Riley One", "riley@example.com")
+  sam = seed_seen_reader.call("Sam Overflow", "sam@example.com")
+  kit = seed_seen_reader.call("Kit Extra", "kit@example.com")
+  support_messages = support_bodies.filter_map do |_actor, body|
+    recordable = RecordingStudioMessages::Message.find_by(body: body)
+    next if recordable.blank?
+
+    RecordingStudio::Recording.find_by(recordable: recordable, parent_recording: support_group, trashed_at: nil)
+  end
+  if support_messages.size >= 3
+    pin_seen = lambda do |actor, message|
+      RecordingStudioMessages::Services::MessageReads.new(actor: actor).upsert_cursor(
+        group_recording: support_group,
+        last_read_at: message.created_at,
+        last_read_message_recording_id: message.id
+      )
+    end
+    pin_seen.call(jules, support_messages[0])
+    pin_seen.call(customer, support_messages[1])
+    [ agent, riley, sam, kit ].each { |actor| pin_seen.call(actor, support_messages[2]) }
+  end
+
   launch_bodies = [
     [staff, "Can we lock the launch copy tonight?"],
     [customer, "I will send a quieter line this evening."]

@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.15.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.16.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -206,6 +206,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def mark_read"
     assert_includes api, "def unread?"
     assert_includes api, "def unread_count"
+    assert_includes api, "def seen_by"
     assert_includes api, "def tag"
     assert_includes api, "def untag"
     assert_includes list_groups, "RecordingStudioAccessible.recordings_for"
@@ -458,10 +459,22 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes controller, "format.turbo_stream"
     assert_includes helper, "messages_panel_list_id"
+    assert_includes helper, "def message_seen_by"
     assert_includes stream, "turbo_stream.replace messages_panel_list_id"
     assert_includes stream, "turbo_stream.replace messages_panel_composer_id"
     refute_includes controller, "ActionCable"
     refute File.exist?(File.expand_path("../app/channels", __dir__))
+
+    message = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_message.html.erb", __dir__)
+    )
+    list = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_message_list.html.erb", __dir__)
+    )
+    refute_includes message, "state: :sent"
+    refute_includes message, "MessageMeta"
+    assert_includes message, "message_groups/message_seen"
+    assert_includes list, "message_seen_by"
   end
 
   def test_public_contact_does_not_reference_users_otp_internals
