@@ -61,6 +61,24 @@ bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
 
+### Upgrading to 0.16.0
+
+Messages `0.16.0` can show who has seen which line. Unread cursors, `#show` mark-read, and tags stay as they are. The check mark next to every timestamp is gone.
+
+1. Install Messages `0.16.0`. No new migration on top of 0.15.0.
+2. Leave `read_receipts` off (the default) if seen faces should stay hidden.
+3. Set `RecordingStudioMessages.configure { |c| c.read_receipts = true }` to show up to three `AvatarGroup` faces under each person's last-read line, then `+N`.
+
+`readers_by_message(group_recording:, viewer:)` is the same lookup the thread uses. It only includes people who currently have a ranked Accessible grant on that conversation. Tags never grant access. Opening a conversation still marks that person read on `#show` only. Other open windows pick up new faces on the next render.
+
+```ruby
+RecordingStudioMessages.configure do |config|
+  config.read_receipts = true
+end
+
+RecordingStudioMessages.readers_by_message(group_recording: group, viewer: current_actor)
+```
+
 ### Upgrading to 0.15.0
 
 Messages `0.15.0` stores a private read cursor per person per conversation. Sending, delivery, and conversation shape are unchanged. Existing public methods keep the same arguments. Unread is a fact table, not a recording.
@@ -71,7 +89,7 @@ Messages `0.15.0` stores a private read cursor per person per conversation. Send
 
 The migration creates `recording_studio_message_reads` and backfills current membership as read (`last_read_at = last_message_at`) in batches. After that, a conversation is unread when someone else sends, until that person opens it (`#show`). A `/my_messages` row click requests a Turbo stream. The stream marks the conversation read, then updates that row's unread avatar and `messages-unread-badge`. A turbo-frame open still marks read. Opening the index does not mark the auto-selected conversation read. Opening a conversation also marks that person's unread `:message_received` notices for it. Notifications does not depend on Messages.
 
-Read state is private. There are no read receipts.
+Read state is private until the host sets `read_receipts`.
 
 ```ruby
 RecordingStudioMessages.unread_count(actor: current_actor)
@@ -284,6 +302,7 @@ RecordingStudioMessages.my_group_recordings(actor: current_actor, unread: true)
 RecordingStudioMessages.unread_count(actor: current_actor)
 RecordingStudioMessages.mark_read(group_recording: group, actor: current_actor)
 RecordingStudioMessages.unread?(group_recording: group, actor: current_actor)
+RecordingStudioMessages.readers_by_message(group_recording: group, viewer: current_actor)
 RecordingStudioMessages.create_group(
   mount,
   title: "Center desk",
@@ -300,7 +319,7 @@ RecordingStudioMessages.tagged_group_recordings(
 
 `my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
 
-`mark_read(group_recording:, actor:)` upserts that person's cursor (`last_read_at` and the latest message id). It requires Accessible `:view`. It also marks that person's unread `:message_received` notices for that conversation as read, through the Notifications model. It does not grant access. `unread?(group_recording:, actor:)` is true only for a viewer who still has a newer `last_message_at`. `unread_count(actor:)` counts unread rows in `my_group_recordings` with one join. Read rows are private. There are no read receipts. Bell clear-all does not change these cursors.
+`mark_read(group_recording:, actor:)` upserts that person's cursor (`last_read_at` and the latest message id). It requires Accessible `:view`. It also marks that person's unread `:message_received` notices for that conversation as read, through the Notifications model. It does not grant access. `unread?(group_recording:, actor:)` is true only for a viewer who still has a newer `last_message_at`. `unread_count(actor:)` counts unread rows in `my_group_recordings` with one join. Read rows are private until `read_receipts` is on. `readers_by_message(group_recording:, viewer:)` then maps current granted readers onto the message they last read. Bell clear-all does not change these cursors.
 
 `tag` writes a message group tag row. One group can hold many keys. Each key points at one tagged recording. `untag` deletes that key, or the exact row when you also pass `recording:`. Optional `tags:` on the list is an AND filter over those rows. It does not replace Accessible. Example keys are `press_center` and `press_kit`. This gem does not define a press vocabulary.
 
