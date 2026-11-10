@@ -102,6 +102,12 @@ module RecordingStudioMessages
       nil
     end
 
+    def messages_list_header_title(mount:, actor:)
+      return unless actor && (mount || mount.nil?)
+
+      nil
+    end
+
     def messages_unread_filter_label(unread_filter)
       key = unread_filter ? "inbox.filter_show_all" : "inbox.filter_unread_only"
       messages_t(key)

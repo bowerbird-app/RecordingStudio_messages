@@ -50,6 +50,9 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "html[data-theme='rounded']", count: 1
     assert_includes response.body, "Site inbox"
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: DummyCatalog.mailbox.name
+    assert_select "[data-flat-pack--chat-layout-target='panel'] h2", text: "Site inbox"
     assert_includes response.body, "They are in. I attached the first frame."
     assert_includes response.body, "flat-pack--chat-panel"
   end

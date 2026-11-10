@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-11-10
+
+The conversation list header no longer shows the mount parent name (or "My messages") by default. Unread controls, the host toolbar slot, and the open conversation header stay as they are.
+
+### Changed
+
+- The list `Chat::Header` title is blank unless a host overrides `messages_list_header_title(mount:, actor:)`. That hook defaults to nil. `messages_list_toolbar` is unchanged. Page titles and back tooltips still use `messages_inbox_title` / `inbox.my_title`.
+
+### Upgrade notes
+
+- Bump to **0.20.1**. No Messages migration on top of 0.20.0.
+- Mount desks and `/my_messages` drop the list-header name. Override `messages_list_header_title(mount:, actor:)` to put one back. Leave it undefined to keep the header as controls only.
+
 ## [0.20.0] - 2026-11-10
 
 Bubble times stay in the DOM and show on hover, tap, or focus. A clock `Chat::DateDivider` sits between consecutive lines when the gap is more than 15 minutes, in addition to day breaks. Last-line status is `Chat::SentAt` until others have read it, then seen faces occupy the group `status` slot. The v0.17 header hooks, v0.18 rename, and v0.19 toolbar/unread stay as they are.

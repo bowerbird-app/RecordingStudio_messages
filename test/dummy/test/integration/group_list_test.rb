@@ -22,6 +22,12 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='flat-pack--chat-layout']"
     assert_select "[data-controller='flat-pack--list-selectable']"
     assert_includes response.body, "Staff desk"
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2",
+                  text: DummyCatalog.studio_workspace.name
+    assert_select "[data-flat-pack--chat-layout-target='panel'] h2", count: 1
+    refute_select "[data-flat-pack--chat-layout-target='panel'] h2",
+                  text: DummyCatalog.studio_workspace.name
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Launch notes"
     assert_includes response.body, "I will send a quieter line this evening."
