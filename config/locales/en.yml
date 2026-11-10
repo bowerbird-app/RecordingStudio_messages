@@ -33,6 +33,8 @@ en:
       panel:
         someone: Someone
         seen_by: "Seen by %{names}"
+        title_label: Conversation name
+        title_placeholder: Name this conversation
       flashes:
         sent: Sent.
         code_resent: Fresh code on the way.
@@ -40,6 +42,8 @@ en:
       errors:
         write_message: Write a message.
         message_too_long: That message is too long.
+        enter_title: Give this conversation a name.
+        title_too_long: That name is too long.
         enter_name: Enter your name.
         name_too_long: That name is too long.
         enter_email: Enter an email address.

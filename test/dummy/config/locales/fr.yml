@@ -69,6 +69,8 @@ fr:
       panel:
         someone: Quelqu’un
         seen_by: "Vu par %{names}"
+        title_label: Nom de la conversation
+        title_placeholder: Nommer cette conversation
       flashes:
         sent: Envoyé.
         code_resent: Nouveau code en route.
@@ -76,6 +78,8 @@ fr:
       errors:
         write_message: Écrivez un message.
         message_too_long: Ce message est trop long.
+        enter_title: Donnez un nom à cette conversation.
+        title_too_long: Ce nom est trop long.
         enter_name: Entrez votre nom.
         name_too_long: Ce nom est trop long.
         enter_email: Entrez une adresse e-mail.

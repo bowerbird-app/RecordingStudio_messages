@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-11-10
+
+People with edit access can rename an open conversation in place. The list row title follows without remounting the desk.
+
+### Added
+
+- Click the conversation name in the open panel header to rename it. Flatpack `InlineEdit` saves on blur and Enter. The name is `MessageGroup#title`. Save goes through `RecordingStudioMessages.rename_group`, which revises that snapshot and writes an `updated` event. There is no new table.
+- `PATCH /recording_studio_messages/message_groups/:id/rename` is the mount-scoped rename. The conversation must sit under a `MessageMount`. Optional `mount_id` must match that parent. Accessible `:edit` (and stronger roles) can hit it. `:view` sees today's plain title and gets 403. No access is 404. Tags never grant access.
+- A successful save Turbo-updates `messages-inbox-title-<id>` on that list row. It does not replace the list. Blank names and names over 120 characters keep the old title and return 422 so InlineEdit can show its error state.
+
+### Upgrade notes
+
+- Bump to **0.18.0**. No Messages migration on top of 0.17.1.
+- Raise `flat_pack` to `>= 0.1.346` so `InlineEdit` is present. Hosts already on 0.17.1's `v0.1.346` pin need no further Flatpack bump.
+- Pin `flat_pack/copy` in the host importmap. `InlineEdit` imports it, and a missing pin leaves the title unclickable.
+- People with Accessible `:edit` or stronger see the editable name. Everyone else still sees a plain title.
+
 ## [0.17.1] - 2026-11-10
 
 Chat bubbles on the rounded theme pick up Flatpack's message radius and padding tokens. Default theme values stay as they were.

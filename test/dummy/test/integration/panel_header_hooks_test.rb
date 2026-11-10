@@ -60,7 +60,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
     <%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
       <% panel.header do %>
         <%= render FlatPack::Chat::Header::Component.new(
-          title: group_recording.recordable.title
+          title: messages_panel_header_title(group_recording, actor: current_actor, inbox: local_assigns[:inbox])
         ) do |header| %>
           <% if membership_open %>
             <% header.right do %>
@@ -292,6 +292,9 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
   end
 
   def stable_panel_html(html)
-    html.to_s.gsub(/__[a-f0-9]{8}/, "__id").rstrip
+    html.to_s
+        .gsub(/__[a-f0-9]{8}/, "__id")
+        .gsub(/fp-inline-edit-live-\d+/, "fp-inline-edit-live-id")
+        .rstrip
   end
 end

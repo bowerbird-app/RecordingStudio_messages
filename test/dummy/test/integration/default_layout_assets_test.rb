@@ -109,7 +109,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
   test "Flatpack application imports resolve without asset 404s" do
     application_css = Rails.application.assets.load_path.find("flat_pack/application.css").compiled_content
 
-    %w[variables rich_text content_editor].each do |stylesheet|
+    %w[variables rich_text content_editor inline_edit].each do |stylesheet|
       assert_match %r{@import url\("/assets/flat_pack/#{stylesheet}-[a-f0-9]+\.css"\);}, application_css
     end
     refute_includes application_css, '@import "flat_pack/'

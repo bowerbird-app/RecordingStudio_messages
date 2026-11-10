@@ -26,7 +26,9 @@
       <% end %>
       <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
         <% inbox_rows.each do |inbox_row| %>
-          <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row) %>
+          <%= turbo_frame_tag inbox_row[:title_frame_id] do %>
+            <%= render FlatPack::Chat::InboxRow::Component.new(**inbox_row.except(:title_frame_id)) %>
+          <% end %>
         <% end %>
         <% if local_assigns[:older_href].present? %>
           <%= render FlatPack::Button::Component.new(
@@ -45,7 +47,8 @@
                  message_recordings: message_recordings,
                  current_actor: current_actor,
                  form_url: local_assigns[:form_url],
-                 return_to: local_assigns[:return_to] %>
+                 return_to: local_assigns[:return_to],
+                 inbox: inbox %>
     <% end %>
   <% end %>
 </div>

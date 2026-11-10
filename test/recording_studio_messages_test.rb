@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.17.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.18.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -17,6 +17,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     )
 
     assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil)"
+    assert_includes api, "def rename_group(group_recording:, title:, actor:)"
     assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
     assert_includes flow, "tags: contact_tags"
     assert_includes helper, "tags: nil"
@@ -46,7 +47,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert requirement.satisfied_by?(Gem::Version.new("0.5.0"))
     refute requirement.satisfied_by?(Gem::Version.new("0.3.0"))
     refute requirement.satisfied_by?(Gem::Version.new("1.0.0"))
-    assert_equal ">= 0.1.331", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal ">= 0.1.346", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -77,7 +78,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
-    assert_equal ">= 0.1.331", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal ">= 0.1.346", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v4.7.0"'
@@ -194,13 +195,25 @@ class RecordingStudioMessagesTest < Minitest::Test
     api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
 
     assert_includes routes, "%i[index show]"
+    assert_includes routes, "patch :rename, on: :member"
     assert_includes routes, "resources :my_messages, only: %i[index show]"
     assert_includes application_controller, "include RecordingStudio::ControllerLayout"
     assert_includes controller, "def index"
     assert_includes controller, "viewable_group_recordings"
     assert_includes controller, "authorize_mount_parent!"
     assert_includes controller, "authorize_group!(:view)"
+    assert_includes controller, "include MessageGroupsRename"
+    rename_actions = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/message_groups_rename.rb", __dir__)
+    )
+    assert_includes rename_actions, "def rename"
+    assert_includes rename_actions, "authorize_rename_mount!"
+    assert_includes rename_actions, "rename_editable?"
+    assert_includes rename_actions, "role: :edit"
+    refute_includes rename_actions, "update_column"
+    refute_includes controller, "update_column"
     assert_includes controller, "mark_read"
+    assert_includes api, "def rename_group"
     assert_includes api, "def viewable_group_recordings"
     assert_includes api, "def my_group_recordings"
     assert_includes api, "def mark_read"
@@ -226,6 +239,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes helper, "turbo_stream: true"
     assert_includes helper, "def messages_unread_badge_id"
     assert_includes helper, "def messages_inbox_unread_dot_id"
+    assert_includes helper, "def messages_inbox_title_id"
+    assert_includes helper, "title_frame_id: messages_inbox_title_id(group_recording)"
     assert_includes helper, "def messages_inbox_row_link"
     assert_includes helper, "inbox: inbox"
     assert_includes helper, "messages_inbox_mount_name"
@@ -246,6 +261,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes my_messages_stream, "turbo_stream.update messages_desk_panel_id"
     assert_includes my_messages_stream, "turbo_stream.update messages_inbox_unread_dot_id"
     assert_includes my_messages_stream, "turbo_stream.update messages_unread_badge_id"
+    rename_stream = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/rename.turbo_stream.erb", __dir__)
+    )
+    assert_includes rename_stream, "turbo_stream.update messages_inbox_title_id"
+    assert_includes rename_stream, "FlatPack::Chat::InboxRow::Component"
+    refute_includes rename_stream, "messages_inbox_rows"
     refute_includes my_messages_stream, "messages_inbox_rows"
     query = File.read(
       File.expand_path("../lib/recording_studio_messages/services/my_group_recordings.rb", __dir__)
@@ -264,10 +285,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "layout.sidebar"
     assert_includes desk, "layout.panel"
     assert_includes desk, "messages_inbox_rows"
+    assert_includes desk, "turbo_frame_tag inbox_row[:title_frame_id]"
     assert_includes desk, "unread_badge"
     assert_includes desk, "panel_frame"
     assert_includes panel_frame, "messages_desk_panel_id"
     assert_includes panel, "membership_locked_for_group?"
+    assert_includes panel, "messages_panel_header_title(group_recording, actor: current_actor, inbox: inbox)"
     assert_includes panel, "messages_panel_right_header(group_recording, actor: current_actor, mount:"
     assert_includes panel, "messages_panel_right_header_mobile(group_recording, actor: current_actor, mount:"
     assert_includes panel, "messages_panel_after(group_recording, actor: current_actor, mount:"
@@ -279,6 +302,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes panel_helper, "def messages_panel_right_header(group_recording, actor:, mount:)"
     assert_includes panel_helper, "def messages_panel_right_header_mobile(group_recording, actor:, mount:)"
     assert_includes panel_helper, "def messages_panel_after(group_recording, actor:, mount:)"
+    assert_includes panel_helper, "def messages_can_rename_group?"
+    assert_includes panel_helper, "def messages_panel_header_title"
+    assert_includes panel_helper, "FlatPack::InlineEdit::Component"
+    assert_includes panel_helper, "role: :edit"
     assert_includes panel, "if membership_open"
     assert_includes panel, "recording_studio_accessible_avatars"
     refute_includes panel, "show_access:"
@@ -370,6 +397,7 @@ class RecordingStudioMessagesTest < Minitest::Test
 
     assert_includes application_js, 'import "@hotwired/turbo-rails"'
     assert_includes importmap, 'pin "@hotwired/turbo-rails", to: "turbo.min.js"'
+    assert_includes importmap, 'pin "flat_pack/copy", to: "flat_pack/copy.js"'
   end
 
   def test_dummy_tailwind_keeps_flatpack_theme_selection_in_flatpack

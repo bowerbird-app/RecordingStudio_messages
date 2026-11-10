@@ -10,6 +10,8 @@ module RecordingStudioMessages
 
     RecordingStudio.enable_capability(:accessible, on: self)
 
-    validates :title, presence: true
+    TITLE_MAX = 120
+
+    validates :title, presence: true, length: { maximum: TITLE_MAX }
   end
 end

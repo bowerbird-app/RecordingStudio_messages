@@ -2,6 +2,8 @@
 
 module RecordingStudioMessages
   class MessageGroupsController < ApplicationController
+    include MessageGroupsRename
+
     rescue_from RecordingStudioMessages::NotAuthorized, with: :handle_not_authorized
 
     def index
