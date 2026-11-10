@@ -1,0 +1,17 @@
+<%= turbo_stream.update messages_desk_panel_id do %>
+  <%= render "recording_studio_messages/message_groups/panel",
+             group_recording: @group_recording,
+             message_recordings: @message_recordings,
+             current_actor: current_messages_actor %>
+<% end %>
+
+<%= turbo_stream.update messages_inbox_unread_dot_id(@group_recording) do %>
+  <%= render "recording_studio_messages/message_groups/inbox_unread_dot_inner",
+             group_recording: @group_recording,
+             unread: false %>
+<% end %>
+
+<%= turbo_stream.update messages_unread_badge_id do %>
+  <%= render "recording_studio_messages/message_groups/unread_badge_inner",
+             unread_count: messages_unread_count %>
+<% end %>

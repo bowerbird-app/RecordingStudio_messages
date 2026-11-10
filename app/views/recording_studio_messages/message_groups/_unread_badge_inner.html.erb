@@ -1,0 +1,4 @@
+<% count = local_assigns[:unread_count].to_i %>
+<% if count.positive? %>
+  <%= render FlatPack::Badge::Component.new(text: count.to_s, style: :primary, size: :sm) %>
+<% end %>

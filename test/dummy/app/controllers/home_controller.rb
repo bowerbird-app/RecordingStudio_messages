@@ -1,8 +1,10 @@
 class HomeController < ApplicationController
   helper RecordingStudioMessages::PublicContactHelper
+  helper RecordingStudioMessages::InboxHelper
 
   def index
     @public_contact_mount = inbox_public_contact_mount
+    @messages_unread_count = RecordingStudioMessages.unread_count(actor: Current.actor)
   end
 
   private

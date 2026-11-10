@@ -1,0 +1,6 @@
+<%= turbo_frame_tag messages_inbox_unread_dot_id(group_recording) do %>
+  <%= render "recording_studio_messages/message_groups/inbox_unread_dot_inner",
+             group_recording: group_recording,
+             unread: unread,
+             page: local_assigns[:page] %>
+<% end %>

@@ -17,10 +17,11 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(actor:, after: nil, limit: nil)
+      def initialize(actor:, after: nil, limit: nil, unread: false)
         @actor = actor
         @after = after
         @limit = limit
+        @unread = unread
       end
 
       def call
@@ -29,6 +30,7 @@ module RecordingStudioMessages
         return RecordingStudio::Recording.none unless defined?(RecordingStudio::Access)
 
         scope = ordered_groups.where(id: granted_group_ids)
+        scope = apply_unread(scope)
         scope = apply_keyset(scope)
         scope = scope.limit(@limit) if @limit.present?
         scope.includes(:recordable, parent_recording: { parent_recording: :recordable })
@@ -127,6 +129,21 @@ module RecordingStudioMessages
         <<~SQL.squish
           COALESCE(recording_studio_message_groups.last_message_at, #{quoted_time(SENTINEL)}) DESC,
           recording_studio_recordings.id DESC
+        SQL
+      end
+
+      def apply_unread(scope)
+        return scope unless @unread
+
+        scope.joins(read_join).where(RecordingStudioMessages::Services::MessageReads::UNREAD_SQL)
+      end
+
+      def read_join
+        <<~SQL.squish
+          LEFT JOIN recording_studio_message_reads
+            ON recording_studio_message_reads.message_group_recording_id = recording_studio_recordings.id
+            AND recording_studio_message_reads.actor_type = #{quoted(actor_filter[:actor_type])}
+            AND recording_studio_message_reads.actor_id = #{quoted(actor_filter[:actor_id])}
         SQL
       end
 

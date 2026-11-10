@@ -1,0 +1,14 @@
+<%= render FlatPack::AvatarGroup::Component.new(
+      items: messages_inbox_avatar_items(
+        group_recording,
+        page: local_assigns[:page],
+        unread: unread
+      ),
+      max: 2,
+      size: :xs,
+      overlap: :sm,
+      data: {
+        chat_group_inbox_avatar: true,
+        max_visible_avatars: 2
+      }
+    ) %>

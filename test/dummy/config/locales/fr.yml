@@ -62,6 +62,8 @@ fr:
         title: Conversations
         my_title: Mes messages
         older: Conversations plus anciennes
+        filter_unread_only: Afficher les non lues
+        filter_show_all: Tout afficher
         empty_thread: Rien ici pour l’instant. Écrivez la première ligne.
         empty_panel: Rien ici pour l’instant.
       panel:

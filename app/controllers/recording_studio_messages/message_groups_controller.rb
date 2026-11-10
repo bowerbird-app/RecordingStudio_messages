@@ -15,6 +15,7 @@ module RecordingStudioMessages
       authorize_group!(:view)
       @mount_recording = @group_recording.parent_recording
       @group_recordings = viewable_groups_for_mount
+      RecordingStudioMessages.mark_read(group_recording: @group_recording, actor: current_messages_actor)
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
       render layout: false if turbo_frame_request?
     end

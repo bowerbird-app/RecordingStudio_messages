@@ -24,11 +24,12 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Site inbox"
     assert_includes response.body, DummyCatalog.studio_workspace.name
     assert_includes response.body, DummyCatalog.mailbox.name
-    assert_select "a[href=?][data-turbo-frame=?]",
+    assert_select "a[href=?][data-turbo-stream]",
+                  recording_studio_messages.my_message_path(DummyCatalog.support_group_recording)
+    assert_select "a[href=?][data-turbo-stream]",
+                  recording_studio_messages.my_message_path(DummyCatalog.inbox_group_recording)
+    refute_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.my_message_path(DummyCatalog.support_group_recording),
-                  "messages-desk-panel"
-    assert_select "a[href=?][data-turbo-frame=?]",
-                  recording_studio_messages.my_message_path(DummyCatalog.inbox_group_recording),
                   "messages-desk-panel"
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
   end
@@ -127,6 +128,126 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Studio help"
   end
 
+  test "index auto-select does not mark the first conversation read" do
+    Current.actor = @staff
+    first = seeded_unread_conversation("First unread")
+    stamp_last_message_at!(first, 2.minutes.from_now)
+    second = seeded_unread_conversation("Second unread")
+    stamp_last_message_at!(second, 3.minutes.from_now)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path
+
+    assert_response :success
+    refute_includes response.body, ">All<"
+    refute_includes response.body, ">Unread<"
+    refute_select ".fp-tabular-nums", text: "1"
+    assert RecordingStudioMessages.unread?(group_recording: first, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: second, actor: @customer)
+    assert_select "a[href=?][aria-label=?][title=?]",
+                  recording_studio_messages.my_messages_path(unread: 1),
+                  "Show unread only",
+                  "Show unread only"
+    assert_select "svg[data-flat-pack--icon-name-value=?][data-flat-pack--icon-variant-value=?]",
+                  "bell-alert",
+                  "outline"
+    assert_select "[data-unread=true]", minimum: 2
+    refute_select "a[aria-current=page][aria-label=?]", "Show unread only"
+    assert_select "turbo-frame#messages-unread-badge"
+    assert_select "turbo-frame#messages-unread-dot-#{first.id}"
+    assert_select "turbo-frame#messages-unread-dot-#{first.id} [class*='avatar-status-busy']"
+  end
+
+  test "explicit show marks read and clears that conversation's notices" do
+    Current.actor = @staff
+    kept = seeded_unread_conversation("Keep notice", notify: true)
+    opened = seeded_unread_conversation("Open notice", notify: true)
+
+    sign_in @customer
+    get recording_studio_messages.my_message_path(opened)
+
+    assert_response :success
+    refute RecordingStudioMessages.unread?(group_recording: opened, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: kept, actor: @customer)
+    assert_not_nil notice_for(opened).read_at
+    assert_nil notice_for(kept).read_at
+  end
+
+  test "explicit turbo show updates that row's unread dot and the badge without remounting the unread list" do
+    Current.actor = @staff
+    kept = seeded_unread_conversation("Keep unread")
+    opened = seeded_unread_conversation("Open from unread")
+    before = RecordingStudioMessages.unread_count(actor: @customer)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(unread: 1)
+
+    assert_response :success
+    assert_includes response.body, "Open from unread"
+    assert_includes response.body, "Keep unread"
+    assert_select "turbo-frame#messages-unread-badge", text: before.to_s
+    assert_select "a[href=?][data-turbo-stream]", recording_studio_messages.my_message_path(opened)
+
+    get recording_studio_messages.my_message_path(opened), as: :turbo_stream
+
+    assert_response :success
+    assert_equal Mime[:turbo_stream], response.media_type
+    refute RecordingStudioMessages.unread?(group_recording: opened, actor: @customer)
+    assert RecordingStudioMessages.unread?(group_recording: kept, actor: @customer)
+    assert_equal before - 1, RecordingStudioMessages.unread_count(actor: @customer)
+    targets = css_select("turbo-stream").map { |node| node["target"] }
+    assert_equal(
+      [
+        "messages-desk-panel",
+        "messages-unread-dot-#{opened.id}",
+        "messages-unread-badge"
+      ].sort,
+      targets.sort
+    )
+    assert_includes stream_html("messages-desk-panel"), "Open from unread"
+    refute_includes stream_html("messages-unread-dot-#{opened.id}"), "avatar-status-busy-color"
+    assert_match(/>#{Regexp.escape((before - 1).to_s)}</, stream_html("messages-unread-badge"))
+    refute_includes response.body, "flat-pack--chat-layout"
+    refute_includes response.body, "Keep unread"
+  end
+
+  test "unread filter lists only unread conversations" do
+    Current.actor = @staff
+    unread = seeded_unread_conversation("Still unread")
+    read = seeded_unread_conversation("Already opened")
+    RecordingStudioMessages.mark_read(group_recording: read, actor: @customer)
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(unread: 1)
+
+    assert_response :success
+    assert_includes response.body, "Still unread"
+    refute_includes response.body, "Already opened"
+    assert_select "a[href=?]", recording_studio_messages.my_message_path(unread)
+    assert_select "a[href=?][aria-label=?][title=?][aria-current=page]",
+                  recording_studio_messages.my_messages_path,
+                  "Show all",
+                  "Show all"
+    assert_select "svg[data-flat-pack--icon-name-value=?][data-flat-pack--icon-variant-value=?]",
+                  "bell-alert",
+                  "solid"
+    assert_select "[data-unread=true]", minimum: 1
+    refute_select ".fp-tabular-nums", text: "1"
+  end
+
+  test "unread filter toggle drops after_id and keeps other query params" do
+    sign_in @customer
+    get recording_studio_messages.my_messages_path(
+      after_id: DummyCatalog.support_group_recording.id,
+      foo: "1"
+    )
+
+    assert_response :success
+    assert_select "a[aria-label=?][href*='unread=1']", "Show unread only"
+    assert_select "a[aria-label=?][href*='foo=1']", "Show unread only"
+    refute_select "a[aria-label=?][href*='after_id']", "Show unread only"
+  end
+
   test "stranger cannot open a conversation from my messages" do
     stranger = User.create!(
       email: "my-stranger-#{SecureRandom.hex(4)}@example.com",
@@ -143,6 +264,30 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def seeded_unread_conversation(title, notify: false)
+    group = RecordingStudioMessages.create_group(
+      DummyCatalog.support_mount_recording,
+      title: title,
+      actor: @staff
+    )
+    grant_view!(group, @customer)
+    RecordingStudioMessages.send_message(
+      group_recording: group,
+      body: "#{title} body",
+      actor: @staff,
+      notify: notify,
+      url: "/my_messages"
+    )
+    group
+  end
+
+  def notice_for(group)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received",
+      recipient: @customer
+    ).find { |note| note.metadata["message_group_id"] == group.id }
+  end
 
   def grant_view!(recording, actor)
     result = RecordingStudioAccessible.grant_access(
@@ -166,5 +311,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages::MessageGroup.unscoped.where(id: recording.recordable_id).update_all(
       last_message_at: time
     )
+  end
+
+  def stream_html(target)
+    Nokogiri::HTML.fragment(response.body).at_css("turbo-stream[target='#{target}']")&.inner_html.to_s
   end
 end

@@ -1,0 +1,4 @@
+<%= turbo_frame_tag messages_unread_badge_id do %>
+  <%= render "recording_studio_messages/message_groups/unread_badge_inner",
+             unread_count: local_assigns[:unread_count] %>
+<% end %>

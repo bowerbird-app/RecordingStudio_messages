@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-09
+
+Each person gets a private read cursor per conversation. Sending and conversation shape stay the same.
+
+### Added
+
+- Table `recording_studio_message_reads`: one row per actor per conversation (`last_read_at`, optional `last_read_message_recording_id`). Unique on `(actor_type, actor_id, message_group_recording_id)`. Indexed on `message_group_recording_id`. This is a fact table, not a recording.
+- `mark_read(group_recording:, actor:)`, `unread?(group_recording:, actor:)`, and `unread_count(actor:)`. Unread means `last_message_at` is after `last_read_at`, or there is no read row and the conversation has a `last_message_at`. `unread_count` is the number of unread conversations in `my_group_recordings`, in one join.
+- `my_group_recordings(..., unread: false)` can keep only unread conversations. `after:` and `limit:` still keyset-page that list.
+- `send_message` upserts the sender's cursor so a line you sent is never unread for you.
+- `MyMessagesController#show` and `MessageGroupsController#show` mark the conversation read after Accessible `:view`. Index auto-select does not. Marking read also sets `read_at` on that actor's unread `:message_received` notices for that conversation. The Notifications gem is unchanged. Bell clear-all does not touch read cursors.
+- Inbox rows mark unread with a Flatpack avatar status dot, not a count. `/my_messages` has one round `bell-alert` button that toggles unread-only. `unread_count(actor:)` is the nav badge number. Other people's read state is never shown.
+- An explicit `/my_messages/:id` Turbo visit marks the conversation read, then updates that row's unread avatar and `messages-unread-badge`. It does not replace the inbox list, so an unread-filtered row stays until the filter changes or the page reloads.
+
+### Upgrade notes
+
+- Bump to **0.15.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Existing conversations start as read. The migration batches over the same direct ranked grants as `my_group_recordings` and inserts `last_read_at = last_message_at`.
+- Keep calling `my_group_recordings(actor:)` as you do today. Pass `unread: true` when you want only unread rows. Call `unread_count(actor:)` for a badge.
+- Do not treat a read row as access. Accessible grants still decide who can open a conversation.
+
 ## [0.14.0] - 2026-11-09
 
 The public contact popup can carry generic conversation tags without exposing recording ids in the clear.

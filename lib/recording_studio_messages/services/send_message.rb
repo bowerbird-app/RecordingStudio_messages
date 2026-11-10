@@ -22,6 +22,7 @@ module RecordingStudioMessages
 
         message_recording = record_message
         stamp_last_message_at!(message_recording)
+        mark_sender_read!(message_recording)
         attach_files!(message_recording)
         notify_recipients!(message_recording) if @notify
         message_recording
@@ -71,6 +72,14 @@ module RecordingStudioMessages
           last_message_at: message_recording.created_at
         )
         recordable.reload
+      end
+
+      def mark_sender_read!(message_recording)
+        RecordingStudioMessages::Services::MessageReads.new(actor: @actor).upsert_cursor(
+          group_recording: @group_recording,
+          last_read_at: message_recording.created_at,
+          last_read_message_recording_id: message_recording.id
+        )
       end
 
       def attach_files!(message_recording)
