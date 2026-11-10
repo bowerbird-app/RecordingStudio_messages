@@ -1,12 +1,14 @@
 <% message_recording = local_assigns.fetch(:message_recording) %>
 <% current_actor = local_assigns.fetch(:current_actor) %>
 <% readers = local_assigns[:readers] || [] %>
+<% last_message = local_assigns.fetch(:last_message, false) %>
 <% sender = message_sender_for(message_recording) %>
 <% outgoing = outgoing_message?(message_recording, actor: current_actor) %>
 <% direction = outgoing ? :outgoing : :incoming %>
 <% sender_name = message_sender_name(sender) %>
 <% bubble = outgoing ? FlatPack::Chat::SentMessage::Component : FlatPack::Chat::ReceivedMessage::Component %>
 <% attachments = message_attachments_for(message_recording) %>
+<% sent_at = message_timestamp(message_recording) %>
 
 <div
   class="transition-[margin] duration-base"
@@ -26,7 +28,10 @@
       <% end %>
     <% end %>
     <% group.message do %>
-      <%= render bubble.new do |message| %>
+      <%= render bubble.new(
+        timestamp: sent_at,
+        reveal_timestamp: true
+      ) do |message| %>
         <% attachments.each do |attachment_recording| %>
           <% attachment = attachment_recording.recordable %>
           <% next if attachment.blank? %>
@@ -51,24 +56,19 @@
             <% end %>
           <% end %>
         <% end %>
-        <% message.meta do %>
-          <%= render FlatPack::Text::Component.new(
-            text: message_clock(message_recording),
-            size: :xs,
-            style: :muted,
-            as: :span,
-            class: "text-[var(--chat-message-meta-color)]"
-          ) %>
-        <% end %>
         <%= message_recording.recordable&.body %>
       <% end %>
     <% end %>
-    <% if readers.any? %>
-      <% group.message do %>
-        <%= render "recording_studio_messages/message_groups/message_seen",
-                   message_recording: message_recording,
-                   actors: readers,
-                   outgoing: outgoing %>
+    <% if last_message %>
+      <% group.status do %>
+        <% if readers.any? %>
+          <%= render "recording_studio_messages/message_groups/message_seen",
+                     message_recording: message_recording,
+                     actors: readers,
+                     outgoing: outgoing %>
+        <% else %>
+          <%= render FlatPack::Chat::SentAt::Component.new(timestamp: sent_at) %>
+        <% end %>
       <% end %>
     <% end %>
   <% end %>

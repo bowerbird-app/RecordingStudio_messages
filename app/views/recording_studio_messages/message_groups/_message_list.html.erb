@@ -17,14 +17,19 @@
       <%= messages_t("inbox.empty_thread") %>
     <% end %>
   <% else %>
-    <% message_recordings.group_by { |recording| message_timestamp(recording).to_date }.each do |day, recordings| %>
-      <%= render FlatPack::Chat::DateDivider::Component.new(label: message_day_label(day)) %>
-      <% recordings.each do |message_recording| %>
-        <%= render "recording_studio_messages/message_groups/message",
-                   message_recording: message_recording,
-                   current_actor: current_actor,
-                   readers: message_recording == latest_message ? seen_by : [] %>
+    <% previous = nil %>
+    <% message_recordings.each do |message_recording| %>
+      <% if message_day_break?(previous, message_recording) %>
+        <%= render FlatPack::Chat::DateDivider::Component.new(label: message_day_label(message_timestamp(message_recording).to_date)) %>
+      <% elsif message_time_break?(previous, message_recording) %>
+        <%= render FlatPack::Chat::DateDivider::Component.new(label: message_clock(message_recording)) %>
       <% end %>
+      <%= render "recording_studio_messages/message_groups/message",
+                 message_recording: message_recording,
+                 current_actor: current_actor,
+                 last_message: message_recording == latest_message,
+                 readers: message_recording == latest_message ? seen_by : [] %>
+      <% previous = message_recording %>
     <% end %>
   <% end %>
 <% end %>

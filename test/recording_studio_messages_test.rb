@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.19.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.20.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -47,7 +47,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert requirement.satisfied_by?(Gem::Version.new("0.5.0"))
     refute requirement.satisfied_by?(Gem::Version.new("0.3.0"))
     refute requirement.satisfied_by?(Gem::Version.new("1.0.0"))
-    assert_equal ">= 0.1.346", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal ">= 0.1.347", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -70,7 +70,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.346"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.347"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
     assert_equal "~> 2.1", gemfile_constraint(gemfile, "recording_studio_admin")
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
@@ -78,7 +78,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
-    assert_equal ">= 0.1.346", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal ">= 0.1.347", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v4.7.0"'
@@ -103,7 +103,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.346"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.347"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.1.7"'
     assert_includes gemfile, "widen_recording_studio_requirement"
@@ -130,10 +130,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes dummy_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "tag: v6.3.0"
     assert_includes root_lock, "recording_studio (6.3.0)"
-    assert_includes root_lock, "tag: v0.1.346"
-    assert_includes root_lock, "flat_pack (0.1.346)"
-    assert_includes dummy_lock, "tag: v0.1.346"
-    assert_includes dummy_lock, "flat_pack (0.1.346)"
+    assert_includes root_lock, "tag: v0.1.347"
+    assert_includes root_lock, "flat_pack (0.1.347)"
+    assert_includes dummy_lock, "tag: v0.1.347"
+    assert_includes dummy_lock, "flat_pack (0.1.347)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
@@ -413,6 +413,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes application_js, 'import "@hotwired/turbo-rails"'
     assert_includes importmap, 'pin "@hotwired/turbo-rails", to: "turbo.min.js"'
     assert_includes importmap, 'pin "flat_pack/copy", to: "flat_pack/copy.js"'
+    assert_includes importmap, "pin_all_from FlatPack::Engine.root.join(\"app/javascript/flat_pack/controllers\")"
+    assert_includes importmap, "flat-pack--chat-timestamp-reveal"
   end
 
   def test_dummy_tailwind_keeps_flatpack_theme_selection_in_flatpack
@@ -527,8 +529,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     )
     refute_includes message, "state: :sent"
     refute_includes message, "MessageMeta"
+    assert_includes message, "reveal_timestamp: true"
+    assert_includes message, "FlatPack::Chat::SentAt::Component"
+    assert_includes message, "group.status"
     assert_includes message, "message_groups/message_seen"
     assert_includes list, "message_seen_by"
+    assert_includes list, "message_time_break?"
+    assert_includes list, "message_day_break?"
   end
 
   def test_public_contact_does_not_reference_users_otp_internals

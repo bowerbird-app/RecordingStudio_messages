@@ -122,7 +122,7 @@ module RecordingStudioMessages
         parent_recording_id: group_recording.id,
         recordable_type: MESSAGE_TYPE,
         trashed_at: nil
-      ).includes(:recordable).order(:created_at)
+      ).includes(:recordable, events: :actor).order(:created_at)
     end
 
     def register_integration!

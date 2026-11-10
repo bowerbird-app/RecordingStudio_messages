@@ -2,28 +2,26 @@
 
 module RecordingStudioMessages
   class Configuration
+    DEFAULT_TIME_BREAK_AFTER = 15.minutes
+
     attr_accessor :api_key, :enable_feature_x, :timeout,
                   :admin_notification_root,
                   :public_contact_recipient_resolver, :public_contact_sent_icon,
                   :public_contact_sign_in_after_verification,
                   :public_contact_success_redirect_url, :public_contact_success_redirect_label
-    attr_reader :hooks, :layout, :read_receipts
+    attr_reader :hooks, :layout, :read_receipts, :time_break_after
 
     def initialize
-      @api_key = ENV.fetch("RECORDING_STUDIO_MESSAGES_API_KEY", nil)
-      @enable_feature_x = false
-      @timeout = 5
-      @admin_notification_root = @layout = nil
-      @public_contact_recipient_resolver = nil
-      @public_contact_sent_icon = "rocket-launch"
-      @public_contact_sign_in_after_verification = false
-      @public_contact_success_redirect_url = @public_contact_success_redirect_label = nil
-      @read_receipts = false
       @hooks = RecordingStudio::Hooks.new
+      assign_defaults
     end
 
     def read_receipts=(value)
       @read_receipts = ActiveModel::Type::Boolean.new.cast(value)
+    end
+
+    def time_break_after=(value)
+      @time_break_after = coerce_time_break_after(value)
     end
 
     def layout=(value)
@@ -55,6 +53,28 @@ module RecordingStudioMessages
         setter = "#{key}="
         public_send(setter, v) if respond_to?(setter)
       end
+    end
+
+    private
+
+    def assign_defaults
+      @api_key = ENV.fetch("RECORDING_STUDIO_MESSAGES_API_KEY", nil)
+      @enable_feature_x = false
+      @timeout = 5
+      @admin_notification_root = @layout = nil
+      @public_contact_recipient_resolver = nil
+      @public_contact_sent_icon = "rocket-launch"
+      @public_contact_sign_in_after_verification = false
+      @public_contact_success_redirect_url = @public_contact_success_redirect_label = nil
+      @read_receipts = false
+      @time_break_after = DEFAULT_TIME_BREAK_AFTER
+    end
+
+    def coerce_time_break_after(value)
+      return DEFAULT_TIME_BREAK_AFTER if value.blank?
+      return value if value.is_a?(ActiveSupport::Duration)
+
+      value.to_i.minutes
     end
   end
 end

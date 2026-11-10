@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-11-10
+
+Bubble times stay in the DOM and show on hover, tap, or focus. A clock `Chat::DateDivider` sits between consecutive lines when the gap is more than 15 minutes, in addition to day breaks. Last-line status is `Chat::SentAt` until others have read it, then seen faces occupy the group `status` slot. The v0.17 header hooks, v0.18 rename, and v0.19 toolbar/unread stay as they are.
+
+### Added
+
+- `RecordingStudioMessages.configuration.time_break_after` defaults to 15 minutes. An integer is minutes. Dividers are computed from the already-loaded thread. There is no extra query.
+- Last message `Chat::MessageGroup` `status` is `Chat::SentAt` (`Sent 2:30 PM`) when nobody else has caught up. With `read_receipts`, seen faces render in that slot instead of a second message row.
+
+### Changed
+
+- Development and dummy pin Flatpack `v0.1.347`. The gemspec floor is `flat_pack >= 0.1.347`.
+- `SentMessage` / `ReceivedMessage` take `timestamp:` and `reveal_timestamp: true`. The time uses Flatpack's `fp-chat-timestamp` clip, not a visible `Text` meta row. `MessageMeta` still draws a sent check, so it stays out of the bubble.
+
+### Upgrade notes
+
+- Bump to **0.20.0**. No Messages migration on top of 0.19.0.
+- Pin Flatpack git tag `v0.1.347`. Reload Flatpack CSS. The timestamp clip lives in kit CSS, so do not rebuild Tailwind for it. Rebuild only if the host is still on a Flatpack older than `v0.1.346` that lacked the bubble radius tokens.
+- `pin_all_from` on Flatpack controllers loads `flat-pack--chat-timestamp-reveal`. If the host copied `build_stimulus.js`, register `ChatTimestampRevealController` as `flat-pack--chat-timestamp-reveal`.
+- Set `config.time_break_after` when 15 minutes is the wrong gap.
+
 ## [0.19.0] - 2026-11-10
 
 Unread filtering works on a mount inbox, and the list header is a host toolbar slot. The v0.17 panel header hooks and the v0.18 rename stay as they are.

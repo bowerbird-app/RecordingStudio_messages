@@ -3,4 +3,5 @@
 RecordingStudioMessages.configure do |config|
   # Hosts can set options here. Enable :messages on the types that should hold a mount:
   # include RecordingStudio::Capabilities::Messages.to
+  # config.time_break_after = 15.minutes
 end
