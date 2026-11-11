@@ -57,8 +57,15 @@ module RecordingStudioMessages
       Array(callable.call(actor: actor, mount: mount, query: query.to_s)).compact
     end
 
+    def token(actor)
+      identity(actor).join(":")
+    end
+
     def identity(item)
-      if item.is_a?(Hash)
+      if item.is_a?(String)
+        type, id = item.split(":", 2)
+        [type.to_s, id.to_s]
+      elsif item.is_a?(Hash)
         type = item[:type] || item["type"]
         id = item[:id] || item["id"]
         [type.to_s, id.to_s]

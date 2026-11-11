@@ -70,10 +70,6 @@ module RecordingStudioMessages
       "messages-new-conversation-#{mount.id}"
     end
 
-    def messages_new_conversation_frame_id(mount)
-      "#{messages_new_conversation_modal_id(mount)}-people"
-    end
-
     def messages_create_conversation_path
       if respond_to?(:message_groups_path)
         message_groups_path

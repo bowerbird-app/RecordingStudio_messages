@@ -1,64 +1,42 @@
 <% mount_recording = local_assigns.fetch(:mount_recording) %>
 <% modal_id = messages_new_conversation_modal_id(mount_recording) %>
-<% frame_id = messages_new_conversation_frame_id(mount_recording) %>
 
 <%= render FlatPack::Modal::Component.new(
   id: modal_id,
   title: messages_t("inbox.new"),
-  size: :md
+  size: :md,
+  scroll: :page
 ) do |modal| %>
   <% modal.body do %>
-    <div class="flex flex-col gap-4"
-         data-controller="recording-studio-messages--new-conversation">
-      <%= form_with url: messages_contacts_path(mount_recording),
-                    method: :get,
-                    local: false,
-                    html: {
-                      data: {
-                        turbo_frame: frame_id,
-                        action: "input->recording-studio-messages--new-conversation#search keydown->recording-studio-messages--new-conversation#keydown"
-                      }
-                    } do %>
-        <%= hidden_field_tag :mount_id, mount_recording.id %>
-        <%= render FlatPack::SearchInput::Component.new(
-          name: "q",
-          placeholder: messages_t("inbox.find_people")
-        ) %>
-      <% end %>
-      <%= form_with url: messages_create_conversation_path,
-                    method: :post,
-                    local: true,
-                    html: { class: "flex flex-col gap-4" } do %>
-        <%= hidden_field_tag :mount_id, mount_recording.id %>
-        <div class="flex flex-wrap gap-2 empty:hidden"
-             data-recording-studio-messages--new-conversation-target="recipients"></div>
-        <%= turbo_frame_tag frame_id %>
-        <%= render FlatPack::TextInput::Component.new(
-          name: "title",
-          label: messages_t("inbox.title_optional"),
-          maxlength: RecordingStudioMessages::MessageGroup::TITLE_MAX
-        ) %>
-        <%= render FlatPack::TextArea::Component.new(
-          name: "body",
-          label: messages_t("contact.body"),
-          required: true,
-          rows: 4,
-          placeholder: messages_t("composer.placeholder")
-        ) %>
-        <%= render FlatPack::Button::Component.new(
-          text: messages_t("inbox.send"),
-          style: :primary,
-          size: :md,
-          type: "submit"
-        ) %>
-      <% end %>
-      <template data-recording-studio-messages--new-conversation-target="chipTemplate">
-        <%= render FlatPack::Chip::Component.new(
-          text: "__TITLE__",
-          removable: true,
-          size: :sm
-        ) %>
-      </template>
-    </div>
+    <%= form_with url: messages_create_conversation_path,
+                  method: :post,
+                  local: true,
+                  html: { class: "flex flex-col gap-4" } do %>
+      <%= hidden_field_tag :mount_id, mount_recording.id %>
+      <%= render FlatPack::Select::Component.new(
+        name: "recipients",
+        options: [],
+        label: messages_t("inbox.find_people"),
+        placeholder: messages_t("inbox.find_people"),
+        searchable: true,
+        multiple: true,
+        search_mode: :remote,
+        search_endpoint: messages_contacts_path(mount_recording),
+        min_search_length: 1
+      ) %>
+      <%= render FlatPack::TextArea::Component.new(
+        name: "body",
+        label: messages_t("contact.body"),
+        required: true,
+        rows: 4,
+        placeholder: messages_t("composer.placeholder")
+      ) %>
+      <%= render FlatPack::Button::Component.new(
+        text: messages_t("inbox.send"),
+        style: :primary,
+        size: :md,
+        type: "submit"
+      ) %>
+    <% end %>
   <% end %>
 <% end %>

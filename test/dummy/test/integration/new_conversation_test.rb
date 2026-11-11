@@ -40,10 +40,14 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, RecordingStudioMessages::Copy.t("inbox.new")
     assert_includes response.body, RecordingStudioMessages::Copy.t("inbox.send")
     assert_includes response.body, "messages-new-conversation-#{@members_mount.id}"
-    assert_includes response.body, "recording-studio-messages--new-conversation"
+    assert_includes response.body, "flat-pack--select"
+    assert_includes response.body, "data-flat-pack--select-multiple-value=\"true\""
+    assert_includes response.body, "data-flat-pack--select-search-mode-value=\"remote\""
     assert_includes response.body, recording_studio_messages.contacts_message_groups_path(
       mount_id: @members_mount.id
     )
+    refute_includes response.body, "recording-studio-messages--new-conversation"
+    refute_includes response.body, 'name="title"'
     assert_select "[data-modal-id=?]", "messages-new-conversation-#{@members_mount.id}"
     assert_select "button[aria-label=?]", RecordingStudioMessages::Copy.t("inbox.new")
   end
@@ -53,10 +57,14 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.contacts_message_groups_path(
       mount_id: @members_mount.id,
       q: "Casey"
-    )
+    ), as: :json
 
     assert_response :success
-    assert_includes response.body, "Casey Patron"
+    items = JSON.parse(response.body).fetch("items")
+    labels = items.map { |item| item.fetch("label") }
+    values = items.map { |item| item.fetch("value") }
+    assert_equal ["Casey Patron"], labels
+    assert_equal ["User:#{@customer.id}"], values
     refute_includes response.body, "Ada Staff"
     refute_includes response.body, @staff.email
     refute_includes response.body, "Jules Early"
@@ -70,20 +78,20 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.contacts_message_groups_path(
       mount_id: @members_mount.id,
       q: "casey@example"
-    )
+    ), as: :json
 
     assert_response :success
-    assert_includes response.body, "Casey Patron"
+    labels = JSON.parse(response.body).fetch("items").map { |item| item.fetch("label") }
+    assert_equal ["Casey Patron"], labels
     refute_includes response.body, "Jules Early"
   end
 
   test "contact search stays empty until there is a query" do
     sign_in @staff
-    get recording_studio_messages.contacts_message_groups_path(mount_id: @members_mount.id)
+    get recording_studio_messages.contacts_message_groups_path(mount_id: @members_mount.id), as: :json
 
     assert_response :success
-    refute_includes response.body, "Casey Patron"
-    refute_includes response.body, "Jules Early"
+    assert_equal [], JSON.parse(response.body).fetch("items")
   end
 
   test "creating a conversation lands on it and the recipient sees it in my messages" do
@@ -91,21 +99,21 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     assert_difference -> { groups_under(@members_mount) }, +1 do
       post recording_studio_messages.message_groups_path, params: {
         mount_id: @members_mount.id,
-        title: "Hero crop",
         body: "Can you send the quieter still?",
-        recipients: [ { type: "User", id: @customer.id } ]
+        recipients: [ "User:#{@customer.id}" ]
       }
     end
 
-    group = DummyCatalog.find_group_recording_under(@members_mount, "Hero crop")
+    group = DummyCatalog.find_group_recording_under(@members_mount, "Casey Patron")
     assert_redirected_to recording_studio_messages.message_group_path(group)
     follow_redirect!
     assert_includes response.body, "Can you send the quieter still?"
+    assert_includes response.body, "Casey Patron"
 
     sign_in @customer
     get recording_studio_messages.my_messages_path
     assert_response :success
-    assert_includes response.body, "Hero crop"
+    assert_includes response.body, "Casey Patron"
   end
 
   test "create rejects a recipient outside the resolver" do

@@ -35,8 +35,6 @@ en:
         send: Send
         new_untitled: New conversation
         find_people: Find someone
-        no_people: Nobody matches that.
-        title_optional: Title (optional)
       panel:
         someone: Someone
         seen_by: "Seen by %{names}"

@@ -34,13 +34,12 @@ module RecordingStudioMessages
     def contacts
       @mount_recording = find_mount_recording!
       authorize_start!
-      @query = params[:q].to_s
-      @contacts = RecordingStudioMessages::Contacts.search(
+      contacts = RecordingStudioMessages::Contacts.search(
         mount: @mount_recording,
         actor: current_messages_actor,
-        query: @query
+        query: params[:q].to_s
       )
-      render layout: false
+      render json: { items: contact_select_items(contacts) }
     end
 
     private
@@ -79,7 +78,7 @@ module RecordingStudioMessages
     end
 
     def conversation_params
-      params.permit(:title, :body, :mount_id, recipients: %i[type id])
+      params.permit(:title, :body, :mount_id)
     end
 
     def submitted_recipients
@@ -87,11 +86,22 @@ module RecordingStudioMessages
       return [] if raw.blank?
 
       items = raw.is_a?(Array) ? raw : raw.to_unsafe_h.values
-      items.filter_map do |item|
-        next if item.blank?
+      items.filter_map { |item| submitted_recipient(item) }
+    end
 
-        permitted = item.respond_to?(:permit) ? item.permit(:type, :id) : item
-        permitted.to_h.symbolize_keys
+    def submitted_recipient(item)
+      return if item.blank?
+      return item if item.is_a?(String)
+
+      permitted = item.respond_to?(:permit) ? item.permit(:type, :id) : item
+      permitted.to_h.symbolize_keys
+    end
+
+    def contact_select_items(contacts)
+      contacts.filter_map do |actor|
+        next if actor.blank?
+
+        { value: RecordingStudioMessages::Contacts.token(actor), label: helpers.message_sender_name(actor) }
       end
     end
 

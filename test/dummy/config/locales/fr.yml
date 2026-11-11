@@ -71,8 +71,6 @@ fr:
         send: Envoyer
         new_untitled: Nouvelle conversation
         find_people: Trouver quelqu’un
-        no_people: Personne ne correspond.
-        title_optional: Titre (facultatif)
       panel:
         someone: Quelqu’un
         seen_by: "Vu par %{names}"
