@@ -47,9 +47,44 @@ class MessageTimestampsTest < ActionDispatch::IntegrationTest
     refute_includes timestamp, "display:none"
     refute_includes timestamp, "aria-hidden"
     refute_includes html, SENT_CHECK_PATH
-    assert_includes html, "Sent 2:30 PM"
-    assert_includes html, "data-flat-pack-chat-group-status"
+    refute_includes html, "Sent 2:30 PM"
+    refute_includes html, "data-flat-pack-chat-group-status"
     refute_includes html, "data-messages-seen-for"
+  end
+
+  test "delivery status sits under own last messages and stays off received ones" do
+    group = open_conversation
+    message = send_line(group, "Quiet crop is in.")
+    stamp(message, Time.zone.parse("2026-11-10 14:30"))
+    RecordingStudioMessages.configuration.read_receipts = true
+
+    sign_in @owner
+    Current.actor = @owner
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    assert_includes response.body, "Sent 2:30 PM"
+    assert_includes response.body, "data-flat-pack-chat-group-status"
+    refute_includes response.body, "data-messages-seen-for"
+
+    sign_in @viewer
+    Current.actor = @viewer
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    refute_includes response.body, "Sent 2:30 PM"
+    refute_includes response.body, "data-flat-pack-chat-group-status"
+    refute_includes response.body, "data-messages-seen-for"
+    assert_includes css_select(".fp-chat-timestamp").map(&:to_s).join, "2:30 PM"
+
+    sign_in @owner
+    Current.actor = @owner
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    refute_includes response.body, "Sent 2:30 PM"
+    seen = css_select("[data-flat-pack-chat-group-status='true'] [data-messages-seen-for='#{message.id}']")
+    assert_equal 1, seen.size
   end
 
   test "does not insert a time divider when the gap is 15 minutes or less" do

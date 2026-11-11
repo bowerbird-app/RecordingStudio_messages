@@ -116,7 +116,7 @@ Messages `0.23.0` adds an optional New message flow on a mount. Existing desks s
 1. Install Messages `0.23.0`. There is no Messages migration.
 2. On each type that should offer New message, pass `contacts:` to `Messages.to`. The callable receives `actor:`, `mount:`, and `query:` and returns actors. A blank query is the allowlist create re-checks.
 3. Keep calling `create_group(mount, title:, actor:)` for quiet creates. Pass `recipients:` and `body:` only when someone is starting a conversation with people.
-4. Seen faces under a line omit that line's author. `seen_by` and read cursors still include them. Unread is unchanged.
+4. Seen faces under a line omit that line's author. `seen_by` and read cursors still include them. Unread is unchanged. `Sent` and seen faces render under the viewer's own last message only. Received lines keep the hover timestamp.
 
 ### Upgrading to 0.22.0
 

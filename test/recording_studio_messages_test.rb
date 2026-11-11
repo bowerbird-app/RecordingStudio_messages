@@ -550,6 +550,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes message, "MessageMeta"
     assert_includes message, "reveal_timestamp: true"
     assert_includes message, "FlatPack::Chat::SentAt::Component"
+    assert_includes message, "last_message && outgoing"
     assert_includes message, "group.status"
     assert_includes message, "message_receipt_readers"
     assert_includes message, "message_groups/message_seen"
