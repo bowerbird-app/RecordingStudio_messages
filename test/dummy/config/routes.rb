@@ -22,6 +22,9 @@ Rails.application.routes.draw do
   namespace :staff do
     resource :desk, only: :show
   end
+  namespace :dummy do
+    get "page_picker", to: "page_picker#show", as: :page_picker
+  end
   get "/inbox", to: "customer/inboxes#show", as: :inbox
 
   get "up" => "rails/health#show", as: :rails_health_check

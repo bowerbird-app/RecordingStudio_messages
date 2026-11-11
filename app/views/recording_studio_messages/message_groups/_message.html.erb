@@ -2,6 +2,7 @@
 <% current_actor = local_assigns.fetch(:current_actor) %>
 <% readers = local_assigns[:readers] || [] %>
 <% last_message = local_assigns.fetch(:last_message, false) %>
+<% reference_slots = Array(local_assigns[:visible_references]) %>
 <% sender = message_sender_for(message_recording) %>
 <% outgoing = outgoing_message?(message_recording, actor: current_actor) %>
 <% direction = outgoing ? :outgoing : :incoming %>
@@ -9,6 +10,8 @@
 <% bubble = outgoing ? FlatPack::Chat::SentMessage::Component : FlatPack::Chat::ReceivedMessage::Component %>
 <% attachments = message_attachments_for(message_recording) %>
 <% sent_at = message_timestamp(message_recording) %>
+<% body_text = message_recording.recordable&.body.to_s %>
+<% show_bubble = body_text.present? || attachments.any? %>
 
 <div
   class="transition-[margin] duration-base"
@@ -27,36 +30,45 @@
         <%= render FlatPack::Avatar::Component.new(name: sender_name, size: :sm) %>
       <% end %>
     <% end %>
-    <% group.message do %>
-      <%= render bubble.new(
-        timestamp: sent_at,
-        reveal_timestamp: true
-      ) do |message| %>
-        <% attachments.each do |attachment_recording| %>
-          <% attachment = attachment_recording.recordable %>
-          <% next if attachment.blank? %>
-          <% if attachment.attachment_kind.to_s == "image" %>
-            <% message.media_attachment do %>
-              <%= render FlatPack::Chat::Attachment::Component.new(
-                name: attachment.name,
-                type: :image,
-                meta: attachment.original_filename,
-                href: message_attachment_href(attachment_recording),
-                thumbnail_url: message_attachment_thumbnail(attachment_recording)
-              ) %>
-            <% end %>
-          <% else %>
-            <% message.attachment do %>
-              <%= render FlatPack::Chat::Attachment::Component.new(
-                name: attachment.name,
-                type: :file,
-                meta: attachment.original_filename,
-                href: message_attachment_href(attachment_recording)
-              ) %>
+    <% if show_bubble %>
+      <% group.message do %>
+        <%= render bubble.new(
+          timestamp: sent_at,
+          reveal_timestamp: true
+        ) do |message| %>
+          <% attachments.each do |attachment_recording| %>
+            <% attachment = attachment_recording.recordable %>
+            <% next if attachment.blank? %>
+            <% if attachment.attachment_kind.to_s == "image" %>
+              <% message.media_attachment do %>
+                <%= render FlatPack::Chat::Attachment::Component.new(
+                  name: attachment.name,
+                  type: :image,
+                  meta: attachment.original_filename,
+                  href: message_attachment_href(attachment_recording),
+                  thumbnail_url: message_attachment_thumbnail(attachment_recording)
+                ) %>
+              <% end %>
+            <% else %>
+              <% message.attachment do %>
+                <%= render FlatPack::Chat::Attachment::Component.new(
+                  name: attachment.name,
+                  type: :file,
+                  meta: attachment.original_filename,
+                  href: message_attachment_href(attachment_recording)
+                ) %>
+              <% end %>
             <% end %>
           <% end %>
+          <%= linked_message_body(body_text) %>
         <% end %>
-        <%= message_recording.recordable&.body %>
+      <% end %>
+    <% end %>
+    <% reference_slots.each do |slot| %>
+      <% group.message do %>
+        <%= render "recording_studio_messages/message_groups/reference_card",
+                   slot: slot,
+                   direction: direction %>
       <% end %>
     <% end %>
     <% if last_message %>

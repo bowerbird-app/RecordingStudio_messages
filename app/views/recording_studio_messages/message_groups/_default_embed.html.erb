@@ -1,0 +1,7 @@
+<% recording = local_assigns.fetch(:recording) %>
+<%= render FlatPack::Chat::LinkCard::Component.new(
+  title: message_reference_title(recording),
+  href: local_assigns[:href].presence || message_reference_href(recording),
+  icon: "link",
+  direction: local_assigns.fetch(:direction, :incoming)
+) %>

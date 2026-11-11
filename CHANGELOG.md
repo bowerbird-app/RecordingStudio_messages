@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-11-10
+
+Composer + menu items and typed recording cards are host/gem registries. Message bodies auto-link `http` and `https` after HTML escape. Conversation desks, unread, seen faces, and the v0.17–v0.19 slots stay as they are.
+
+### Added
+
+- `register_composer_action(key, label:, icon:, partial:, src:, title:, size:, if:)`. The + menu lists upload plus every registered item whose `if` returns true. Messages owns the Flatpack modal (id, title, close, size, default `:sm`). Pass exactly one of `partial:` (light body) or `src:` (lazy Turbo frame). Search and pickers should use `src:` with their own endpoint and Accessible checks. Insert with `messages:composer-insert` (`text` optional, `reference: { recording_id, title, url }`). That event closes the modal. A `reference` becomes a removable composer chip and submits as `references:`. It does not insert title or URL text.
+- `register_message_embed(recordable_type, partial:)`. Unregistered types use Flatpack `Chat::LinkCard` as their own MessageGroup `messages` slot item below the bubble. Hidden, trashed, and missing targets still occupy a slot with no `href`, so the kit paints its muted Unavailable card. They never leak the unseen title.
+- `send_message(..., references:)` writes `recording_studio_message_references` in the same commit. The sender needs Accessible `:view` on the target. The target must sit under the mount parent. A blank body is allowed when a reference or file is present.
+- `preview_text(body, references:)` builds notice and inbox fallback copy from reference titles when the stored body is blank. Messages does not name other gems.
+- Thread render loads one page of references in a batched query, then `recordings_for` per distinct parent.
+- `http`/`https` auto-link with `rel="noopener noreferrer nofollow"` and `target=_blank`.
+
+### Upgrade notes
+
+- Bump to **0.21.0**.
+- Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+- Pin Flatpack git tag `v0.1.349` and rebuild Tailwind. The gemspec floor is `flat_pack >= 0.1.349`.
+- Pin `recording_studio_messages/controllers` in the host importmap.
+- Register composer actions and embeds from the host or another gem. Defaults stay no-ops aside from auto-linking and LinkCard. Pass exactly one of `partial:` or `src:`. Search and pickers use `src:` and their own Accessible checks. Do not render `FlatPack::Modal` in the body. `messages:composer-insert` closes the Messages modal.
+
 ## [0.20.1] - 2026-11-10
 
 The conversation list header no longer shows the mount parent name (or "My messages") by default. Unread controls, the host toolbar slot, and the open conversation header stay as they are.

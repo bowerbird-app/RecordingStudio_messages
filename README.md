@@ -23,7 +23,7 @@ Two desks are two mounts of this gem, not two gems.
 | `MessageGroup` | A conversation | Accessible |
 | `Message` | A line in that conversation | Attachable |
 
-Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency. Message group tags are a join table next to this tree, not children. Hosts choose the keys.
+Notifications stay on their own tables. This gem calls `RecordingStudioNotifications.notify_each` when someone sends. Do not add a Notifications → Messages dependency. Message group tags are a join table next to this tree, not children. Hosts choose the keys. Message references are the same kind of fact table. They point a line at another recording. They are not children.
 
 ## Install
 
@@ -35,7 +35,7 @@ gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.3.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.24.1"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"
-gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.347"
+gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.349"
 gem "view_component", "4.19.0"
 gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages"
 ```
@@ -46,7 +46,7 @@ gem "recording_studio", ">= 6.1.0"
 gem "recording_studio_accessible", "~> 0.24"
 gem "recording_studio_attachable", "~> 0.13"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1"
-gem "flat_pack", ">= 0.1.347"
+gem "flat_pack", ">= 0.1.349"
 ```
 
 Then:
@@ -60,6 +60,66 @@ bin/rails generate recording_studio_attachable:migrations
 bin/rails generate recording_studio_notifications:migrations
 bin/rails db:migrate
 ```
+
+### Composer actions and message cards
+
+Other gems can add a + menu item and a card under a line. This gem does not name those gems. Register in a host or gem initializer.
+
+`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the desk mount. A missing `if:` keeps the item. The + menu renders every item that returns true.
+
+Messages owns the modal. It renders one Flatpack modal per item (id, title from `title:` or `label`, close control, `size:` default `:sm`). Pass exactly one of `partial:` or `src:`. `partial:` is a light body. `src:` is a URL (or a proc of `(group, actor, mount)` that returns one). Search and pickers should use `src:` with their own endpoint and their own Accessible checks. The shell loads that URL in a Turbo frame with `loading: lazy` when the modal opens. The body receives `group_recording`, `actor`, `mount`, and `action`. Do not render `FlatPack::Modal` or match a `modal_id` in the gem.
+
+The body inserts into the composer with a document event. The composer closes the open action modal when that event fires:
+
+```js
+window.dispatchEvent(new CustomEvent("messages:composer-insert", {
+  bubbles: true,
+  detail: {
+    reference: { recording_id: "…", title: "Brand notes", url: "/pages/…" }
+  }
+}))
+```
+
+A `reference` becomes a removable chip in the composer attachments slot and submits as `message[references]`. It does not insert title or URL text. Optional `text` still appends to the box for hosts that need a paste. Do not parse references out of the body.
+
+`send_message(..., references:)` writes those rows in the same commit as the line. Each value may be a recording, an id, or `{ recording_id:, title:, url: }`. The sender must have Accessible `:view` on the target. The target must sit in the subtree of the mount's parent (the messages-enabled recording). The stored body stays as sent. A blank body is allowed when a reference or file is present. `preview_text(body, references:)` supplies notice and inbox fallback copy from the titles when the body is blank.
+
+`register_message_embed` remains an override for a recordable class name. Unregistered types use Flatpack `Chat::LinkCard` in their own MessageGroup `messages` slot below the bubble. Render loads one page of references in one query, then filters with Accessible `recordings_for` on each distinct parent. Missing, trashed, and unseen targets still render a slot with no `href`, so the kit paints Unavailable. They do not leak a title.
+
+```ruby
+RecordingStudioMessages.register_composer_action(
+  :attach_page,
+  label: "Attach a page",
+  icon: "document-text",
+  src: ->(_group, _actor, mount) { dummy_page_picker_path(mount_id: mount.id) },
+  if: ->(_group, actor, mount) { actor.present? && mount.present? }
+)
+
+RecordingStudioMessages.register_message_embed("Page", partial: "dummy/page_embed")
+
+RecordingStudioMessages.send_message(
+  group_recording: group,
+  body: "See this page.",
+  actor: current_actor,
+  references: [{ recording_id: page.id, title: "Brand notes", url: "/pages/#{page.id}" }]
+)
+```
+
+Pin `recording_studio_messages/controllers` in the host importmap so `recording-studio-messages--composer` loads. The dummy pin sits next to the Admin pin. Message bodies auto-link `http` and `https` only. The helper escapes first, then wraps. `javascript:` and `data:` stay text.
+
+The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
+
+### Upgrading to 0.21.0
+
+Messages `0.21.0` adds composer actions, typed recording references, and safe URL auto-linking. Conversation desks, unread cursors, seen faces, and the v0.17–v0.19 host slots stay as they are.
+
+1. Install Messages `0.21.0`.
+2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
+3. Pin `app/javascript/recording_studio_messages/controllers` in the host importmap (`under: "controllers/recording_studio_messages"`).
+4. Pin Flatpack git tag `v0.1.349` and rebuild Tailwind. The gemspec floor is `flat_pack >= 0.1.349`.
+5. Call `register_composer_action` from a host or gem initializer when you need a + item. Use `src:` for search and pickers. Leave actions unregistered to keep the upload-only + menu. Call `register_message_embed` only when a typed card should replace LinkCard. Auto-linking still runs.
+
+The migration creates `recording_studio_message_references` (`message_recording_id`, `target_recording_id`, unique pair). Tags never grant access. Accessible does not learn about Messages.
 
 ### Upgrading to 0.20.1
 
@@ -692,7 +752,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users stays on `v0.26.3` because `v0.27.0` wraps sign-in in Default Layout. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.347`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.347`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users stays on `v0.26.3` because `v0.27.0` wraps sign-in in Default Layout. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.349`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.349`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -703,7 +763,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_attachable` | `~> 0.13` | `v0.21.1` | `0.21.1` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.13.1` | `0.13.1` |
 | `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.6.1` | `0.6.1` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.347` | `v0.1.347` | `0.1.347` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.349` | `v0.1.349` | `0.1.349` |
 | `view_component` | `4.19.0` | | `4.19.0` |
 | `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.26.3` | `0.26.3` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |

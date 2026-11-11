@@ -58,6 +58,7 @@ fr:
         add_file: Ajouter un fichier
         upload: Envoyer des fichiers ou des images
         placeholder: Écrire un message
+        linked_item: Élément lié
       inbox:
         title: Conversations
         my_title: Mes messages
@@ -94,10 +95,11 @@ fr:
         users_required: Le contact public a besoin des codes e-mail Recording Studio Users.
         no_recipient: Personne ne peut recevoir ce message.
         not_enabled: Le contact public n’est pas activé sur ce bureau.
-        write_or_attach: Écrivez quelque chose ou ajoutez un fichier
+        write_or_attach: Écrivez quelque chose ou joignez quelque chose
         cannot_send_conversation: Vous ne pouvez pas envoyer dans cette conversation
         attach_failed: Impossible de joindre ce fichier
         not_a_conversation: Les messages s’envoient dans une conversation
+        cannot_attach_item: Vous ne pouvez pas joindre cela
   dummy:
     home:
       title: Hôte dummy
@@ -106,6 +108,11 @@ fr:
       inbox: Boîte de réception
       my_messages: Mes messages
       admin: Admin
+    composer:
+      attach_page: Joindre une page
+      find_a_page: Trouver une page
+      no_pages: Aucune page à joindre pour l’instant.
+      untitled_page: Page sans titre
   flatpack:
     chat:
       placeholder: Écrire un message…

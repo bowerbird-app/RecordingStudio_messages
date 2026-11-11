@@ -19,6 +19,39 @@ module DummyMessagesPanelHelper
     )
   end
 
+  def dummy_attachable_pages(actor:, mount:, query: nil)
+    parent = mount&.parent_recording
+    return [] if actor.blank? || parent.blank?
+
+    pages = RecordingStudioAccessible.recordings_for(
+      actor: actor,
+      parent_recording: parent,
+      minimum_role: :view,
+      recordable_type: "Page"
+    ).includes(:recordable)
+    needle = query.to_s.strip.downcase
+    return pages if needle.blank?
+
+    pages.select { |recording| dummy_page_title(recording).downcase.include?(needle) }
+  end
+
+  def dummy_page_href(recording)
+    return if recording.blank?
+
+    "/pages/#{recording.id}"
+  end
+
+  def message_reference_href(recording)
+    dummy_page_href(recording)
+  end
+
+  def dummy_page_title(recording)
+    recordable = recording&.recordable
+    return recordable.title if recordable.respond_to?(:title) && recordable.title.present?
+
+    I18n.t("dummy.composer.untitled_page")
+  end
+
   private
 
   def dummy_thread_status_badge(group_recording, actor:, mount:, html_id:)

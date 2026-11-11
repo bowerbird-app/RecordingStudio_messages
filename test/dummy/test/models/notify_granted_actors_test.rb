@@ -87,6 +87,29 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     refute_equal @admin_root.id, customer_note.root_recording_id
   end
 
+  test "blank body notify copy uses the reference title" do
+    RecordingStudioMessages.configuration.admin_notification_root = nil
+    page = RecordingStudio.record!(
+      action: "created",
+      recordable: Page.create!(title: "Brand notes"),
+      root_recording: @ticket_root,
+      parent_recording: @ticket_root,
+      actor: @staff
+    ).recording
+
+    RecordingStudioMessages.send_message(
+      group_recording: @group,
+      body: "",
+      actor: @staff,
+      references: [{ recording_id: page.id, title: "Brand notes", url: "/pages/#{page.id}" }],
+      url: "/inbox"
+    )
+
+    customer_note = last_message_received_for(@customer)
+    assert_equal "Brand notes", customer_note.body
+    assert_equal "", RecordingStudioMessages.message_recordings(@group).last.recordable.body
+  end
+
   test "callable admin_notification_root files staff under the returned recording" do
     RecordingStudioMessages.configuration.admin_notification_root = -> { @admin_root }
 

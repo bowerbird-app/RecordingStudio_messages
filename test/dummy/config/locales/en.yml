@@ -7,3 +7,8 @@ en:
       inbox: Inbox
       my_messages: My messages
       admin: Admin
+    composer:
+      attach_page: Attach a page
+      find_a_page: Find a page
+      no_pages: No pages to attach yet.
+      untitled_page: Untitled page

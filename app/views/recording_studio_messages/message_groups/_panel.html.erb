@@ -50,6 +50,8 @@
     <%= render "recording_studio_messages/message_groups/composer",
                group_recording: group_recording,
                form_url: form_url,
-               return_to: return_to %>
+               return_to: return_to,
+               mount: hook_mount,
+               actor: current_actor %>
   <% end %>
 <% end %><% if panel_after.present? %><%= panel_after %><% end %>

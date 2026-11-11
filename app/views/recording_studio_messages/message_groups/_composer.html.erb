@@ -1,13 +1,19 @@
 <% group_recording = local_assigns.fetch(:group_recording) %>
 <% form_url = local_assigns[:form_url].presence || messages_panel_form_url(group_recording) %>
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
+<% mount = local_assigns[:mount] || group_recording.parent_recording %>
+<% actor = local_assigns[:actor] || (current_messages_actor if respond_to?(:current_messages_actor, true)) %>
+<% composer_actions = messages_composer_actions(group_recording, actor: actor, mount: mount) %>
 
 <%= form_with url: form_url,
               method: :post,
               local: true,
               multipart: true,
               html: { id: messages_panel_composer_id(group_recording) },
-              data: { controller: "flat-pack--chat-sender", turbo_stream: true } do %>
+              data: {
+                controller: "flat-pack--chat-sender recording-studio-messages--composer",
+                turbo_stream: true
+              } do %>
   <%= hidden_field_tag :return_to, return_to %>
   <%= file_field_tag "message[files][]",
         multiple: true,
@@ -34,7 +40,20 @@
           type: "button",
           data: { action: "click->flat-pack--chat-sender#openFilePicker" }
         ) %>
+        <% composer_actions.each do |action| %>
+          <% dropdown.menu_item(
+            text: action.label,
+            icon: action.icon,
+            type: "button",
+            keep_open: true,
+            data: { modal_id: messages_composer_action_modal_id(action) }
+          ) %>
+        <% end %>
       <% end %>
+    <% end %>
+    <% composer.attachments do %>
+      <div class="flex flex-wrap gap-2 empty:hidden"
+           data-recording-studio-messages--composer-target="references"></div>
     <% end %>
     <% composer.center do %>
       <%= render FlatPack::TextArea::Component.new(
@@ -47,4 +66,18 @@
       ) %>
     <% end %>
   <% end %>
+  <template data-recording-studio-messages--composer-target="chipTemplate">
+    <%= render FlatPack::Chip::Component.new(
+      text: "__TITLE__",
+      removable: true,
+      size: :sm
+    ) %>
+  </template>
+<% end %>
+<% composer_actions.each do |action| %>
+  <%= render "recording_studio_messages/message_groups/composer_action_modal",
+             group_recording: group_recording,
+             actor: actor,
+             mount: mount,
+             action: action %>
 <% end %>

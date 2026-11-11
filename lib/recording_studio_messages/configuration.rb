@@ -55,6 +55,14 @@ module RecordingStudioMessages
       end
     end
 
+    def composer_actions
+      @composer_actions ||= {}
+    end
+
+    def message_embeds
+      @message_embeds ||= {}
+    end
+
     private
 
     def assign_defaults

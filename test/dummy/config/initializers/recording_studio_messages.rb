@@ -8,3 +8,19 @@ RecordingStudioMessages.configure do |config|
     [User.find_by(email: "admin@admin.com")].compact
   }
 end
+
+Rails.application.config.to_prepare do
+  RecordingStudioMessages.register_composer_action(
+    :attach_page,
+    label: "Attach a page",
+    icon: "document-text",
+    src: ->(_group, _actor, mount) {
+      next if mount.blank?
+
+      Rails.application.routes.url_helpers.dummy_page_picker_path(mount_id: mount.id)
+    },
+    if: ->(_group, actor, mount) {
+      mount&.recordable&.key.to_s == DummyCatalog::SUPPORT_KEY && actor.present?
+    }
+  )
+end

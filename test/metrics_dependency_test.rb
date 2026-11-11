@@ -19,8 +19,8 @@ class MetricsDependencyTest < Minitest::Test
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
     assert_includes dummy_lock, "tag: v0.6.1"
     assert_includes dummy_lock, "recording_studio_metrics (0.6.1)"
-    assert_includes root_lock, "recording_studio_messages (0.20.1)"
-    assert_includes dummy_lock, "recording_studio_messages (0.20.1)"
+    assert_includes root_lock, "recording_studio_messages (0.21.0)"
+    assert_includes dummy_lock, "recording_studio_messages (0.21.0)"
   end
 
   def test_engine_registers_metrics_on_reload
@@ -29,7 +29,7 @@ class MetricsDependencyTest < Minitest::Test
     end
 
     assert initializer
-    source = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
+    source = File.read(File.expand_path("../lib/recording_studio_messages/engine_frontend.rb", __dir__))
     assert_includes source, "RecordingStudioMessages::Metrics.register!"
     refute_includes source, "RecordingStudioMetrics::Api.register!"
   end
