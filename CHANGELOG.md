@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-11
+
+Hosts can let people start a conversation from a Messages mount and pick who it goes to. The feature stays off until the host declares `contacts:` on `Messages.to`. There is no migration.
+
+### Added
+
+- Optional `contacts:` callable on `RecordingStudio::Capabilities::Messages.to`. Messages calls it as `contacts.call(actor:, mount:, query:)`. A blank query is the allowlist. The New message button renders only when that callable is present and the actor has Accessible `:edit` on the mount.
+- `create_group(..., recipients:, body:)`. Recipients are re-checked against the resolver. Each recipient gets a direct `:edit` grant. On `:members` the creator is still admin. On `:inherited` the creator gets a direct `:edit` grant only. The first message, grants, and tags commit together. Title is optional when recipients are present. Body is required.
+- Gem routes to search contacts and create the conversation. The list header uses an icon New message control. The modal uses Flatpack Select (`multiple`, remote search) so chips live in the trigger, then submits with Send. When title is omitted, the stored name is the creator then the recipients in pick order. List rows, the panel header, and the page heading CSS-truncate that name with the full string in a title tooltip. `Sent` and seen faces sit under the viewer's own last line only. Received lines keep the hover timestamp and omit that status row. Seen faces omit that line's author. Read cursors and unread stay as they are.
+
+### Upgrade notes
+
+- Bump to **0.23.0**. No Messages migration.
+- Declare `contacts:` on each mount type that should offer New message. Omit it to keep the button hidden and create-with-recipients rejected.
+- Keep calling `create_group(mount, title:, actor:)` when you are not starting a conversation with people. Pass `recipients:` and `body:` only for that flow.
+
 ## [0.22.0] - 2026-11-11
 
 Per-mount access mode on `Messages.to`. Shared desks stay membership grants. Desks under an owner root inherit Accessible from the tree. Existing grants are untouched. No migration.

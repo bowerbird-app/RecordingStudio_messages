@@ -61,6 +61,49 @@ module RecordingStudioMessages
       }.merge(messages_inbox_row_link(group_recording, inbox: inbox, active: active))
     end
 
+    def messages_can_start_conversation?(mount, actor: nil)
+      actor ||= inbox_actor
+      RecordingStudioMessages::Contacts.can_start?(mount: mount, actor: actor)
+    end
+
+    def messages_new_conversation_modal_id(mount)
+      "messages-new-conversation-#{mount.id}"
+    end
+
+    def messages_create_conversation_path
+      if respond_to?(:message_groups_path)
+        message_groups_path
+      else
+        recording_studio_messages.message_groups_path
+      end
+    end
+
+    def messages_contacts_path(mount, query: nil)
+      query_params = { mount_id: mount.id }
+      query_params[:q] = query if query.present?
+      if respond_to?(:contacts_message_groups_path)
+        contacts_message_groups_path(query_params)
+      else
+        recording_studio_messages.contacts_message_groups_path(query_params)
+      end
+    end
+
+    def messages_new_conversation_button(mount)
+      label = Copy.t("inbox.new")
+      {
+        text: label,
+        icon: "plus",
+        icon_only: true,
+        round: true,
+        style: :ghost,
+        size: :sm,
+        type: :button,
+        title: label,
+        aria: { label: label },
+        data: { modal_id: messages_new_conversation_modal_id(mount) }
+      }
+    end
+
     def messages_unread_filter_button(unread_filter:)
       on = ActiveModel::Type::Boolean.new.cast(unread_filter) == true
       label = messages_unread_filter_label(on)
@@ -121,12 +164,14 @@ module RecordingStudioMessages
 
     def messages_inbox_row_link(group_recording, inbox: nil, active: false)
       href = messages_inbox_href(group_recording, inbox: inbox)
-      return { href: href, turbo_frame: messages_desk_panel_id } unless inbox == :my_messages
+      name = messages_inbox_group_name(group_recording)
+      data = inbox == :my_messages ? { turbo_stream: true } : { turbo_frame: messages_desk_panel_id }
 
       {
         href: href,
         link_arguments: {
-          data: { turbo_stream: true },
+          title: name,
+          data: data,
           aria: { current: (active ? "page" : nil) }
         }
       }

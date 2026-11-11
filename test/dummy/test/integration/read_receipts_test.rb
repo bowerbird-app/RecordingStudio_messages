@@ -52,17 +52,10 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.message_group_path(group)
 
     assert_response :success
-    first_seen = css_select("[data-messages-seen-for='#{first.id}']").to_s
-    second_seen = css_select("[data-messages-seen-for='#{second.id}']").to_s
-    assert_equal "", first_seen
-    assert_includes second_seen, "+1"
-    assert_includes second_seen, "justify-start"
-    assert_includes second_seen, "Ann"
-    refute_includes second_seen, "Jules"
-    refute_includes second_seen, "-space-x-"
-    refute_includes second_seen, "Casey Patron"
-    assert_includes response.body, "Seen by"
+    refute_includes response.body, "data-messages-seen-for"
+    refute_includes response.body, "Seen by"
     refute_includes response.body, SENT_CHECK_PATH
+    refute_match(/\bSent\b/, response.body)
 
     sign_in @owner
     Current.actor = @owner
@@ -72,8 +65,40 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     owner_first = css_select("[data-messages-seen-for='#{first.id}']").to_s
     owner_last = css_select("[data-messages-seen-for='#{second.id}']").to_s
     assert_equal "", owner_first
+    assert_includes owner_last, "+2"
     assert_includes owner_last, "justify-end"
+    assert_includes owner_last, "Ann"
+    refute_includes owner_last, "Jules"
+    refute_includes owner_last, "-space-x-"
     refute_includes owner_last, "Ada Staff"
+    assert_includes response.body, "Seen by"
+  end
+
+  test "seen faces omit the author and keep that author's read cursor" do
+    RecordingStudioMessages.configuration.read_receipts = true
+    group = open_conversation
+    line = send_line(group, "Author stays off the receipt row")
+    riley = create_user("Riley")
+    grant!(group, riley)
+    pin_read(@owner, group, line)
+    pin_read(riley, group, line)
+    pin_read(@viewer, group, line)
+
+    sign_in @owner
+    Current.actor = @owner
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    seen = css_select("[data-messages-seen-for='#{line.id}']").to_s
+    assert_includes seen, "Riley"
+    assert_includes seen, "Casey Patron"
+    refute_includes seen, "Ada Staff"
+    assert RecordingStudioMessages::MessageRead.exists?(
+      message_group_recording_id: group.id,
+      actor_type: RecordingStudioAccessible::ActorType.for(@owner),
+      actor_id: @owner.id
+    )
+    refute RecordingStudioMessages.unread?(group_recording: group, actor: @viewer)
   end
 
   private
@@ -101,7 +126,7 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     jules = create_user("Jules")
     grant!(group, jules)
     pin_read(jules, group, first)
-    %w[Ann Bea Cy].each do |name|
+    %w[Ann Bea Cy Dee].each do |name|
       actor = create_user(name)
       grant!(group, actor)
       pin_read(actor, group, second)

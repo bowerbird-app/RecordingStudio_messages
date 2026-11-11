@@ -31,6 +31,10 @@ en:
         filter_show_all: Show all
         empty_thread: Nothing here yet. Write the first line.
         empty_panel: Nothing here yet.
+        new: New message
+        send: Send
+        new_untitled: New conversation
+        find_people: Find someone
       panel:
         someone: Someone
         seen_by: "Seen by %{names}"
@@ -64,3 +68,7 @@ en:
         attach_failed: Could not attach that file
         not_a_conversation: Messages must be sent in a conversation
         cannot_attach_item: You can't attach that
+        contacts_off: You can't start a message here.
+        cannot_start: You can't start a message here.
+        pick_recipient: Pick who this goes to.
+        unknown_recipient: That person isn't on this list.

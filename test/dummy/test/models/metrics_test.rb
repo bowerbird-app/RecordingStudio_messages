@@ -34,7 +34,7 @@ class MetricsTest < ActiveSupport::TestCase
     )
     second.update!(trashed_at: Time.current)
 
-    kept = live_recordings(RecordingStudioMessages::MESSAGE_TYPE)
+    kept = live_recordings(RecordingStudioMessages::MESSAGE_TYPE).where("created_at <= ?", Time.current)
     refute_includes kept.map(&:id), second.id
     assert_includes kept.map(&:id), first.id
     assert_operator RecordingStudioMessages::Message.count, :>,

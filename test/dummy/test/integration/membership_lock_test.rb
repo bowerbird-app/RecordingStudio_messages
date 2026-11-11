@@ -130,7 +130,8 @@ class MembershipLockTest < ActionDispatch::IntegrationTest
       :messages,
       on: Workspace,
       keys: [:support],
-      membership_locked: [:support]
+      membership_locked: [:support],
+      contacts: DummyCatalog::CONTACTS
     )
   end
 
@@ -138,7 +139,12 @@ class MembershipLockTest < ActionDispatch::IntegrationTest
     if @original_options
       RecordingStudio.set_capability_options(:messages, on: Workspace, **@original_options)
     else
-      RecordingStudio.set_capability_options(:messages, on: Workspace, keys: [:support])
+      RecordingStudio.set_capability_options(
+        :messages,
+        on: Workspace,
+        keys: [:support],
+        contacts: DummyCatalog::CONTACTS
+      )
     end
   end
 

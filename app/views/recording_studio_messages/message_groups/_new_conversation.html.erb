@@ -1,0 +1,42 @@
+<% mount_recording = local_assigns.fetch(:mount_recording) %>
+<% modal_id = messages_new_conversation_modal_id(mount_recording) %>
+
+<%= render FlatPack::Modal::Component.new(
+  id: modal_id,
+  title: messages_t("inbox.new"),
+  size: :md,
+  scroll: :page
+) do |modal| %>
+  <% modal.body do %>
+    <%= form_with url: messages_create_conversation_path,
+                  method: :post,
+                  local: true,
+                  html: { class: "flex flex-col gap-4" } do %>
+      <%= hidden_field_tag :mount_id, mount_recording.id %>
+      <%= render FlatPack::Select::Component.new(
+        name: "recipients",
+        options: [],
+        label: messages_t("inbox.find_people"),
+        placeholder: messages_t("inbox.find_people"),
+        searchable: true,
+        multiple: true,
+        search_mode: :remote,
+        search_endpoint: messages_contacts_path(mount_recording),
+        min_search_length: 1
+      ) %>
+      <%= render FlatPack::TextArea::Component.new(
+        name: "body",
+        label: messages_t("contact.body"),
+        required: true,
+        rows: 4,
+        placeholder: messages_t("composer.placeholder")
+      ) %>
+      <%= render FlatPack::Button::Component.new(
+        text: messages_t("inbox.send"),
+        style: :primary,
+        size: :md,
+        type: "submit"
+      ) %>
+    <% end %>
+  <% end %>
+<% end %>

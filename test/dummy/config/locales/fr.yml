@@ -67,6 +67,10 @@ fr:
         filter_show_all: Tout afficher
         empty_thread: Rien ici pour l’instant. Écrivez la première ligne.
         empty_panel: Rien ici pour l’instant.
+        new: Nouveau message
+        send: Envoyer
+        new_untitled: Nouvelle conversation
+        find_people: Trouver quelqu’un
       panel:
         someone: Quelqu’un
         seen_by: "Vu par %{names}"
@@ -100,6 +104,10 @@ fr:
         attach_failed: Impossible de joindre ce fichier
         not_a_conversation: Les messages s’envoient dans une conversation
         cannot_attach_item: Vous ne pouvez pas joindre cela
+        contacts_off: Vous ne pouvez pas commencer un message ici.
+        cannot_start: Vous ne pouvez pas commencer un message ici.
+        pick_recipient: Choisissez à qui l’envoyer.
+        unknown_recipient: Cette personne n’est pas sur la liste.
   dummy:
     home:
       title: Hôte dummy

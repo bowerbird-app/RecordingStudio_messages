@@ -22,7 +22,9 @@
           <%= render "recording_studio_messages/message_groups/list_toolbar",
                      inbox: inbox,
                      unread_filter: unread_filter,
-                     list_toolbar: list_toolbar %>
+                     list_toolbar: list_toolbar,
+                     mount_recording: mount_recording,
+                     current_actor: current_actor %>
         <% end %>
       <% end %>
       <%= render FlatPack::List::Component.new(spacing: :dense, selectable: true) do %>
@@ -53,3 +55,8 @@
     <% end %>
   <% end %>
 </div>
+<% if messages_can_start_conversation?(mount_recording, actor: current_actor) %>
+  <%= render "recording_studio_messages/message_groups/new_conversation",
+             mount_recording: mount_recording,
+             current_actor: current_actor %>
+<% end %>

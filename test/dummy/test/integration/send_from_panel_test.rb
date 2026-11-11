@@ -18,11 +18,11 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
     assert_difference -> { RecordingStudioMessages.message_recordings(group).count }, +1 do
       post recording_studio_messages.message_group_messages_path(group), params: {
         message: { body: "Trying a quieter type scale next." },
-        return_to: staff_desk_path
+        return_to: "/staff/desk?group_id=#{group.id}"
       }
     end
 
-    assert_redirected_to "/staff/desk"
+    assert_redirected_to "/staff/desk?group_id=#{group.id}"
     follow_redirect!
     assert_includes response.body, "Trying a quieter type scale next."
     assert_includes response.body, "Sent."

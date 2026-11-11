@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.22.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.23.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -16,7 +16,8 @@ class RecordingStudioMessagesTest < Minitest::Test
       File.expand_path("../app/helpers/recording_studio_messages/public_contact_helper.rb", __dir__)
     )
 
-    assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil, admin: nil)"
+    assert_includes api, "recipients: nil, body: nil"
+    assert_includes api, "def create_group(mount_recording, actor:, title: nil"
     assert_includes api, "def rename_group(group_recording:, title:, actor:)"
     assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
     assert_includes api, "def register_composer_action"
@@ -490,6 +491,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "docs/cursor-skills.md"
     assert_includes readme, "membership_locked: [:support]"
     assert_includes readme, "access: :inherited"
+    assert_includes readme, "contacts:"
     assert_includes readme, "allow_membership_change"
     refute_includes readme, "show_access"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
@@ -500,8 +502,8 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_membership_lock_module_is_wired
     api = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
     lock = File.read(File.expand_path("../lib/recording_studio_messages/membership_lock.rb", __dir__))
-    create_group = File.read(
-      File.expand_path("../lib/recording_studio_messages/services/create_group.rb", __dir__)
+    create_group_people = File.read(
+      File.expand_path("../lib/recording_studio_messages/services/create_group_people.rb", __dir__)
     )
 
     assert_includes api, "membership_lock"
@@ -511,8 +513,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes lock, "membership_locked"
     assert_includes lock, "access_management_authorizer"
     assert_includes lock, "allow_membership_change"
-    assert_includes create_group, "allow_membership_change"
-    assert_includes create_group, "MountAccess.inherited?"
+    assert_includes create_group_people, "allow_membership_change"
+    assert_includes create_group_people, "MountAccess.inherited?"
     assert_includes File.read(
       File.expand_path("../lib/recording_studio_messages/mount_access.rb", __dir__)
     ), ":inherited"
@@ -532,6 +534,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes controller, "format.turbo_stream"
     assert_includes helper, "messages_panel_list_id"
     assert_includes helper, "def message_seen_by"
+    assert_includes helper, "def message_receipt_readers"
     assert_includes stream, "turbo_stream.replace messages_panel_list_id"
     assert_includes stream, "turbo_stream.replace messages_panel_composer_id"
     refute_includes controller, "ActionCable"
@@ -547,7 +550,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes message, "MessageMeta"
     assert_includes message, "reveal_timestamp: true"
     assert_includes message, "FlatPack::Chat::SentAt::Component"
+    assert_includes message, "last_message && outgoing"
     assert_includes message, "group.status"
+    assert_includes message, "message_receipt_readers"
     assert_includes message, "message_groups/message_seen"
     assert_includes list, "message_seen_by"
     assert_includes list, "message_time_break?"

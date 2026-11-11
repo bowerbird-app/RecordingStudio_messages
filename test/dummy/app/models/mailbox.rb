@@ -3,6 +3,7 @@ class Mailbox < ApplicationRecord
   include RecordingStudio::Capabilities::Messages.to(
     keys: [ :inbox ],
     public_contact: [ :inbox ],
-    access: :inherited
+    access: :inherited,
+    contacts: DummyCatalog::CONTACTS
   )
 end

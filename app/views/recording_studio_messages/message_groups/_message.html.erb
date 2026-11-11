@@ -1,6 +1,6 @@
 <% message_recording = local_assigns.fetch(:message_recording) %>
 <% current_actor = local_assigns.fetch(:current_actor) %>
-<% readers = local_assigns[:readers] || [] %>
+<% readers = message_receipt_readers(local_assigns[:readers] || [], message_recording: message_recording) %>
 <% last_message = local_assigns.fetch(:last_message, false) %>
 <% reference_slots = Array(local_assigns[:visible_references]) %>
 <% sender = message_sender_for(message_recording) %>
@@ -71,7 +71,7 @@
                    direction: direction %>
       <% end %>
     <% end %>
-    <% if last_message %>
+    <% if last_message && outgoing %>
       <% group.status do %>
         <% if readers.any? %>
           <%= render "recording_studio_messages/message_groups/message_seen",

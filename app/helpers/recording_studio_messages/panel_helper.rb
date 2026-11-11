@@ -40,11 +40,16 @@ module RecordingStudioMessages
 
     def messages_panel_header_title(group_recording, actor:, inbox: nil)
       title = group_recording.recordable.title
-      return title unless messages_can_rename_group?(group_recording, actor: actor)
+      return messages_truncated_title(title) unless messages_can_rename_group?(group_recording, actor: actor)
 
       render FlatPack::InlineEdit::Component.new(
         **inline_edit_title_arguments(group_recording, title, inbox: inbox)
       )
+    end
+
+    def messages_truncated_title(text)
+      text = text.to_s
+      tag.span(text, class: "block min-w-0 truncate", title: text)
     end
 
     def inline_edit_title_arguments(group_recording, title, inbox: nil)
@@ -54,7 +59,9 @@ module RecordingStudioMessages
         method: :patch, maxlength: RecordingStudioMessages::MessageGroup::TITLE_MAX,
         required: true, save_on_blur: true,
         label: Copy.t("panel.title_label"),
-        placeholder: Copy.t("panel.title_placeholder")
+        placeholder: Copy.t("panel.title_placeholder"),
+        class: "min-w-0 max-w-full truncate",
+        title: title
       }
     end
 
@@ -166,10 +173,13 @@ module RecordingStudioMessages
     end
 
     def outgoing_message?(message_recording, actor:)
-      sender = message_sender_for(message_recording)
-      return false if sender.blank? || actor.blank?
+      same_message_actor?(message_sender_for(message_recording), actor)
+    end
 
-      sender.instance_of?(actor.class) && sender.id.to_s == actor.id.to_s
+    def same_message_actor?(left, right)
+      return false if left.blank? || right.blank?
+
+      left.instance_of?(right.class) && left.id.to_s == right.id.to_s
     end
 
     def message_timestamp(message_recording)
@@ -206,6 +216,10 @@ module RecordingStudioMessages
         viewer: viewer,
         latest_message: latest_message
       )
+    end
+
+    def message_receipt_readers(actors, message_recording:)
+      Array(actors).reject { |actor| same_message_actor?(actor, message_sender_for(message_recording)) }
     end
 
     def message_seen_label(actors)
