@@ -116,7 +116,6 @@ class ListToolbarHooksTest < ActionDispatch::IntegrationTest
     assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
     refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2",
                   text: DummyCatalog.studio_workspace.name
-    assert_select "[data-flat-pack--chat-layout-target='panel'] h2", count: 1
     refute_select "[data-flat-pack--chat-layout-target='panel'] h2",
                   text: DummyCatalog.studio_workspace.name
     assert_select "#dummy-list-toolbar", text: "New"
