@@ -7,12 +7,13 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(group_recording:, message_recording:, actor:, body:, url:)
+      def initialize(group_recording:, message_recording:, actor:, body:, url:, recipients: nil)
         @group_recording = group_recording
         @message_recording = message_recording
         @actor = actor
         @body = body
         @url = url
+        @recipients = recipients
       end
 
       def call
@@ -29,9 +30,13 @@ module RecordingStudioMessages
       private
 
       def other_granted_actors
-        RecordingStudioMessages.granted_actors(@group_recording).reject do |recipient|
-          same_actor?(recipient, @actor)
-        end
+        notify_candidates.reject { |recipient| same_actor?(recipient, @actor) }
+      end
+
+      def notify_candidates
+        return Array(@recipients).compact if @recipients
+
+        RecordingStudioMessages.granted_actors(@group_recording)
       end
 
       def notification_attributes(recipients, root_recording:)

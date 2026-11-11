@@ -109,6 +109,15 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.22.0
+
+Messages `0.22.0` adds `access:` on `Messages.to`. Existing mounts stay `:members`. Conversations you already granted stay granted. There is no migration.
+
+1. Install Messages `0.22.0`.
+2. On a desk under an owner root, add `access: :inherited` to that type's `Messages.to`. Leave a shared membership desk on the default.
+3. Keep calling `create_group(mount, title:, actor:, tags:)`. Pass `admin:` only on `:members` when someone other than the creator should own the conversation. `:inherited` ignores `admin:` and writes no staff grant.
+4. Public contact on `:inherited` no longer needs an opener. The resolver may return no one. It only drives `:message_received` notices. The sender still gets a direct `:edit` grant, so they see the thread in `/my_messages`. Team members who only inherit access do not.
+
 ### Upgrading to 0.21.0
 
 Messages `0.21.0` adds composer actions, typed recording references, and safe URL auto-linking. Conversation desks, unread cursors, seen faces, and the v0.17–v0.19 host slots stay as they are.
@@ -384,7 +393,11 @@ class Mailbox < ApplicationRecord
                               root: false,
                               allowed_parent_types: ["Workspace"]
 
-  include RecordingStudio::Capabilities::Messages.to(keys: [:inbox])
+  include RecordingStudio::Capabilities::Messages.to(
+    keys: [:inbox],
+    access: :inherited,
+    public_contact: [:inbox]
+  )
 end
 ```
 
@@ -413,6 +426,19 @@ end
 
 `create_group` already uses that for the owner grant. Support `sync_staff_grants`
 will use the same helper when Support enables the lock.
+
+### Choose an access mode
+
+`Messages.to` takes `access:`. Callers of `create_group` and public contact do not pick a mode. They read it from the mount's parent type.
+
+| Mode | When | `create_group` | Public contact |
+|---|---|---|---|
+| `:members` (default) | A shared desk whose people are the conversation members | Grants `:admin` to `admin:` when passed, otherwise to the creating actor | Needs an opener. The first resolver recipient who is already an admin on the mount path opens the conversation. Other resolver recipients and the sender get `:edit`. An empty list, or a list with no admin, raises "Nobody can receive this message." |
+| `:inherited` | A desk under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
+
+Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). A staff member who starts a thread gets no direct grant, so the thread does not appear in `/my_messages`. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
+
+Existing direct grants stay as they are. There is no migration. Hosts that already mint staff grants on every new conversation under an owner root should add `access: :inherited` so new conversations stop doing that.
 
 Register every type the dummy or host uses:
 
@@ -480,6 +506,8 @@ RecordingStudioMessages.tagged_group_recordings(
   tags: { "press_center" => press_center }
 )
 ```
+
+`create_group` still takes `title:`, `actor:`, and optional `tags:`. Optional `admin:` sets the `:members` owner instead of the creating actor. On `:inherited` it writes no grant.
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff desk, and the inbox all use this list.
 
@@ -582,7 +610,13 @@ group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: v
 
 The engine contact form has no visible tag field. Pass `tags:` to `public_contact_form` or `public_contact_modal` when the popup should carry them. Call `begin_public_contact` from the host when you already have the hash in Ruby.
 
-Set `public_contact_recipient_resolver` to a callable. When the callable lists `tags:` or a keyrest parameter, `begin` and `complete` pass `tags:` as a hash. Keys are strings. Values are recordings. When there are no tags, that hash is `{}`. A callable that only lists `mount_recording:` and `actor:` is called with those two keywords. A value that does not respond to `call` is ignored. The first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist. There is no file field on this form.
+Set `public_contact_recipient_resolver` to a callable. When the callable lists `tags:` or a keyrest parameter, `begin` and `complete` pass `tags:` as a hash. Keys are strings. Values are recordings. When there are no tags, that hash is `{}`. A callable that only lists `mount_recording:` and `actor:` is called with those two keywords. A value that does not respond to `call` is ignored.
+
+On a `:members` mount the first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist.
+
+On an `:inherited` mount there is no opener. `create_group` writes no staff grant. The sender gets a direct `:edit` grant. Resolver recipients are notified and are not granted. An empty resolver is fine.
+
+There is no file field on this form.
 
 ```ruby
 RecordingStudioMessages.configure do |config|
@@ -643,7 +677,7 @@ RecordingStudioMessages.configure do |config|
 end
 ```
 
-If nobody in that list is already an admin on the mount path, `begin` raises `RecordingStudioMessages::Error` with "Nobody can receive this message." and does not send a code.
+On a `:members` mount, if nobody in that list is already an admin on the mount path, `begin` raises `RecordingStudioMessages::Error` with "Nobody can receive this message." and does not send a code. On an `:inherited` mount that check is skipped.
 
 ```text
 form
@@ -651,8 +685,8 @@ form
     └── email code
         └── verify_otp!
             └── confirmed user, profile written from the submitted name when none exists
-                └── create_group as the admin recipient
-                    └── :edit grants
+                └── create_group (`:members` uses the admin recipient; `:inherited` uses the sender)
+                    └── `:members` grants opener, sender, and other recipients; `:inherited` grants only the sender `:edit`
                         └── send_message
                             └── intent fulfilled, body cleared
 ```

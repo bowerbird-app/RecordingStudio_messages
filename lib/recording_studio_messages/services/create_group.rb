@@ -7,11 +7,12 @@ module RecordingStudioMessages
         new(...).call
       end
 
-      def initialize(mount_recording, title:, actor:, tags: nil)
+      def initialize(mount_recording, title:, actor:, tags: nil, admin: nil)
         @mount_recording = mount_recording
         @title = title.to_s
         @actor = actor
         @tags = tags
+        @admin = admin
       end
 
       def call
@@ -59,6 +60,7 @@ module RecordingStudioMessages
 
       def grant_owner!(group_recording)
         return unless defined?(RecordingStudioAccessible)
+        return if MountAccess.inherited?(@mount_recording)
 
         result = owner_grant_result(group_recording)
         return if result.success?
@@ -67,10 +69,11 @@ module RecordingStudioMessages
       end
 
       def owner_grant_result(group_recording)
+        owner = @admin.presence || @actor
         RecordingStudioMessages.allow_membership_change do
           RecordingStudioAccessible.grant_access(
             recording: group_recording,
-            actor: @actor,
+            actor: owner,
             role: :admin,
             manager_actor: @actor
           )

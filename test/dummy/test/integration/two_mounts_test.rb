@@ -20,6 +20,8 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert RecordingStudio.capability_enabled?(:messages, for: Mailbox)
     assert_equal ["support"], Array(RecordingStudio.capability_options(:messages, for: Workspace)[:keys]).map(&:to_s)
     assert_equal ["inbox"], Array(RecordingStudio.capability_options(:messages, for: Mailbox)[:keys]).map(&:to_s)
+    assert_equal :members, RecordingStudioMessages::MountAccess.mode(support_mount)
+    assert_equal :inherited, RecordingStudioMessages::MountAccess.mode(inbox_mount)
     assert_equal "Workspace", support_mount.parent_recording.recordable_type
     assert_equal "Mailbox", inbox_mount.parent_recording.recordable_type
     refute_equal support_mount.parent_recording, inbox_mount.parent_recording

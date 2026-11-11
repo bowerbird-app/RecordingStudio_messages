@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-11
+
+Per-mount access mode on `Messages.to`. Shared desks stay membership grants. Desks under an owner root inherit Accessible from the tree. Existing grants are untouched. No migration.
+
+### Added
+
+- `access: :members` (default) or `access: :inherited` on `RecordingStudio::Capabilities::Messages.to`.
+- `create_group(..., admin:)` on `:members` grants that actor `:admin` instead of the creator. `:inherited` writes the conversation and grants nobody.
+- Public contact on `:inherited` grants the sender `:edit` only, treats `public_contact_recipient_resolver` as notification-only, and allows an empty resolver. "Nobody can receive this message." stays a `:members` failure.
+- Dummy Site mailbox mount uses `access: :inherited`. Workspace `support` stays `:members`.
+
+### Upgrade notes
+
+- Bump to **0.22.0**. No Messages migration.
+- Declare `access: :inherited` on mounts that sit under an owner root. Leave shared inboxes on `:members`.
+- Direct grants you already wrote stay. New `:inherited` conversations do not mint staff grants. `/my_messages` still lists direct grants only.
+
 ## [0.21.0] - 2026-11-10
 
 Composer + menu items and typed recording cards are host/gem registries. Message bodies auto-link `http` and `https` after HTML escape. Conversation desks, unread, seen faces, and the v0.17–v0.19 slots stay as they are.

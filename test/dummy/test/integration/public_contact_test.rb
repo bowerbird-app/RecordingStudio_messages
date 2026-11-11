@@ -98,7 +98,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     message_recording = RecordingStudio::Recording.find_by!(recordable: message)
     sender = message_recording.events.where(action: "created").order(:created_at).first.actor
     assert_equal user.id, sender.id
-    assert_includes RecordingStudioMessages.granted_actors(group).map(&:id), @staff.id
+    refute_includes RecordingStudioMessages.granted_actors(group).map(&:id), @staff.id
     assert_includes RecordingStudioMessages.granted_actors(group).map(&:id), user.id
 
     notification = message_received_scope.order(:created_at).last
@@ -942,7 +942,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
         { "press_center" => press.id.to_s, "press_kit" => kit.id.to_s },
         intent.tags
       )
-      assert_equal [{ "press_center" => press, "press_kit" => kit }], received
+      assert_equal [], received
 
       verified = RecordingStudioUser.verify_otp!(
         challenge_id: intent.otp_challenge_id,
@@ -962,7 +962,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       again = RecordingStudioMessages.complete_public_contact(intent: intent.reload, actor: user)
       assert_equal group.id, again.id
       assert_equal 2, RecordingStudioMessages::MessageGroupTag.where(message_group_recording_id: group.id).count
-      assert_equal 2, received.size
+      assert_equal 1, received.size
     end
   end
 

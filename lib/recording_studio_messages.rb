@@ -14,6 +14,7 @@ require "recording_studio_messages/metrics"
 require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
 require "recording_studio_messages/membership_lock"
+require "recording_studio_messages/mount_access"
 require "recording_studio_messages/public_contact"
 require "recording_studio_messages/services/ensure_mount"
 require "recording_studio_messages/services/create_group"
@@ -59,8 +60,8 @@ module RecordingStudioMessages
       Services::EnsureMount.call(parent_recording, key: key, actor: actor)
     end
 
-    def create_group(mount_recording, title:, actor:, tags: nil)
-      Services::CreateGroup.call(mount_recording, title: title, actor: actor, tags: tags)
+    def create_group(mount_recording, title:, actor:, tags: nil, admin: nil)
+      Services::CreateGroup.call(mount_recording, title: title, actor: actor, tags: tags, admin: admin)
     end
 
     def rename_group(group_recording:, title:, actor:)

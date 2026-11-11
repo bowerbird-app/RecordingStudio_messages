@@ -20,6 +20,8 @@ module RecordingStudioMessages
       end
 
       def ensure_recipient!(mount, user, tags:)
+        return if MountAccess.inherited?(mount)
+
         raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user, tags: tags)).nil?
       end
 
