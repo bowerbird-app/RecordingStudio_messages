@@ -9,7 +9,14 @@
                unread_count: messages_unread_count %>
   <% end %>
   <% if messages_can_start_conversation?(mount_recording, actor: current_actor) %>
-    <%= render FlatPack::Button::Component.new(**messages_new_conversation_button(mount_recording)) %>
+    <div class="shrink-0">
+      <%= render FlatPack::Tooltip::Component.new(
+            text: messages_t("inbox.new"),
+            placement: :bottom
+          ) do %>
+        <%= render FlatPack::Button::Component.new(**messages_new_conversation_button(mount_recording)) %>
+      <% end %>
+    </div>
   <% end %>
   <%= render FlatPack::Button::Component.new(**messages_unread_filter_button(unread_filter: unread_filter)) %>
   <% if list_toolbar.present? %>

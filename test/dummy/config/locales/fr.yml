@@ -68,6 +68,7 @@ fr:
         empty_thread: Rien ici pour l’instant. Écrivez la première ligne.
         empty_panel: Rien ici pour l’instant.
         new: Nouveau message
+        send: Envoyer
         new_untitled: Nouvelle conversation
         find_people: Trouver quelqu’un
         no_people: Personne ne correspond.

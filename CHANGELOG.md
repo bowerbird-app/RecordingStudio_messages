@@ -15,7 +15,7 @@ Hosts can let people start a conversation from a Messages mount and pick who it 
 
 - Optional `contacts:` callable on `RecordingStudio::Capabilities::Messages.to`. Messages calls it as `contacts.call(actor:, mount:, query:)`. A blank query is the allowlist. The New message button renders only when that callable is present and the actor has Accessible `:edit` on the mount.
 - `create_group(..., recipients:, body:)`. Recipients are re-checked against the resolver. Each recipient gets a direct `:edit` grant. On `:members` the creator is still admin. On `:inherited` the creator gets a direct `:edit` grant only. The first message, grants, and tags commit together. Title is optional when recipients are present. Body is required.
-- Gem routes to search contacts and create the conversation. The list header opens a Flatpack modal with a live search, removable chips, optional title, and the first message.
+- Gem routes to search contacts and create the conversation. The list header uses an icon New message control. The modal searches people in a compact list, keeps chips under the field, and submits with Send.
 
 ### Upgrade notes
 

@@ -93,12 +93,17 @@ module RecordingStudioMessages
     end
 
     def messages_new_conversation_button(mount)
+      label = Copy.t("inbox.new")
       {
-        text: Copy.t("inbox.new"),
+        text: label,
         icon: "plus",
-        style: :secondary,
+        icon_only: true,
+        round: true,
+        style: :ghost,
         size: :sm,
         type: :button,
+        title: label,
+        aria: { label: label },
         data: { modal_id: messages_new_conversation_modal_id(mount) }
       }
     end

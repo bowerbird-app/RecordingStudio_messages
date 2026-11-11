@@ -32,6 +32,7 @@ en:
         empty_thread: Nothing here yet. Write the first line.
         empty_panel: Nothing here yet.
         new: New message
+        send: Send
         new_untitled: New conversation
         find_people: Find someone
         no_people: Nobody matches that.

@@ -24,7 +24,10 @@ module RecordingStudioMessages
     end
 
     def search(mount:, actor:, query: "")
-      call(mount: mount, actor: actor, query: query).first(SEARCH_LIMIT)
+      text = query.to_s.strip
+      return [] if text.blank?
+
+      call(mount: mount, actor: actor, query: text).first(SEARCH_LIMIT)
     end
 
     def allowlist(mount:, actor:)

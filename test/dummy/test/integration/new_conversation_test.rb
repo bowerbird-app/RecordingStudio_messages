@@ -38,15 +38,17 @@ class NewConversationTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, RecordingStudioMessages::Copy.t("inbox.new")
+    assert_includes response.body, RecordingStudioMessages::Copy.t("inbox.send")
     assert_includes response.body, "messages-new-conversation-#{@members_mount.id}"
     assert_includes response.body, "recording-studio-messages--new-conversation"
     assert_includes response.body, recording_studio_messages.contacts_message_groups_path(
       mount_id: @members_mount.id
     )
     assert_select "[data-modal-id=?]", "messages-new-conversation-#{@members_mount.id}"
+    assert_select "button[aria-label=?]", RecordingStudioMessages::Copy.t("inbox.new")
   end
 
-  test "contact search is scoped to the resolver and omits the current actor" do
+  test "contact search returns only resolver matches for the query" do
     sign_in @staff
     get recording_studio_messages.contacts_message_groups_path(
       mount_id: @members_mount.id,
@@ -57,6 +59,31 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Casey Patron"
     refute_includes response.body, "Ada Staff"
     refute_includes response.body, @staff.email
+    refute_includes response.body, "Jules Early"
+    refute_includes response.body, "Kit Extra"
+    refute_includes response.body, "Riley One"
+    refute_includes response.body, "Sam Overflow"
+  end
+
+  test "contact search matches name or email without caring about case" do
+    sign_in @staff
+    get recording_studio_messages.contacts_message_groups_path(
+      mount_id: @members_mount.id,
+      q: "casey@example"
+    )
+
+    assert_response :success
+    assert_includes response.body, "Casey Patron"
+    refute_includes response.body, "Jules Early"
+  end
+
+  test "contact search stays empty until there is a query" do
+    sign_in @staff
+    get recording_studio_messages.contacts_message_groups_path(mount_id: @members_mount.id)
+
+    assert_response :success
+    refute_includes response.body, "Casey Patron"
+    refute_includes response.body, "Jules Early"
   end
 
   test "creating a conversation lands on it and the recipient sees it in my messages" do

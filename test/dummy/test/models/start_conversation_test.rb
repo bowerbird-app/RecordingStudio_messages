@@ -84,6 +84,21 @@ class StartConversationTest < ActiveSupport::TestCase
     refute_includes listed_titles(actor: @viewer), "Quiet ask"
   end
 
+  test "dummy contacts resolver filters by name or email without caring about case" do
+    matches = DummyCatalog.contacts_for(actor: @owner, mount: @members_mount, query: "editor")
+
+    assert_includes matches.map(&:id), @editor.id
+    refute_includes matches.map(&:id), @owner.id
+    refute_includes matches.map(&:id), @viewer.id
+
+    by_email = DummyCatalog.contacts_for(
+      actor: @owner,
+      mount: @members_mount,
+      query: @editor.email.split("@").first.upcase
+    )
+    assert_includes by_email.map(&:id), @editor.id
+  end
+
   test "create_group with recipients rejects a person outside the resolver" do
     error = assert_raises(RecordingStudioMessages::Error) do
       RecordingStudioMessages.create_group(
