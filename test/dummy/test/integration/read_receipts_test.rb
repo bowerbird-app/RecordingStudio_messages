@@ -63,6 +63,7 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     refute_includes second_seen, "Casey Patron"
     assert_includes response.body, "Seen by"
     refute_includes response.body, SENT_CHECK_PATH
+    refute_includes second_seen, "Ada Staff"
 
     sign_in @owner
     Current.actor = @owner
@@ -74,6 +75,33 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     assert_equal "", owner_first
     assert_includes owner_last, "justify-end"
     refute_includes owner_last, "Ada Staff"
+  end
+
+  test "seen faces omit the author and keep that author's read cursor" do
+    RecordingStudioMessages.configuration.read_receipts = true
+    group = open_conversation
+    line = send_line(group, "Author stays off the receipt row")
+    riley = create_user("Riley")
+    grant!(group, riley)
+    pin_read(@owner, group, line)
+    pin_read(riley, group, line)
+    pin_read(@viewer, group, line)
+
+    sign_in @viewer
+    Current.actor = @viewer
+    get recording_studio_messages.message_group_path(group)
+
+    assert_response :success
+    seen = css_select("[data-messages-seen-for='#{line.id}']").to_s
+    assert_includes seen, "Riley"
+    refute_includes seen, "Ada Staff"
+    refute_includes seen, "Casey Patron"
+    assert RecordingStudioMessages::MessageRead.exists?(
+      message_group_recording_id: group.id,
+      actor_type: RecordingStudioAccessible::ActorType.for(@owner),
+      actor_id: @owner.id
+    )
+    refute RecordingStudioMessages.unread?(group_recording: group, actor: @viewer)
   end
 
   private
@@ -101,7 +129,7 @@ class ReadReceiptsTest < ActionDispatch::IntegrationTest
     jules = create_user("Jules")
     grant!(group, jules)
     pin_read(jules, group, first)
-    %w[Ann Bea Cy].each do |name|
+    %w[Ann Bea Cy Dee].each do |name|
       actor = create_user(name)
       grant!(group, actor)
       pin_read(actor, group, second)

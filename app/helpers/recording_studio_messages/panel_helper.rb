@@ -173,10 +173,13 @@ module RecordingStudioMessages
     end
 
     def outgoing_message?(message_recording, actor:)
-      sender = message_sender_for(message_recording)
-      return false if sender.blank? || actor.blank?
+      same_message_actor?(message_sender_for(message_recording), actor)
+    end
 
-      sender.instance_of?(actor.class) && sender.id.to_s == actor.id.to_s
+    def same_message_actor?(left, right)
+      return false if left.blank? || right.blank?
+
+      left.instance_of?(right.class) && left.id.to_s == right.id.to_s
     end
 
     def message_timestamp(message_recording)
@@ -213,6 +216,10 @@ module RecordingStudioMessages
         viewer: viewer,
         latest_message: latest_message
       )
+    end
+
+    def message_receipt_readers(actors, message_recording:)
+      Array(actors).reject { |actor| same_message_actor?(actor, message_sender_for(message_recording)) }
     end
 
     def message_seen_label(actors)
