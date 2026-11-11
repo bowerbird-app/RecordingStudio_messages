@@ -51,7 +51,7 @@ module RecordingStudioMessages
       {
         chat_group_name: messages_inbox_group_name(group_recording),
         latest_sender: messages_inbox_row_sender(group_recording, latest, inbox: inbox),
-        latest_preview: latest&.recordable&.body,
+        latest_preview: inbox_latest_preview(group_recording, latest, page),
         latest_at: latest && message_timestamp(latest),
         avatar_items: messages_inbox_avatar_items(group_recording, page: page, unread: unread),
         leading: messages_inbox_unread_dot(group_recording, unread: unread, page: page),
@@ -205,6 +205,12 @@ module RecordingStudioMessages
       return page.latest_for(group_recording) if page
 
       RecordingStudioMessages.message_recordings(group_recording).last
+    end
+
+    def inbox_latest_preview(group_recording, latest, page)
+      return page.preview_for(group_recording) if page.respond_to?(:preview_for)
+
+      latest&.recordable&.body
     end
 
     def inbox_granted_actors(group_recording, page)

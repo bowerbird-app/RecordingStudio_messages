@@ -1,21 +1,27 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["references"]
+  static targets = ["references", "chipTemplate"]
 
   connect() {
     this.onInsert = this.onInsert.bind(this)
+    this.onChipRemoved = this.onChipRemoved.bind(this)
     window.addEventListener("messages:composer-insert", this.onInsert)
+    this.element.addEventListener("chip:removed", this.onChipRemoved)
   }
 
   disconnect() {
     window.removeEventListener("messages:composer-insert", this.onInsert)
+    this.element.removeEventListener("chip:removed", this.onChipRemoved)
   }
 
   onInsert(event) {
     const detail = event.detail || {}
-    if (detail.text) this.appendText(detail.text)
-    if (detail.reference) this.addReference(detail.reference)
+    if (detail.reference) {
+      this.addReference(detail.reference)
+    } else if (detail.text) {
+      this.appendText(detail.text)
+    }
     this.closeOpenActionModal()
   }
 
@@ -42,10 +48,28 @@ export default class extends Controller {
     if (!reference.recording_id) return
     if (this.existingIds().includes(String(reference.recording_id))) return
 
-    const index = this.referencesTarget.children.length
-    this.referencesTarget.append(this.hiddenInput(index, "recording_id", reference.recording_id))
-    if (reference.title) this.referencesTarget.append(this.hiddenInput(index, "title", reference.title))
-    if (reference.url) this.referencesTarget.append(this.hiddenInput(index, "url", reference.url))
+    const index = `${Date.now()}${this.referencesTarget.children.length}`
+    const wrap = document.createElement("div")
+    wrap.dataset.pendingReference = "true"
+    wrap.className = "inline-flex"
+    wrap.append(this.hiddenInput(index, "recording_id", reference.recording_id))
+    if (reference.title) wrap.append(this.hiddenInput(index, "title", reference.title))
+    if (reference.url) wrap.append(this.hiddenInput(index, "url", reference.url))
+    wrap.append(this.chipFor(reference.title))
+    this.referencesTarget.append(wrap)
+  }
+
+  chipFor(title) {
+    if (!this.hasChipTemplateTarget) return document.createTextNode(title || "")
+
+    const html = this.chipTemplateTarget.innerHTML.replaceAll("__TITLE__", title || "")
+    const wrap = document.createElement("template")
+    wrap.innerHTML = html
+    return wrap.content
+  }
+
+  onChipRemoved(event) {
+    event.target.closest("[data-pending-reference]")?.remove()
   }
 
   existingIds() {

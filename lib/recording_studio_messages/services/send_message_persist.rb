@@ -3,7 +3,7 @@
 module RecordingStudioMessages
   module Services
     class SendMessagePersist
-      def initialize(group_recording:, actor:, body:, files:, url:, notify:, references:)
+      def initialize(group_recording:, actor:, body:, files:, url:, notify:, references:, preview: nil)
         @group_recording = group_recording
         @actor = actor
         @body = body
@@ -11,6 +11,7 @@ module RecordingStudioMessages
         @url = url
         @notify = notify
         @references = references
+        @preview = preview
       end
 
       def call
@@ -89,7 +90,7 @@ module RecordingStudioMessages
           group_recording: @group_recording,
           message_recording: message_recording,
           actor: @actor,
-          body: @body,
+          body: @preview.presence || @body,
           url: @url
         )
       end

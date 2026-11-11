@@ -21,6 +21,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
     assert_includes api, "def register_composer_action"
     assert_includes api, "def register_message_embed"
+    assert_includes api, "def preview_text(body, references: [])"
     assert_includes api, "def send_message(...)"
     assert_includes flow, "tags: contact_tags"
     assert_includes helper, "tags: nil"
@@ -50,7 +51,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert requirement.satisfied_by?(Gem::Version.new("0.5.0"))
     refute requirement.satisfied_by?(Gem::Version.new("0.3.0"))
     refute requirement.satisfied_by?(Gem::Version.new("1.0.0"))
-    assert_equal ">= 0.1.347", gemspec_constraint(gemspec, "flat_pack")
+    assert_equal ">= 0.1.349", gemspec_constraint(gemspec, "flat_pack")
     assert_equal "~> 8.1.0", gemspec_constraint(gemspec, "rails")
     refute_includes gemspec, 'spec.add_dependency "recording_studio_publishable"'
     refute_includes gemspec, 'spec.add_dependency "recording_studio_api"'
@@ -73,7 +74,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.347"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.349"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.6.2"'
     assert_equal "~> 2.1", gemfile_constraint(gemfile, "recording_studio_admin")
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
@@ -81,7 +82,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
-    assert_equal ">= 0.1.347", gemfile_constraint(gemfile, "flat_pack")
+    assert_equal ">= 0.1.349", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, 'tag: "v0.3.4"'
     refute_includes gemfile, 'tag: "v4.7.0"'
@@ -106,7 +107,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.347"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.349"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.1.7"'
     assert_includes gemfile, "widen_recording_studio_requirement"
@@ -133,10 +134,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes dummy_lock, "recording_studio_notifications (0.7.0)"
     assert_includes root_lock, "tag: v6.3.0"
     assert_includes root_lock, "recording_studio (6.3.0)"
-    assert_includes root_lock, "tag: v0.1.347"
-    assert_includes root_lock, "flat_pack (0.1.347)"
-    assert_includes dummy_lock, "tag: v0.1.347"
-    assert_includes dummy_lock, "flat_pack (0.1.347)"
+    assert_includes root_lock, "tag: v0.1.349"
+    assert_includes root_lock, "flat_pack (0.1.349)"
+    assert_includes dummy_lock, "tag: v0.1.349"
+    assert_includes dummy_lock, "flat_pack (0.1.349)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
@@ -606,6 +607,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes sent, 'h1 class="text-3xl font-semibold"'
     assert_includes composer, "variant: :chat"
     assert_includes composer, "recording-studio-messages--composer"
+    assert_includes composer, "chipTemplate"
     assert_includes composer, "messages_composer_actions"
     assert_includes composer, "composer_action_modal"
     refute_includes composer, "action.partial"
@@ -627,7 +629,16 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes action_modal, "action"
     assert_includes composer_js, "closeOpenActionModal"
     assert_includes composer_js, "messages:composer-insert"
+    assert_includes composer_js, "addReference"
     assert_includes composer_js, "[id^='messages-composer-action-']"
+    message_partial = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_message.html.erb", __dir__)
+    )
+    assert_includes message_partial, "recording_studio_messages/message_groups/reference_card"
+    card = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_reference_card.html.erb", __dir__)
+    )
+    assert_includes card, "FlatPack::Chat::LinkCard::Component"
   end
 
   def test_public_contact_page_loads_flatpack_application_styles

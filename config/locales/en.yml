@@ -59,7 +59,7 @@ en:
         users_required: Public contact needs Recording Studio Users email codes.
         no_recipient: Nobody can receive this message.
         not_enabled: Public contact is not enabled on this mount.
-        write_or_attach: Write something or add a file
+        write_or_attach: Write something or attach something
         cannot_send_conversation: You cannot send to this conversation
         attach_failed: Could not attach that file
         not_a_conversation: Messages must be sent in a conversation

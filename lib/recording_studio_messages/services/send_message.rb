@@ -21,7 +21,6 @@ module RecordingStudioMessages
         validate!
         authorize!
         @checked_references = checked_references
-        @body = MessageReferences.fallback_body(@body, @reference_items)
         validate_content!
         persist!
       end
@@ -36,7 +35,8 @@ module RecordingStudioMessages
           files: @files,
           url: @url,
           notify: @notify,
-          references: @checked_references
+          references: @checked_references,
+          preview: MessageReferences.fallback_body(@body, @reference_items)
         ).call
       end
 

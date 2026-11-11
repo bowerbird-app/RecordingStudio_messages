@@ -133,7 +133,7 @@ module RecordingStudioMessages
 
     def ready_inbox_group?(group)
       group.recordable&.title.to_s.strip.present? &&
-        RecordingStudioMessages.message_recordings(group).last&.recordable&.body.present?
+        RecordingStudioMessages.message_recordings(group).last.present?
     end
   end
 end

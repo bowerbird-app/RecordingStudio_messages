@@ -18,17 +18,21 @@ module RecordingStudioMessages
         refs = MessageReference.where(message_recording_id: @message_recordings.map(&:id)).to_a
         return {} if refs.empty?
 
-        index_visible(refs, load_targets(refs.map(&:target_recording_id)))
+        index_slots(refs, load_targets(refs.map(&:target_recording_id)))
       end
 
       private
 
-      def index_visible(refs, targets)
+      def index_slots(refs, targets)
         allowed = allowed_ids(targets.values)
         refs.each_with_object({}) do |ref, index|
-          next unless allowed.include?(ref.target_recording_id.to_s)
-
-          (index[ref.message_recording_id.to_s] ||= []) << targets[ref.target_recording_id.to_s]
+          recording = targets[ref.target_recording_id.to_s]
+          slot = if allowed.include?(ref.target_recording_id.to_s)
+                   MessageReferenceSlot.new(recording: recording)
+                 else
+                   MessageReferenceSlot.new(recording: nil)
+                 end
+          (index[ref.message_recording_id.to_s] ||= []) << slot
         end
       end
 

@@ -20,7 +20,17 @@ module RecordingStudioMessages
 
       def ready?(group_recording)
         group_recording.recordable&.title.to_s.strip.present? &&
-          latest_for(group_recording)&.recordable&.body.present?
+          preview_for(group_recording).present?
+      end
+
+      def preview_for(group_recording)
+        latest = latest_for(group_recording)
+        return if latest.blank?
+
+        MessageReferences.fallback_body(
+          latest.recordable&.body,
+          reference_slots[latest.id.to_s]
+        ).presence
       end
 
       def unread?(group_recording)
@@ -35,6 +45,10 @@ module RecordingStudioMessages
 
       def latest_by_id
         @latest_by_id ||= load_latest_by_id
+      end
+
+      def reference_slots
+        @reference_slots ||= VisibleMessageReferences.call(latest_by_id.values, actor: @actor)
       end
 
       def actors_by_id

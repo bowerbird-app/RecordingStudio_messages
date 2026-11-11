@@ -14,7 +14,6 @@ export default class extends Controller {
       new CustomEvent("messages:composer-insert", {
         bubbles: true,
         detail: {
-          text: [button.dataset.title, button.dataset.url].filter(Boolean).join("\n"),
           reference: {
             recording_id: button.dataset.recordingId,
             title: button.dataset.title,

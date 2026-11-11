@@ -1,8 +1,7 @@
 <% recording = local_assigns.fetch(:recording) %>
-<% title = message_reference_title(recording) %>
-<%= render FlatPack::Chat::Attachment::Component.new(
-  name: title,
-  type: :file,
-  meta: messages_t("composer.linked_item"),
-  href: local_assigns[:href]
+<%= render FlatPack::Chat::LinkCard::Component.new(
+  title: message_reference_title(recording),
+  href: local_assigns[:href].presence || message_reference_href(recording),
+  icon: "link",
+  direction: local_assigns.fetch(:direction, :incoming)
 ) %>

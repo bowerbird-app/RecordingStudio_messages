@@ -95,7 +95,7 @@ fr:
         users_required: Le contact public a besoin des codes e-mail Recording Studio Users.
         no_recipient: Personne ne peut recevoir ce message.
         not_enabled: Le contact public n’est pas activé sur ce bureau.
-        write_or_attach: Écrivez quelque chose ou ajoutez un fichier
+        write_or_attach: Écrivez quelque chose ou joignez quelque chose
         cannot_send_conversation: Vous ne pouvez pas envoyer dans cette conversation
         attach_failed: Impossible de joindre ce fichier
         not_a_conversation: Les messages s’envoient dans une conversation

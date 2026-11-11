@@ -117,6 +117,10 @@ module RecordingStudioMessages
       Copy.t("composer.linked_item")
     end
 
+    def message_reference_href(_recording)
+      nil
+    end
+
     def message_embed_partial_for(recording)
       RecordingStudioMessages.message_embed_partial(recording.recordable_type)
     end

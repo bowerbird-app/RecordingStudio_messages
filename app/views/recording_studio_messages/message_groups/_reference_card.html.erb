@@ -1,0 +1,21 @@
+<% slot = local_assigns.fetch(:slot) %>
+<% direction = local_assigns.fetch(:direction) %>
+<% if slot.unavailable? %>
+  <%= render FlatPack::Chat::LinkCard::Component.new(
+    title: messages_t("composer.linked_item"),
+    direction: direction
+  ) %>
+<% else %>
+  <% recording = slot.recording %>
+  <% embed = message_embed_partial_for(recording) %>
+  <% if embed.present? %>
+    <%= render embed, recording: recording %>
+  <% else %>
+    <%= render FlatPack::Chat::LinkCard::Component.new(
+      title: message_reference_title(recording),
+      href: message_reference_href(recording),
+      icon: "link",
+      direction: direction
+    ) %>
+  <% end %>
+<% end %>

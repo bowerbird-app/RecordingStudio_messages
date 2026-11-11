@@ -29,6 +29,7 @@ require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
 require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/composer_action"
+require "recording_studio_messages/message_reference_slot"
 require "recording_studio_messages/services/auto_link"
 require "recording_studio_messages/services/message_reference_fallback"
 require "recording_studio_messages/services/visible_message_references"
@@ -92,6 +93,10 @@ module RecordingStudioMessages
 
     def visible_message_references(...)
       Services::MessageReferences.visible_for(...)
+    end
+
+    def preview_text(body, references: [])
+      Services::MessageReferences.fallback_body(body, references)
     end
 
     def auto_link(text)

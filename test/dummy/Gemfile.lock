@@ -179,10 +179,10 @@ GIT
 
 GIT
   remote: https://github.com/bowerbird-app/flatpack.git
-  revision: 399823c0154941aa1e05acb5d3d2bb09f4bc8250
-  tag: v0.1.347
+  revision: c9a2ac63a3b6c3f3ba37e0e42f53e5130d5cb1e3
+  tag: v0.1.349
   specs:
-    flat_pack (0.1.347)
+    flat_pack (0.1.349)
       pagy (~> 9.0)
       rails (>= 7.1, < 9)
       tailwind_merge (>= 0.13, < 2)
@@ -192,7 +192,7 @@ PATH
   remote: ../..
   specs:
     recording_studio_messages (0.21.0)
-      flat_pack (>= 0.1.347)
+      flat_pack (>= 0.1.349)
       rails (~> 8.1.0)
       recording_studio (>= 6.1.0)
       recording_studio_accessible (~> 0.24)
@@ -780,7 +780,7 @@ CHECKSUMS
   ffi (1.17.4-x86_64-darwin) sha256=aa70390523cf3235096cf64962b709b4cfbd5c082a2cb2ae714eb0fe2ccda496
   ffi (1.17.4-x86_64-linux-gnu) sha256=9d3db14c2eae074b382fa9c083fe95aec6e0a1451da249eab096c34002bc752d
   ffi (1.17.4-x86_64-linux-musl) sha256=3fdf9888483de005f8ef8d1cf2d3b20d86626af206cbf780f6a6a12439a9c49e
-  flat_pack (0.1.347)
+  flat_pack (0.1.349)
   fugit (1.13.0) sha256=a4f093fce740da52f216740a5041e2a594ea763cdb89e8b2754ca4399634ab18
   globalid (1.4.0) sha256=037f12fbf1d9d7a014d501c2d5c77356fd4ddd96d7a7991d6700bba96706f427
   hashie (5.2.0) sha256=357a22635195c2e3911fbbc3de9a7d528843d1f42ab0aae02171048f16332d72

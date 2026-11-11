@@ -23,5 +23,4 @@ Rails.application.config.to_prepare do
       mount&.recordable&.key.to_s == DummyCatalog::SUPPORT_KEY && actor.present?
     }
   )
-  RecordingStudioMessages.register_message_embed("Page", partial: "dummy/page_embed")
 end

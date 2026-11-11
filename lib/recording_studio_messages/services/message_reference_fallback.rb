@@ -6,46 +6,36 @@ module RecordingStudioMessages
       module_function
 
       def apply(body, references)
-        Array(references).reduce(body.to_s) { |text, item| append(text, item_hash(item)) }
+        text = body.to_s
+        return text if text.strip.present?
+
+        Array(references).filter_map { |item| title_for(item) }.join(", ")
       end
 
-      def item_hash(item)
-        return keys(item) if item.is_a?(Hash)
-        return { title: title_for(item) } if item.respond_to?(:recordable)
+      def title_for(item)
+        return hash_title(item) if item.is_a?(Hash)
 
-        {}
+        if item.respond_to?(:unavailable?)
+          return Copy.t("composer.linked_item") if item.unavailable?
+
+          return title_for(item.recording)
+        end
+        return recording_title(item) if item.respond_to?(:recordable)
+
+        nil
       end
 
-      def keys(item)
-        {
-          title: item[:title] || item["title"],
-          url: item[:url] || item["url"],
-          recording_id: item[:recording_id] || item["recording_id"]
-        }
+      def hash_title(item)
+        (item[:title] || item["title"]).to_s.strip.presence
       end
 
-      def title_for(recording)
+      def recording_title(recording)
         recordable = recording.recordable
         return if recordable.blank?
-        return unless recordable.respond_to?(:title)
+        return recordable.title.to_s.strip.presence if recordable.respond_to?(:title)
+        return recordable.name.to_s.strip.presence if recordable.respond_to?(:name)
 
-        recordable.title
-      end
-
-      def append(body, item)
-        title = item[:title].to_s.strip.presence
-        url = item[:url].to_s.strip.presence
-        return body if title.blank? && url.blank?
-
-        line = [title, url].compact.join("\n")
-        return body if duplicate?(body, title, url)
-        return line if body.blank?
-
-        "#{body.rstrip}\n\n#{line}"
-      end
-
-      def duplicate?(body, title, url)
-        (url.present? && body.include?(url)) || (url.blank? && title.present? && body.include?(title))
+        nil
       end
     end
   end

@@ -41,6 +41,10 @@ module DummyMessagesPanelHelper
     "/pages/#{recording.id}"
   end
 
+  def message_reference_href(recording)
+    dummy_page_href(recording)
+  end
+
   def dummy_page_title(recording)
     recordable = recording&.recordable
     return recordable.title if recordable.respond_to?(:title) && recordable.title.present?

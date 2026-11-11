@@ -25,7 +25,7 @@ class MessageReferencesTest < ActiveSupport::TestCase
     @page = record_page!("Brand notes", parent: @root)
   end
 
-  test "send_message writes a reference and appends title plus url" do
+  test "send_message writes a reference and leaves the body alone" do
     Current.actor = @staff
     url = "/pages/#{@page.id}"
 
@@ -39,8 +39,41 @@ class MessageReferencesTest < ActiveSupport::TestCase
 
     row = RecordingStudioMessages::MessageReference.find_by!(message_recording_id: message.id)
     assert_equal @page.id, row.target_recording_id
-    assert_includes message.recordable.body, "Brand notes"
-    assert_includes message.recordable.body, url
+    assert_equal "See this.", message.recordable.body
+  end
+
+  test "send_message allows a blank body when a reference is present" do
+    Current.actor = @staff
+
+    message = RecordingStudioMessages.send_message(
+      group_recording: @group,
+      body: "  ",
+      actor: @staff,
+      references: [{ recording_id: @page.id, title: "Brand notes", url: "/pages/#{@page.id}" }],
+      notify: false
+    )
+
+    assert_equal "", message.recordable.body.strip
+    assert RecordingStudioMessages::MessageReference.exists?(message_recording_id: message.id)
+    assert_equal "Brand notes", RecordingStudioMessages.preview_text(
+      "",
+      references: [{ title: "Brand notes" }]
+    )
+  end
+
+  test "send_message refuses a blank body without a reference or file" do
+    Current.actor = @staff
+
+    error = assert_raises(RecordingStudioMessages::Error) do
+      RecordingStudioMessages.send_message(
+        group_recording: @group,
+        body: "",
+        actor: @staff,
+        notify: false
+      )
+    end
+
+    assert_equal RecordingStudioMessages::Copy.t("errors.write_or_attach"), error.message
   end
 
   test "send_message refuses a target the sender cannot view" do
@@ -78,7 +111,7 @@ class MessageReferencesTest < ActiveSupport::TestCase
     end
   end
 
-  test "render hides unseen and trashed references" do
+  test "render marks unseen and trashed references unavailable without leaking titles" do
     Current.actor = @staff
     shown = RecordingStudioMessages.send_message(
       group_recording: @group,
@@ -106,10 +139,14 @@ class MessageReferencesTest < ActiveSupport::TestCase
       actor: @customer
     )
 
-    assert_equal [@page.id], visible_to_staff[shown.id.to_s].map(&:id)
-    assert_nil visible_to_staff[hidden.id.to_s]
-    assert_nil visible_to_customer[shown.id.to_s]
-    assert_nil visible_to_customer[hidden.id.to_s]
+    assert_equal [@page.id], visible_to_staff[shown.id.to_s].map { |slot| slot.recording&.id }
+    assert visible_to_staff[hidden.id.to_s].all?(&:unavailable?)
+    assert visible_to_customer[shown.id.to_s].all?(&:unavailable?)
+    assert visible_to_customer[hidden.id.to_s].all?(&:unavailable?)
+    assert_equal "Linked item", RecordingStudioMessages.preview_text(
+      "",
+      references: visible_to_customer[shown.id.to_s]
+    )
   end
 
   test "visible_message_references query count stays flat as the thread grows" do
