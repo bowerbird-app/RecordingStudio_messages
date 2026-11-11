@@ -13,12 +13,12 @@ Workspace  — enables :messages
         ├── Access grants
         └── Messages (+ files)
 
-Mailbox  — also enables :messages
+Mailbox  — also enables :messages, access: :inherited
 └── MessageMount key: inbox
     └── Conversation
 ```
 
-The dummy host proves that shape with a staff desk and an inbox.
+The dummy host proves that shape with a staff desk (`:members`) and an inbox (`:inherited`).
 
 ## What belongs in the tree
 
@@ -36,7 +36,7 @@ Notifications are facts, not recordings. They live in the Notifications tables. 
 Use the public helpers:
 
 - `ensure_message_mount` to hang or find a keyed mount
-- `create_group` to open a conversation, grant the first owner, and optionally write tags in that same commit
+- `create_group` to open a conversation. On `:members` it grants `:admin` to `admin:` or the creating actor. On `:inherited` it grants nobody. Optional tags write in that same commit.
 - `rename_group` to revise the conversation title (`MessageGroup#title`) and append an `updated` event
 - `viewable_group_recordings` to list the kept conversations one actor can view under one mount
 - `my_group_recordings` to list the kept conversations one actor was added to, across every mount
@@ -55,7 +55,7 @@ Use the public helpers:
 
 Message group tags live in `recording_studio_message_group_tags`. They are facts, not recordings. `MessageGroupTags` is the only writer of those rows. Unique `(message_group_recording_id, key)` keeps one tagged recording per key on a group. Hosts choose keys such as `press_center` and `press_kit`. This gem does not ship those names as constants.
 
-`create_group(..., tags: nil)` writes those rows in the same transaction as the conversation and the owner grant. `nil` and `{}` write none. A failed owner grant leaves no conversation and no tag rows. A second successful `create_group` with the same tags creates a second conversation. `tag` and `create_group` reload each tagged recording. They reject an unsaved recording and a missing or trashed one. They do not delete existing tag rows.
+`create_group(..., tags: nil, admin: nil)` writes those rows in the same transaction as the conversation. On `:members` it also writes the owner grant (`admin:` when passed, otherwise the creating actor). On `:inherited` it writes no grant. `nil` and `{}` tags write none. A failed owner grant on `:members` leaves no conversation and no tag rows. A second successful `create_group` with the same tags creates a second conversation. `tag` and `create_group` reload each tagged recording. They reject an unsaved recording and a missing or trashed one. They do not delete existing tag rows.
 
 `tagged_group_recordings(mount_recording:, tags:)` is an unsorted relation of kept `MessageGroup` children of that mount. It does not call Accessible, so it is not an ACL. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. `tags: nil` and `tags: {}` leave the filter off and return every kept conversation on the mount. A non-empty hash requires every pair. `press_center` and `press_kit` are examples, not constants. Many conversations may share one key. The host counts, then creates, when one conversation is the goal. Two processes can both read zero and both create. That race stays in the host.
 
@@ -85,7 +85,7 @@ Flatpack `>= 0.1.349` (pinned tag `v0.1.349`) keeps rounded primary buttons char
 
 Dummy screenshots of Casey's inbox (row dots, round unread filter, live badge after open), of seen faces, of a conversation at rest, of a hovered bubble time, of a 15-minute gap divider, of last-line `Sent …` vs seen faces, of a tapped mobile bubble, of the dummy support-only **Open** header badge, of the staff desk with a conversation open (`docs/screenshots/staff-desk-conversation.png`), of renaming a conversation (edit state plus the list row after save, desktop and mobile), of a mount inbox unfiltered and filtered to unread, of the list toolbar with the dummy **New** host button (desktop and mobile), of the list header without a mount name (`docs/screenshots/list-header-staff-desk-desktop.png`, `list-header-staff-desk-mobile.png`, `list-header-my-messages-desktop.png`, `list-header-my-messages-mobile.png`), and of the dummy **Attach a page** composer item (plus menu, picker with **Find a page**, pending chip, outgoing and incoming LinkCards, and the Unavailable card) live in `docs/screenshots/`. The dummy host sets `read_receipts`. It overrides the panel header hooks and `messages_list_toolbar` only on the `support` mount. Dummy-only `register_composer_action` adds **Attach a page** on that mount. The dummy theme is Flatpack `rounded`. Studio help seeds a 5-minute pair and a 25-minute gap so the time divider is visible.
 
-Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. Home also links to My messages, which lists Casey's direct grants on both desks. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
+Dummy staff desk and inbox land on that split layout. Support seeds two conversations so the sidebar is real. Inbox still shows one InboxRow plus its panel. Home also links to My messages, which lists Casey's direct grants on both desks. Ada can open the Site inbox desk through inherited workspace access and does not get that row on My messages. Screenshots of that split live in `docs/screenshots/inherited-contact-desk-team.png`, `docs/screenshots/inherited-contact-my-messages-sender.png`, and `docs/screenshots/inherited-contact-my-messages-team.png`. An empty-grant conversation can still open by URL for + Access; it does not leak a bare title into the sidebar.
 
 Customer-facing chrome (contact form, composer, empty states, flashes, validation) lives under `recording_studio.messages.*` in `config/locales/en.yml`. The engine ships English only. Hosts translate by copying those keys. Conversation titles and message bodies are stored data and are not translated here.
 

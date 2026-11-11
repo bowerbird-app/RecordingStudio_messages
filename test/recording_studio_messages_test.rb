@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.21.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.22.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -16,7 +16,7 @@ class RecordingStudioMessagesTest < Minitest::Test
       File.expand_path("../app/helpers/recording_studio_messages/public_contact_helper.rb", __dir__)
     )
 
-    assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil)"
+    assert_includes api, "def create_group(mount_recording, title:, actor:, tags: nil, admin: nil)"
     assert_includes api, "def rename_group(group_recording:, title:, actor:)"
     assert_includes api, "def tagged_group_recordings(mount_recording:, tags:)"
     assert_includes api, "def register_composer_action"
@@ -489,6 +489,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "Do not add a Notifications → Messages dependency"
     assert_includes readme, "docs/cursor-skills.md"
     assert_includes readme, "membership_locked: [:support]"
+    assert_includes readme, "access: :inherited"
     assert_includes readme, "allow_membership_change"
     refute_includes readme, "show_access"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
@@ -511,6 +512,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes lock, "access_management_authorizer"
     assert_includes lock, "allow_membership_change"
     assert_includes create_group, "allow_membership_change"
+    assert_includes create_group, "MountAccess.inherited?"
+    assert_includes File.read(
+      File.expand_path("../lib/recording_studio_messages/mount_access.rb", __dir__)
+    ), ":inherited"
   end
 
   def test_send_replaces_the_thread_over_turbo_without_action_cable

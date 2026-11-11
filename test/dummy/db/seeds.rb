@@ -128,8 +128,7 @@ begin
   find_or_grant.call(support_group, agent, :view, staff)
   find_or_grant.call(launch_group, staff, :admin, staff)
   find_or_grant.call(launch_group, customer, :edit, staff)
-  find_or_grant.call(inbox_group, customer, :admin, staff)
-  find_or_grant.call(inbox_group, staff, :edit, staff)
+  find_or_grant.call(inbox_group, customer, :edit, staff)
 
   support_bodies = [
     [staff, "The homepage hero feels a bit loud. Can we calm it down?"],

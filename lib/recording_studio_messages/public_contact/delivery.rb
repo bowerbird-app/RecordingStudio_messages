@@ -18,6 +18,8 @@ module RecordingStudioMessages
       end
 
       def fulfill!(mount:, contact:, title:, body:, recipients:, tags:)
+        return fulfill_inherited!(mount:, contact:, title:, body:, recipients:, tags:) if MountAccess.inherited?(mount)
+
         opener = opener_among(mount, recipients)
         raise Error, Copy.t("errors.no_recipient") if opener.nil?
 
@@ -59,13 +61,13 @@ module RecordingStudioMessages
         same_actor?(recipient, opener) || same_actor?(recipient, contact) || granted_ids.include?(recipient.id.to_s)
       end
 
-      def send_contact_message(group, contact, body)
+      def send_contact_message(group, contact, body, notify: true)
         RecordingStudioMessages.send_message(
           group_recording: group,
           body: body,
           actor: contact,
           files: [],
-          notify: true,
+          notify: notify,
           url: RecordingStudioMessages::Engine.routes.url_helpers.message_group_path(group)
         )
       end

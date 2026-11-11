@@ -65,6 +65,21 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "flat-pack--chat-layout"
   end
 
+  test "staff sees the inherited inbox on the mount desk and not in my messages" do
+    sign_in @staff
+    get inbox_path
+
+    assert_response :success
+    assert_includes response.body, "Site inbox"
+    assert_includes response.body, "Did the press stills land?"
+
+    get recording_studio_messages.my_messages_path
+
+    assert_response :success
+    refute_includes response.body, "Site inbox"
+    assert_includes response.body, "Studio help"
+  end
+
   test "staff desk list is unchanged and still uses mount routes" do
     sign_in @staff
     get staff_desk_path
