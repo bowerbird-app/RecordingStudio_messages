@@ -19,6 +19,8 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-controller='flat-pack--chat-layout']"
     assert_includes response.body, "My messages"
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: "My messages"
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Launch notes"
     assert_includes response.body, "Site inbox"

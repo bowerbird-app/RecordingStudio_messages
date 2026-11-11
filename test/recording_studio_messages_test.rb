@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.20.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.20.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -241,6 +241,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes helper, "messages_unread_filter_button"
     assert_includes helper, "messages_unread_filter_href"
     assert_includes helper, "def messages_list_toolbar(mount:, actor:)"
+    assert_includes helper, "def messages_list_header_title(mount:, actor:)"
     assert_includes helper, "messages_unread_filter_index_path"
     assert_includes helper, 'icon: "bell-alert"'
     refute_includes helper, "funnel"
@@ -336,7 +337,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes desk, "FlatPack::Chat::InboxRow::Component"
     assert_includes desk, "unread_filter"
     assert_includes desk, "messages_list_toolbar(mount: mount_recording, actor: current_actor)"
+    assert_includes desk, "messages_list_header_title(mount: mount_recording, actor: current_actor)"
+    refute_includes desk, "sidebar_title"
+    refute_includes desk, "messages_inbox_title(mount_recording)"
+    refute_includes desk, 'inbox == :my_messages ? messages_t("inbox.my_title")'
     assert_includes desk, "list_toolbar"
+    assert_includes desk, "title: list_title"
     assert_includes list_toolbar, "messages_unread_filter_button"
     assert_includes list_toolbar, "unread_filter"
     assert_includes list_toolbar, "list_toolbar.present?"

@@ -12,13 +12,22 @@ module MessagesListToolbarOverrides
     super
   end
 
+  def messages_list_header_title(mount:, actor:)
+    override = MessagesListToolbarOverrides.current[:title]
+    return override.call(mount: mount, actor: actor) if override
+    return if MessagesListToolbarOverrides.current.key?(:title)
+
+    super
+  end
+
   def self.current
     Thread.current[:messages_list_toolbar_overrides] ||= {}
   end
 
-  def self.with_overrides(toolbar: :keep)
+  def self.with_overrides(toolbar: :keep, title: :keep)
     previous = current.dup
     current[:toolbar] = toolbar unless toolbar == :keep
+    current[:title] = title unless title == :keep
     yield
   ensure
     Thread.current[:messages_list_toolbar_overrides] = previous
@@ -44,6 +53,8 @@ class ListToolbarHooksTest < ActionDispatch::IntegrationTest
 
     assert_nil helper.messages_list_toolbar(mount: @mount, actor: @staff)
     assert_nil helper.messages_list_toolbar(mount: nil, actor: @staff)
+    assert_nil helper.messages_list_header_title(mount: @mount, actor: @staff)
+    assert_nil helper.messages_list_header_title(mount: nil, actor: @staff)
   end
 
   test "dummy host toolbar renders on the support mount and stays off inbox and my messages" do
@@ -61,6 +72,8 @@ class ListToolbarHooksTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#dummy-list-toolbar", count: 0
     assert_select "a[aria-label=?]", "Show unread only"
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: "My messages"
   end
 
   test "overridden list toolbar receives the mount and actor and renders beside the unread toggle" do
@@ -94,5 +107,33 @@ class ListToolbarHooksTest < ActionDispatch::IntegrationTest
 
     assert_equal [[nil, @staff]], seen
     assert_select "#messages-list-toolbar", text: "hook-list"
+  end
+
+  test "list header omits the mount name until a host title hook returns one" do
+    get recording_studio_messages.message_groups_path(mount_id: @mount.id)
+
+    assert_response :success
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2",
+                  text: DummyCatalog.studio_workspace.name
+    assert_select "[data-flat-pack--chat-layout-target='panel'] h2", count: 1
+    refute_select "[data-flat-pack--chat-layout-target='panel'] h2",
+                  text: DummyCatalog.studio_workspace.name
+    assert_select "#dummy-list-toolbar", text: "New"
+    assert_select "a[aria-label=?]", "Show unread only"
+
+    seen = []
+    MessagesListToolbarOverrides.with_overrides(
+      title: lambda { |mount:, actor:|
+        seen << [mount, actor]
+        "Desk name"
+      }
+    ) do
+      get recording_studio_messages.message_groups_path(mount_id: @mount.id)
+    end
+
+    assert_equal [[@mount, @staff]], seen
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: "Desk name"
+    refute_select "[data-flat-pack--chat-layout-target='panel'] h2", text: "Desk name"
   end
 end

@@ -6,7 +6,7 @@
 <% unread_filter = local_assigns[:unread_filter] %>
 <% mount_recording = local_assigns[:mount_recording] %>
 <% list_toolbar = messages_list_toolbar(mount: mount_recording, actor: current_actor) %>
-<% sidebar_title = inbox == :my_messages ? messages_t("inbox.my_title") : messages_inbox_title(mount_recording) %>
+<% list_title = messages_list_header_title(mount: mount_recording, actor: current_actor) %>
 <% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group, inbox: inbox) %>
 <%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
 <% desk_height_class = local_assigns[:desk_height_class].presence || "h-[calc(100dvh-15.5rem)]" %>
@@ -17,7 +17,7 @@
 <div class="w-full min-w-0 <%= desk_height_class %>">
   <%= render FlatPack::Chat::Layout::Component.new(variant: :split) do |layout| %>
     <% layout.sidebar do %>
-      <%= render FlatPack::Chat::Header::Component.new(title: sidebar_title) do |header| %>
+      <%= render FlatPack::Chat::Header::Component.new(title: list_title) do |header| %>
         <% header.right do %>
           <%= render "recording_studio_messages/message_groups/list_toolbar",
                      inbox: inbox,
