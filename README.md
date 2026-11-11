@@ -109,6 +109,14 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.23.0
+
+Messages `0.23.0` adds an optional New message flow on a mount. Existing desks stay unchanged until you declare `contacts:`.
+
+1. Install Messages `0.23.0`. There is no Messages migration.
+2. On each type that should offer New message, pass `contacts:` to `Messages.to`. The callable receives `actor:`, `mount:`, and `query:` and returns actors. A blank query is the allowlist create re-checks.
+3. Keep calling `create_group(mount, title:, actor:)` for quiet creates. Pass `recipients:` and `body:` only when someone is starting a conversation with people.
+
 ### Upgrading to 0.22.0
 
 Messages `0.22.0` adds `access:` on `Messages.to`. Existing mounts stay `:members`. Conversations you already granted stay granted. There is no migration.
@@ -385,7 +393,10 @@ Accessible on a root stays `RecordingStudio.enable_capability`. Mixins use `.to`
 class Workspace < ApplicationRecord
   recording_studio_recordable label: "Workspace", root: true
   RecordingStudio.enable_capability(:accessible, on: self)
-  include RecordingStudio::Capabilities::Messages.to(keys: [:support])
+  include RecordingStudio::Capabilities::Messages.to(
+    keys: [:support],
+    contacts: ->(actor:, mount:, query:) { team_members_for(actor: actor, mount: mount, query: query) }
+  )
 end
 
 class Mailbox < ApplicationRecord
@@ -396,7 +407,8 @@ class Mailbox < ApplicationRecord
   include RecordingStudio::Capabilities::Messages.to(
     keys: [:inbox],
     access: :inherited,
-    public_contact: [:inbox]
+    public_contact: [:inbox],
+    contacts: ->(actor:, mount:, query:) { team_members_for(actor: actor, mount: mount, query: query) }
   )
 end
 ```
@@ -429,14 +441,16 @@ will use the same helper when Support enables the lock.
 
 ### Choose an access mode
 
-`Messages.to` takes `access:`. Callers of `create_group` and public contact do not pick a mode. They read it from the mount's parent type.
+`Messages.to` takes `access:` and optional `contacts:`. Callers of `create_group` and public contact do not pick a mode. They read those options from the mount's parent type.
+
+Pass `contacts:` when people on that desk should start a conversation and pick who it goes to. Messages calls `contacts.call(actor:, mount:, query:)`. Return the actors that person may message. A blank `query` is the full allowlist. A search string filters it. Without `contacts:`, the New message button does not render and `create_group(..., recipients:)` is rejected.
 
 | Mode | When | `create_group` | Public contact |
 |---|---|---|---|
 | `:members` (default) | A shared desk whose people are the conversation members | Grants `:admin` to `admin:` when passed, otherwise to the creating actor | Needs an opener. The first resolver recipient who is already an admin on the mount path opens the conversation. Other resolver recipients and the sender get `:edit`. An empty list, or a list with no admin, raises "Nobody can receive this message." |
-| `:inherited` | A desk under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
+| `:inherited` | A desk under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody. `recipients:` grants `:edit` to the creator and each recipient | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
 
-Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). A staff member who starts a thread gets no direct grant, so the thread does not appear in `/my_messages`. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
+Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). A staff member who starts a quiet thread gets no direct grant, so that thread does not appear in `/my_messages`. `recipients:` is the exception. It grants `:edit` to the creator and each recipient. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
 
 Existing direct grants stay as they are. There is no migration. Hosts that already mint staff grants on every new conversation under an owner root should add `access: :inherited` so new conversations stop doing that.
 
@@ -507,7 +521,9 @@ RecordingStudioMessages.tagged_group_recordings(
 )
 ```
 
-`create_group` still takes `title:`, `actor:`, and optional `tags:`. Optional `admin:` sets the `:members` owner instead of the creating actor. On `:inherited` it writes no grant.
+`create_group` still takes `title:`, `actor:`, and optional `tags:`. Optional `admin:` sets the `:members` owner instead of the creating actor. On `:inherited` without `recipients:` it writes no grant.
+
+Pass `recipients:` and `body:` to start a conversation with people. The actor needs Accessible `:edit` on the mount. Every recipient must appear in that mount's `contacts:` allowlist. Each recipient gets a direct `:edit` grant. On `:members` the creator stays admin. On `:inherited` the creator gets a direct `:edit` grant only, so the conversation appears in `/my_messages` for the creator and the recipients. The team above an `:inherited` mount still sees it through inheritance. Title may be blank. Messages names the conversation from the people when you omit it. Body is required. Tags still never grant access.
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff desk, and the inbox all use this list.
 

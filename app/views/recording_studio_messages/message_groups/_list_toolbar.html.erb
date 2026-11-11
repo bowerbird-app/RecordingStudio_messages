@@ -1,10 +1,15 @@
 <% inbox = local_assigns[:inbox] %>
 <% unread_filter = local_assigns[:unread_filter] %>
 <% list_toolbar = local_assigns[:list_toolbar] %>
+<% mount_recording = local_assigns[:mount_recording] %>
+<% current_actor = local_assigns[:current_actor] %>
 <div class="flex items-center gap-2">
   <% if inbox == :my_messages %>
     <%= render "recording_studio_messages/message_groups/unread_badge",
                unread_count: messages_unread_count %>
+  <% end %>
+  <% if messages_can_start_conversation?(mount_recording, actor: current_actor) %>
+    <%= render FlatPack::Button::Component.new(**messages_new_conversation_button(mount_recording)) %>
   <% end %>
   <%= render FlatPack::Button::Component.new(**messages_unread_filter_button(unread_filter: unread_filter)) %>
   <% if list_toolbar.present? %>

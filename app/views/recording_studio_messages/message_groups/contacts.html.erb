@@ -1,0 +1,40 @@
+<% frame_id = messages_new_conversation_frame_id(@mount_recording) %>
+<%= turbo_frame_tag frame_id do %>
+  <div class="flex flex-col gap-2">
+    <%= form_with url: messages_contacts_path(@mount_recording),
+                  method: :get,
+                  local: false,
+                  html: {
+                    data: {
+                      turbo_frame: frame_id,
+                      action: "input->recording-studio-messages--new-conversation#search"
+                    }
+                  } do %>
+      <%= hidden_field_tag :mount_id, @mount_recording.id %>
+      <%= render FlatPack::SearchInput::Component.new(
+        name: "q",
+        value: @query,
+        placeholder: messages_t("inbox.find_people")
+      ) %>
+    <% end %>
+    <% if @contacts.empty? %>
+      <%= render FlatPack::Text::Component.new(text: messages_t("inbox.no_people"), size: :sm) %>
+    <% else %>
+      <% @contacts.each do |actor| %>
+        <% name = message_sender_name(actor) %>
+        <%= render FlatPack::Button::Component.new(
+          text: name,
+          style: :secondary,
+          size: :md,
+          type: :button,
+          data: {
+            action: "click->recording-studio-messages--new-conversation#add",
+            type: actor.class.name,
+            id: actor.id,
+            name: name
+          }
+        ) %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

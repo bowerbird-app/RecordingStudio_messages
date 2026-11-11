@@ -46,8 +46,15 @@ class InheritedContactAccessTest < ActionDispatch::IntegrationTest
   teardown do
     Current.actor = nil
     RecordingStudioUser.config.otp_enabled = @otp_was
-    restore_options!(Mailbox, @original_mailbox, keys: [:inbox], public_contact: [:inbox], access: :inherited)
-    restore_options!(Workspace, @original_workspace, keys: [:support])
+    restore_options!(
+      Mailbox,
+      @original_mailbox,
+      keys: [:inbox],
+      public_contact: [:inbox],
+      access: :inherited,
+      contacts: DummyCatalog::CONTACTS
+    )
+    restore_options!(Workspace, @original_workspace, keys: [:support], contacts: DummyCatalog::CONTACTS)
   end
 
   test "inherited public contact grants the sender edit and skips an empty resolver" do

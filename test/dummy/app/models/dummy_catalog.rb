@@ -7,6 +7,9 @@ module DummyCatalog
   LAUNCH_TITLE = "Launch notes"
   INBOX_TITLE = "Site inbox"
   EMPTY_TITLE = "Open conversation"
+  CONTACTS = lambda { |actor:, mount:, query:|
+    contacts_for(actor: actor, mount: mount, query: query)
+  }
 
   class << self
     def studio_workspace
@@ -57,6 +60,16 @@ module DummyCatalog
 
     def empty_group_recording
       group_recording_under(support_mount_recording, EMPTY_TITLE)
+    end
+
+    def contacts_for(actor:, mount:, query:)
+      scope = User.order(:name, :email)
+      scope = scope.where.not(id: actor.id) if actor.is_a?(User)
+      text = query.to_s.strip
+      return scope if text.blank?
+
+      pattern = "%#{User.sanitize_sql_like(text)}%"
+      scope.where("COALESCE(name, '') ILIKE :q OR email ILIKE :q", q: pattern)
     end
   end
 end

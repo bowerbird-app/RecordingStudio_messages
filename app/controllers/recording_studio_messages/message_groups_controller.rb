@@ -23,6 +23,26 @@ module RecordingStudioMessages
       render layout: false if turbo_frame_request?
     end
 
+    def create
+      @mount_recording = find_mount_recording!
+      authorize_start!
+      redirect_to message_group_path(started_conversation), notice: Copy.t("flashes.sent")
+    rescue RecordingStudioMessages::Error => e
+      redirect_back_or_to(message_groups_path(mount_id: @mount_recording&.id), alert: e.message)
+    end
+
+    def contacts
+      @mount_recording = find_mount_recording!
+      authorize_start!
+      @query = params[:q].to_s
+      @contacts = RecordingStudioMessages::Contacts.search(
+        mount: @mount_recording,
+        actor: current_messages_actor,
+        query: @query
+      )
+      render layout: false
+    end
+
     private
 
     def find_mount_recording
@@ -33,6 +53,46 @@ module RecordingStudioMessages
 
       authorize_mount_parent!(recording)
       recording
+    end
+
+    def find_mount_recording!
+      find_mount_recording || raise(ActiveRecord::RecordNotFound, "Desk not found")
+    end
+
+    def authorize_start!
+      return if RecordingStudioMessages::Contacts.can_start?(
+        mount: @mount_recording,
+        actor: current_messages_actor
+      )
+
+      raise RecordingStudioMessages::NotAuthorized, Copy.t("errors.cannot_start")
+    end
+
+    def started_conversation
+      RecordingStudioMessages.create_group(
+        @mount_recording,
+        title: conversation_params[:title],
+        actor: current_messages_actor,
+        recipients: submitted_recipients,
+        body: conversation_params[:body]
+      )
+    end
+
+    def conversation_params
+      params.permit(:title, :body, :mount_id, recipients: %i[type id])
+    end
+
+    def submitted_recipients
+      raw = params[:recipients]
+      return [] if raw.blank?
+
+      items = raw.is_a?(Array) ? raw : raw.to_unsafe_h.values
+      items.filter_map do |item|
+        next if item.blank?
+
+        permitted = item.respond_to?(:permit) ? item.permit(:type, :id) : item
+        permitted.to_h.symbolize_keys
+      end
     end
 
     def authorize_mount_parent!(mount_recording)

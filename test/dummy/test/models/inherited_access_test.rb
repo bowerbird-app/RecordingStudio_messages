@@ -116,7 +116,8 @@ class InheritedAccessTest < ActiveSupport::TestCase
       on: Mailbox,
       keys: [:inbox],
       public_contact: [:inbox],
-      access: :party
+      access: :party,
+      contacts: DummyCatalog::CONTACTS
     )
 
     error = assert_raises(RecordingStudioMessages::Error) do
@@ -129,7 +130,8 @@ class InheritedAccessTest < ActiveSupport::TestCase
       on: Mailbox,
       keys: [:inbox],
       public_contact: [:inbox],
-      access: :inherited
+      access: :inherited,
+      contacts: DummyCatalog::CONTACTS
     )
   end
 

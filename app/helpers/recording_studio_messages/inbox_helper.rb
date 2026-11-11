@@ -61,6 +61,48 @@ module RecordingStudioMessages
       }.merge(messages_inbox_row_link(group_recording, inbox: inbox, active: active))
     end
 
+    def messages_can_start_conversation?(mount, actor: nil)
+      actor ||= inbox_actor
+      RecordingStudioMessages::Contacts.can_start?(mount: mount, actor: actor)
+    end
+
+    def messages_new_conversation_modal_id(mount)
+      "messages-new-conversation-#{mount.id}"
+    end
+
+    def messages_new_conversation_frame_id(mount)
+      "#{messages_new_conversation_modal_id(mount)}-people"
+    end
+
+    def messages_create_conversation_path
+      if respond_to?(:message_groups_path)
+        message_groups_path
+      else
+        recording_studio_messages.message_groups_path
+      end
+    end
+
+    def messages_contacts_path(mount, query: nil)
+      query_params = { mount_id: mount.id }
+      query_params[:q] = query if query.present?
+      if respond_to?(:contacts_message_groups_path)
+        contacts_message_groups_path(query_params)
+      else
+        recording_studio_messages.contacts_message_groups_path(query_params)
+      end
+    end
+
+    def messages_new_conversation_button(mount)
+      {
+        text: Copy.t("inbox.new"),
+        icon: "plus",
+        style: :secondary,
+        size: :sm,
+        type: :button,
+        data: { modal_id: messages_new_conversation_modal_id(mount) }
+      }
+    end
+
     def messages_unread_filter_button(unread_filter:)
       on = ActiveModel::Type::Boolean.new.cast(unread_filter) == true
       label = messages_unread_filter_label(on)

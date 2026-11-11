@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 RecordingStudioMessages::Engine.routes.draw do
-  resources :message_groups, only: %i[index show] do
+  resources :message_groups, only: %i[index show create] do
+    get :contacts, on: :collection
     patch :rename, on: :member
     resources :messages, only: [:create]
   end
