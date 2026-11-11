@@ -164,12 +164,14 @@ module RecordingStudioMessages
 
     def messages_inbox_row_link(group_recording, inbox: nil, active: false)
       href = messages_inbox_href(group_recording, inbox: inbox)
-      return { href: href, turbo_frame: messages_desk_panel_id } unless inbox == :my_messages
+      name = messages_inbox_group_name(group_recording)
+      data = inbox == :my_messages ? { turbo_stream: true } : { turbo_frame: messages_desk_panel_id }
 
       {
         href: href,
         link_arguments: {
-          data: { turbo_stream: true },
+          title: name,
+          data: data,
           aria: { current: (active ? "page" : nil) }
         }
       }

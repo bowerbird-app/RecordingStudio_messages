@@ -104,16 +104,21 @@ class NewConversationTest < ActionDispatch::IntegrationTest
       }
     end
 
-    group = DummyCatalog.find_group_recording_under(@members_mount, "Casey Patron")
+    named = "Ada Staff, Casey Patron"
+    group = DummyCatalog.find_group_recording_under(@members_mount, named)
     assert_redirected_to recording_studio_messages.message_group_path(group)
     follow_redirect!
     assert_includes response.body, "Can you send the quieter still?"
-    assert_includes response.body, "Casey Patron"
+    assert_includes response.body, named
+    assert_select "h1", text: named
+    assert_select ".fp-inline-edit[title=?]", named
+    assert_select "a[title=?]", named
 
     sign_in @customer
     get recording_studio_messages.my_messages_path
     assert_response :success
-    assert_includes response.body, "Casey Patron"
+    assert_includes response.body, named
+    assert_select "a[title=?]", named
   end
 
   test "create rejects a recipient outside the resolver" do

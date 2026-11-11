@@ -83,8 +83,21 @@ module RecordingStudioMessages
       end
 
       def default_title(members)
-        names = Array(members).map { |actor| actor_name(actor) }.compact_blank
+        names = title_people(members).map { |person| actor_name(person) }.compact_blank
         names.presence&.join(", ")&.truncate(MessageGroup::TITLE_MAX) || Copy.t("inbox.new_untitled")
+      end
+
+      def title_people(members)
+        seen = {}
+        ([@actor] + Array(members)).filter_map do |person|
+          next if person.blank?
+
+          key = Contacts.identity(person)
+          next if seen[key]
+
+          seen[key] = true
+          person
+        end
       end
 
       def actor_name(actor)

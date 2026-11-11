@@ -40,11 +40,16 @@ module RecordingStudioMessages
 
     def messages_panel_header_title(group_recording, actor:, inbox: nil)
       title = group_recording.recordable.title
-      return title unless messages_can_rename_group?(group_recording, actor: actor)
+      return messages_truncated_title(title) unless messages_can_rename_group?(group_recording, actor: actor)
 
       render FlatPack::InlineEdit::Component.new(
         **inline_edit_title_arguments(group_recording, title, inbox: inbox)
       )
+    end
+
+    def messages_truncated_title(text)
+      text = text.to_s
+      tag.span(text, class: "block min-w-0 truncate", title: text)
     end
 
     def inline_edit_title_arguments(group_recording, title, inbox: nil)
@@ -54,7 +59,9 @@ module RecordingStudioMessages
         method: :patch, maxlength: RecordingStudioMessages::MessageGroup::TITLE_MAX,
         required: true, save_on_blur: true,
         label: Copy.t("panel.title_label"),
-        placeholder: Copy.t("panel.title_placeholder")
+        placeholder: Copy.t("panel.title_placeholder"),
+        class: "min-w-0 max-w-full truncate",
+        title: title
       }
     end
 

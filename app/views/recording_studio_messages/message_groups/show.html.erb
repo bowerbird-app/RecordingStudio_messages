@@ -5,6 +5,15 @@
              current_actor: current_messages_actor %>
 <% else %>
   <% content_for :title, @group_recording.recordable.title %>
+  <% content_for :head do %>
+    <style>
+      [data-recording-studio-default-layout] h1.fp-text-balance {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    </style>
+  <% end %>
   <% flat_pack_page_nav(
        round: true,
        style: :default,

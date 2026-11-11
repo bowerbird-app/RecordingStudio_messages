@@ -57,13 +57,24 @@ class StartConversationTest < ActiveSupport::TestCase
       body: "Can you look at this?"
     )
 
-    assert_equal "Editor", group.recordable.title
+    assert_equal "Owner, Editor", group.recordable.title
     assert_equal :admin, direct_role(group, @owner)
     assert_equal :edit, direct_role(group, @editor)
     refute_includes granted_ids(group), @viewer.id
-    assert_includes listed_titles(actor: @owner), "Editor"
-    assert_includes listed_titles(actor: @editor), "Editor"
+    assert_includes listed_titles(actor: @owner), "Owner, Editor"
+    assert_includes listed_titles(actor: @editor), "Owner, Editor"
     assert_equal "Can you look at this?", RecordingStudioMessages.message_recordings(group).last.recordable.body
+  end
+
+  test "untitled create_group names the conversation creator first then recipients in pick order" do
+    group = RecordingStudioMessages.create_group(
+      @members_mount,
+      actor: @owner,
+      recipients: [@viewer, @editor],
+      body: "Three of us."
+    )
+
+    assert_equal "Owner, Viewer, Editor", group.recordable.title
   end
 
   test "inherited create_group with recipients grants edit to the creator and each recipient" do
