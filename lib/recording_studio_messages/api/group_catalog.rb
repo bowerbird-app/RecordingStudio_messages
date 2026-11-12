@@ -67,10 +67,10 @@ module RecordingStudioMessages
       }.freeze
 
       ACTIONS = {
-        send_message: SEND_MESSAGE,
-        read_thread: READ_THREAD,
-        rename_group: RENAME_GROUP,
-        mark_read: MARK_READ
+        messages_send_message: SEND_MESSAGE,
+        messages_read_thread: READ_THREAD,
+        messages_rename_group: RENAME_GROUP,
+        messages_mark_read: MARK_READ
       }.freeze
     end
   end

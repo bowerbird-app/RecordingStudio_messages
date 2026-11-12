@@ -5,18 +5,13 @@ module RecordingStudioMessages
     module Target
       module_function
 
-      def actor(context)
-        return context.actor if context.respond_to?(:actor) && context.actor.present?
-
-        context.access_grant&.actor
-      end
-
       def authorize!(context, recording, role)
         context.access_grant.authorize!(recording: recording, role: role)
       end
 
-      def recording(context, type)
-        found = recording_from(context)
+      def accessible_recording(context, type)
+        id = context.params[:id]
+        found = context.access_grant.accessible_recordings.find_by(id: id) if id.present?
         raise ::RecordingStudioApi::NotFoundError, "Resource was not found in this API scope" if found.nil?
         unless found.recordable_type == type
           raise ::RecordingStudioApi::NotFoundError, "Resource type does not match #{type}"
@@ -25,19 +20,8 @@ module RecordingStudioMessages
         found
       end
 
-      def recording_from(context)
-        if context.respond_to?(:recording) && context.recording
-          context.recording
-        else
-          id = context.params[:id]
-          return if id.blank?
-
-          context.access_grant.accessible_recordings.find_by(id: id)
-        end
-      end
-
       def serialize(recording)
-        base_payload(recording).merge(recordable_fields(recording.recordable))
+        base_payload(recording).merge(recordable_fields(recording))
       end
 
       def base_payload(recording)
@@ -50,12 +34,14 @@ module RecordingStudioMessages
         }
       end
 
-      def recordable_fields(recordable)
-        fields = {}
-        fields[:key] = recordable.key if recordable.respond_to?(:key)
-        fields[:title] = recordable.title if recordable.respond_to?(:title)
-        fields[:body] = recordable.body if recordable.respond_to?(:body)
-        fields
+      def recordable_fields(recording)
+        recordable = recording.recordable
+        type = recording.recordable_type
+        return { key: recordable.key } if type == MESSAGE_MOUNT_TYPE
+        return { title: recordable.title } if type == MESSAGE_GROUP_TYPE
+        return { body: recordable.body } if type == MESSAGE_TYPE
+
+        {}
       end
     end
   end

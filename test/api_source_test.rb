@@ -7,6 +7,8 @@ class ApiSourceTest < Minitest::Test
     source = File.read(File.expand_path("../lib/recording_studio_messages/api.rb", __dir__))
 
     assert_equal 1, source.scan("defined?(::RecordingStudioApi)").size
+    assert_includes source, "each_api"
+    refute_includes source, "apis: [:public]"
     refute_includes source, "const_set"
     refute_includes source, "remove_const"
   end
@@ -31,12 +33,17 @@ class ApiSourceTest < Minitest::Test
     assert_includes actions, "RecordingStudioMessages.create_group"
     assert_includes actions, "RecordingStudioMessages.rename_group"
     assert_includes actions, "RecordingStudioMessages.mark_read"
-    assert_includes actions, "RecordingStudioMessages.unread_count"
+    assert_includes actions, "RecordingStudioMessages.my_group_recordings"
+    assert_includes actions, "accessible_recordings"
     refute_includes actions, "Services::SendMessage"
     refute_includes actions, ".send("
     assert_includes registration, "reject_unknown: false"
+    assert_includes registration, "already registered"
+    refute_includes registration, "enable_capability(:messages"
     assert_includes catalog, "Message - Send"
     assert_includes catalog, "Group - Create"
+    assert_includes catalog, "messages_send_message"
+    assert_includes catalog, "CreateGroupPeople requires :admin"
     refute_includes catalog, "public_contact"
     refute_includes catalog, "ensure_mount"
     refute_includes catalog, "untag"

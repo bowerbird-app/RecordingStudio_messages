@@ -7,10 +7,14 @@ module RecordingStudioMessages
   module Api
     module_function
 
-    def register!(apis: [:public])
+    def register!
       return unless defined?(::RecordingStudioApi)
+      return if @registered
 
-      Array(apis).each { |api| Registration.register!(api) }
+      ::RecordingStudioApi.configuration.each_api do |api|
+        Registration.register!(api.name)
+      end
+      @registered = true
     end
   end
 end

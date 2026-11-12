@@ -13,7 +13,7 @@ Send, list, read, and create on Recording Studio API, plus rename, mark read, an
 
 ### Added
 
-- Message and group capability actions on Recording Studio API, with matching named endpoints so MCP can call `capability_action` or the endpoint path.
+- Scoped message endpoints on Recording Studio API (`messages_send_message`, `messages_read_thread`, `messages_rename_group`, `messages_mark_read`, `messages_create_group`, `messages_list_conversations`, `messages_unread_count`). `:messages` is not enabled on MessageGroup or MessageMount. A colliding type or endpoint name raises.
 - Dummy mounts Recording Studio API `v0.21.3` so hosts and MCP adapters can use the same Accessible-gated surface.
 
 ### Upgrade notes
@@ -21,7 +21,8 @@ Send, list, read, and create on Recording Studio API, plus rename, mark read, an
 - Bump to **0.25.0**. No Messages migration. This gem still has no gemspec dependency on Recording Studio API.
 - Hosts that already have Recording Studio API get these actions when this gem loads. Install and mount API (and MCP, if you use it) as those gems document.
 - Access matches the HTML screens: `:view` to list, read, mark read, and unread count; `:edit` to send, create, and rename. A conversation in another workspace is 404.
-- `create_group` still grants Accessible membership through the existing helper. On a `:members` desk that means the API client must be allowed to manage access (admin), the same as a person creating a conversation.
+- `create_group` still grants Accessible membership through the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so the API client must be an admin client.
+- Unread count is the grant's Accessible scope, not every workspace that actor can see.
 
 ## [0.24.1] - 2026-11-12
 

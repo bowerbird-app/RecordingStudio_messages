@@ -123,19 +123,18 @@ bin/rails db:migrate
 ```
 
 3. Turn on `:api_access_point` on roots that should hold API clients, and add `RecordingStudioApi::ApiClient` to `access_actor_types`. Recording Studio MCP needs no extra Messages code.
-4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper, so a `:members` desk needs an API client that can manage access. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.
+4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so you need an admin API client. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.
 
 | Verb | Path | Accessible role |
 |---|---|---|
-| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/send_message` | `:edit` on the conversation |
-| GET | `/recording_studio_api/api/v1/message_mounts/:id/actions/list_conversations` | `:view` on the desk |
-| GET | `/recording_studio_api/api/v1/message_groups/:id/actions/read_thread` | `:view` on the conversation |
-| POST | `/recording_studio_api/api/v1/message_mounts/:id/actions/create_group` | `:edit` on the desk |
-| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/rename_group` | `:edit` on the conversation |
-| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/mark_read` | `:view` on the conversation |
+| POST | `/recording_studio_api/api/v1/conversations/:id/send_message` | `:edit` on the conversation |
+| GET | `/recording_studio_api/api/v1/desks/:id/conversations` | `:view` on the desk |
+| GET | `/recording_studio_api/api/v1/conversations/:id/messages` | `:view` on the conversation |
+| POST | `/recording_studio_api/api/v1/desks/:id/create_group` | `:edit` on the desk |
+| POST | `/recording_studio_api/api/v1/conversations/:id/rename_group` | `:edit` on the conversation |
+| POST | `/recording_studio_api/api/v1/conversations/:id/mark_read` | `:view` on the conversation |
 | GET | `/recording_studio_api/api/v1/unread_count` | `:view` on the access recording |
-
-Named endpoints sit beside those member actions (`/conversations/:id/send_message`, `/desks/:id/conversations`, `/conversations/:id/messages`, `/desks/:id/create_group`, `/conversations/:id/rename_group`, `/conversations/:id/mark_read`).
+| GET | `/recording_studio_api/api/v1/message_groups/:id` | `:view` on the conversation |
 
 ### Upgrading to 0.24.1
 

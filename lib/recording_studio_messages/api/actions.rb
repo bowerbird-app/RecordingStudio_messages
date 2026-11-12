@@ -16,7 +16,7 @@ module RecordingStudioMessages
         end
 
         def deliver
-          group = Target.recording(@context, MESSAGE_GROUP_TYPE)
+          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
           Target.authorize!(@context, group, :edit)
           Target.serialize(RecordingStudioMessages.send_message(**line(group)))
         end
@@ -25,7 +25,7 @@ module RecordingStudioMessages
           {
             group_recording: group,
             body: @context.params[:body],
-            actor: Target.actor(@context),
+            actor: @context.access_grant.actor,
             references: Array(@context.params[:references])
           }
         end
@@ -41,14 +41,14 @@ module RecordingStudioMessages
         end
 
         def list
-          mount = Target.recording(@context, MESSAGE_MOUNT_TYPE)
+          mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
           Target.authorize!(@context, mount, :view)
           { records: groups(mount).map { |group| Target.serialize(group) } }
         end
 
         def groups(mount)
           RecordingStudioMessages.viewable_group_recordings(
-            actor: Target.actor(@context),
+            actor: @context.access_grant.actor,
             mount_recording: mount,
             tags: @context.params[:tags],
             unread: unread?,
@@ -87,7 +87,7 @@ module RecordingStudioMessages
         end
 
         def read
-          group = Target.recording(@context, MESSAGE_GROUP_TYPE)
+          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
           Target.authorize!(@context, group, :view)
           { records: RecordingStudioMessages.message_recordings(group).map { |row| Target.serialize(row) } }
         end
@@ -103,14 +103,14 @@ module RecordingStudioMessages
         end
 
         def create
-          mount = Target.recording(@context, MESSAGE_MOUNT_TYPE)
+          mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
           Target.authorize!(@context, mount, :edit)
           Target.serialize(RecordingStudioMessages.create_group(mount, **attrs))
         end
 
         def attrs
           {
-            actor: Target.actor(@context),
+            actor: @context.access_grant.actor,
             title: @context.params[:title],
             tags: @context.params[:tags],
             recipients: @context.params[:recipients],
@@ -129,7 +129,7 @@ module RecordingStudioMessages
         end
 
         def rename
-          group = Target.recording(@context, MESSAGE_GROUP_TYPE)
+          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
           Target.authorize!(@context, group, :edit)
           Target.serialize(RecordingStudioMessages.rename_group(**attrs(group)))
         end
@@ -138,7 +138,7 @@ module RecordingStudioMessages
           {
             group_recording: group,
             title: @context.params[:title],
-            actor: Target.actor(@context)
+            actor: @context.access_grant.actor
           }
         end
       end
@@ -153,9 +153,9 @@ module RecordingStudioMessages
         end
 
         def mark
-          group = Target.recording(@context, MESSAGE_GROUP_TYPE)
+          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
           Target.authorize!(@context, group, :view)
-          RecordingStudioMessages.mark_read(group_recording: group, actor: Target.actor(@context))
+          RecordingStudioMessages.mark_read(group_recording: group, actor: @context.access_grant.actor)
           Target.serialize(group.reload)
         end
       end
@@ -172,7 +172,10 @@ module RecordingStudioMessages
         def count
           recording = @context.access_grant.access_recording || @context.root_recording
           Target.authorize!(@context, recording, :view)
-          { unread_count: RecordingStudioMessages.unread_count(actor: Target.actor(@context)) }
+          actor = @context.access_grant.actor
+          unread = RecordingStudioMessages.my_group_recordings(actor: actor, unread: true)
+          scoped = unread.merge(@context.access_grant.accessible_recordings)
+          { unread_count: scoped.except(:includes).unscope(:order).count }
         end
       end
     end

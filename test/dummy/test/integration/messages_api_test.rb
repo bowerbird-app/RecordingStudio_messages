@@ -31,43 +31,63 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   teardown { Current.actor = @previous_actor }
 
   test "send_message goes through RecordingStudioMessages.send_message" do
-    sent = call(:post, "/message_groups/#{@group.id}/actions/send_message", @editor_token, body: "Quiet crop on the way.")
+    sent = call(
+      :post,
+      "/conversations/#{@group.id}/send_message",
+      @editor_token,
+      body: "Quiet crop on the way."
+    )
     assert_response :success, response.body
     assert_equal "Quiet crop on the way.", sent.fetch("body")
     assert_equal @group.id, sent.fetch("parent_id")
     assert_equal "Quiet crop on the way.", RecordingStudioMessages.message_recordings(@group).last.recordable.body
-
-    endpoint = call(:post, "/conversations/#{@group.id}/send_message", @editor_token, body: "Second line.")
-    assert_response :success, response.body
-    assert_equal "Second line.", endpoint.fetch("body")
   end
 
   test "list_conversations goes through viewable_group_recordings" do
-    listed = call(:get, "/message_mounts/#{@mount.id}/actions/list_conversations", @editor_token)
+    listed = call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
     assert_response :success, response.body
     ids = listed.fetch("records").map { |row| row.fetch("id") }
     assert_includes ids, @group.id
+  end
 
-    desks = call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
+  test "list_conversations pages after_id without overlap" do
+    extra = Array.new(3) do |index|
+      group = RecordingStudioMessages.create_group(@mount, title: "Page #{index} #{SecureRandom.hex(2)}", actor: @owner)
+      RecordingStudioMessages.send_message(
+        group_recording: group, body: "Line #{index}", actor: @owner, notify: false
+      )
+      group
+    end
+    page_one = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: 2)
     assert_response :success, response.body
-    assert_equal ids.sort, desks.fetch("records").map { |row| row.fetch("id") }.sort
+    first_ids = page_one.fetch("records").map { |row| row.fetch("id") }
+    assert_equal 2, first_ids.size
+
+    page_two = call(
+      :get,
+      "/desks/#{@mount.id}/conversations",
+      @editor_token,
+      limit: 2,
+      after_id: first_ids.last
+    )
+    assert_response :success, response.body
+    second_ids = page_two.fetch("records").map { |row| row.fetch("id") }
+    refute_empty second_ids
+    assert_empty first_ids & second_ids
+    assert_includes(extra.map(&:id) + [ @group.id ], first_ids.first)
   end
 
   test "read_thread goes through message_recordings" do
-    thread = call(:get, "/message_groups/#{@group.id}/actions/read_thread", @editor_token)
+    thread = call(:get, "/conversations/#{@group.id}/messages", @editor_token)
     assert_response :success, response.body
     bodies = thread.fetch("records").map { |row| row["body"] }
     assert_includes bodies, "Hello from the desk."
-
-    endpoint = call(:get, "/conversations/#{@group.id}/messages", @editor_token)
-    assert_response :success, response.body
-    assert_equal bodies, endpoint.fetch("records").map { |row| row["body"] }
   end
 
   test "create_group goes through RecordingStudioMessages.create_group" do
     created = call(
       :post,
-      "/message_mounts/#{@mount.id}/actions/create_group",
+      "/desks/#{@mount.id}/create_group",
       @admin_token,
       title: "New API conversation"
     )
@@ -79,16 +99,12 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
       mount_recording: @mount
     ).map(&:id)
     assert_includes listed, created.fetch("id")
-
-    endpoint = call(:post, "/desks/#{@mount.id}/create_group", @admin_token, title: "Endpoint conversation")
-    assert_response :success, response.body
-    assert_equal "Endpoint conversation", endpoint.fetch("title")
   end
 
   test "rename_group mark_read and unread_count wrap public helpers" do
     renamed = call(
       :post,
-      "/message_groups/#{@group.id}/actions/rename_group",
+      "/conversations/#{@group.id}/rename_group",
       @editor_token,
       title: "Renamed API thread"
     )
@@ -96,106 +112,115 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "Renamed API thread", renamed.fetch("title")
     assert_equal "Renamed API thread", @group.reload.recordable.title
 
-    marked = call(:post, "/message_groups/#{@group.id}/actions/mark_read", @editor_token)
+    marked = call(:post, "/conversations/#{@group.id}/mark_read", @editor_token)
     assert_response :success, response.body
     assert_equal @group.id, marked.fetch("id")
 
     count = call(:get, "/unread_count", @editor_token)
     assert_response :success, response.body
     assert count.fetch("unread_count").is_a?(Integer)
+  end
 
-    endpoint_rename = call(
-      :post, "/conversations/#{@group.id}/rename_group", @editor_token, title: "Endpoint rename"
+  test "unread_count does not include another workspace" do
+    workspace_b = owned_root(Workspace.create!(name: "Unread B #{SecureRandom.hex(4)}"))
+    mount_b = workspace_b.ensure_message_mount("support", actor: @owner)
+    group_b = RecordingStudioMessages.create_group(mount_b, title: "B unread", actor: @owner)
+    grant!(@group, @editor_client, :edit)
+    grant!(group_b, @editor_client, :edit)
+    RecordingStudioMessages.send_message(
+      group_recording: @group, body: "Unread in A", actor: @owner, notify: false
     )
+    RecordingStudioMessages.send_message(
+      group_recording: group_b, body: "Unread in B", actor: @owner, notify: false
+    )
+
+    global = RecordingStudioMessages.unread_count(actor: @editor_client)
+    count = call(:get, "/unread_count", @editor_token)
     assert_response :success, response.body
-    assert_equal "Endpoint rename", endpoint_rename.fetch("title")
+    assert_operator global, :>=, 2
+    assert_equal 1, count.fetch("unread_count")
   end
 
   test "view is forbidden from edit actions and can read" do
-    call(:get, "/message_mounts/#{@mount.id}/actions/list_conversations", @viewer_token)
+    call(:get, "/desks/#{@mount.id}/conversations", @viewer_token)
     assert_response :success, response.body
 
-    call(:get, "/message_groups/#{@group.id}/actions/read_thread", @viewer_token)
+    call(:get, "/conversations/#{@group.id}/messages", @viewer_token)
     assert_response :success, response.body
 
-    call(:post, "/message_groups/#{@group.id}/actions/mark_read", @viewer_token)
+    call(:post, "/conversations/#{@group.id}/mark_read", @viewer_token)
     assert_response :success, response.body
 
     call(:get, "/unread_count", @viewer_token)
     assert_response :success, response.body
 
-    call(:post, "/message_groups/#{@group.id}/actions/send_message", @viewer_token, body: "Nope")
-    assert_response :forbidden, response.body
-
-    call(:post, "/message_mounts/#{@mount.id}/actions/create_group", @viewer_token, title: "Nope")
-    assert_response :forbidden, response.body
-
-    call(:post, "/message_groups/#{@group.id}/actions/rename_group", @viewer_token, title: "Nope")
-    assert_response :forbidden, response.body
-
     call(:post, "/conversations/#{@group.id}/send_message", @viewer_token, body: "Nope")
+    assert_response :forbidden, response.body
+
+    call(:post, "/desks/#{@mount.id}/create_group", @viewer_token, title: "Nope")
+    assert_response :forbidden, response.body
+
+    call(:post, "/conversations/#{@group.id}/rename_group", @viewer_token, title: "Nope")
     assert_response :forbidden, response.body
   end
 
   test "a conversation in another workspace is not found" do
-    call(:post, "/message_groups/#{@other_group.id}/actions/send_message", @editor_token, body: "Nope")
-    assert_response :not_found, response.body
-
-    call(:get, "/message_groups/#{@other_group.id}/actions/read_thread", @editor_token)
-    assert_response :not_found, response.body
-
-    call(:post, "/message_groups/#{@other_group.id}/actions/rename_group", @editor_token, title: "Nope")
-    assert_response :not_found, response.body
-
-    call(:post, "/message_groups/#{@other_group.id}/actions/mark_read", @editor_token)
-    assert_response :not_found, response.body
-
-    call(:get, "/message_mounts/#{@other_mount.id}/actions/list_conversations", @editor_token)
-    assert_response :not_found, response.body
-
-    call(:post, "/message_mounts/#{@other_mount.id}/actions/create_group", @editor_token, title: "Nope")
-    assert_response :not_found, response.body
-
     call(:post, "/conversations/#{@other_group.id}/send_message", @editor_token, body: "Nope")
+    assert_response :not_found, response.body
+
+    call(:get, "/conversations/#{@other_group.id}/messages", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/conversations/#{@other_group.id}/rename_group", @editor_token, title: "Nope")
+    assert_response :not_found, response.body
+
+    call(:post, "/conversations/#{@other_group.id}/mark_read", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:get, "/desks/#{@other_mount.id}/conversations", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/desks/#{@other_mount.id}/create_group", @editor_token, title: "Nope")
     assert_response :not_found, response.body
   end
 
   test "bad input is unprocessable" do
-    call(:post, "/message_groups/#{@group.id}/actions/send_message", @editor_token, body: "")
+    call(:post, "/conversations/#{@group.id}/send_message", @editor_token, body: "")
     assert_response :unprocessable_entity, response.body
 
-    call(:post, "/message_mounts/#{@mount.id}/actions/create_group", @editor_token, title: "")
+    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "")
     assert_response :unprocessable_entity, response.body
 
-    call(:post, "/message_groups/#{@group.id}/actions/rename_group", @editor_token, title: "")
+    call(:post, "/conversations/#{@group.id}/rename_group", @editor_token, title: "")
     assert_response :unprocessable_entity, response.body
 
-    call(:get, "/message_mounts/#{@mount.id}/actions/list_conversations", @editor_token, after_id: @other_group.id)
+    call(:get, "/desks/#{@mount.id}/conversations", @editor_token, after_id: @other_group.id)
     assert_response :unprocessable_entity, response.body
   end
 
   test "messages api registration matches html roles and skips generic message create" do
+    refute RecordingStudio.capability_enabled?(:messages, for: RecordingStudioMessages::MessageGroup)
+    refute RecordingStudio.capability_enabled?(:messages, for: RecordingStudioMessages::MessageMount)
+
     group = RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::MessageGroup")
     mount = RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::MessageMount")
     assert_equal %i[show], group.operations
     assert_equal %i[show], mount.operations
     assert_equal false, group.auto_capability_actions
-    assert_equal %w[mark_read read_thread rename_group send_message], group.capability_actions
-    assert_equal %w[create_group list_conversations], mount.capability_actions
+    assert_equal %w[messages_mark_read messages_read_thread messages_rename_group messages_send_message],
+                 group.capability_actions
+    assert_equal %w[messages_create_group], mount.capability_actions
     refute RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
 
-    send_message = RecordingStudioApi.capability_action(:send_message)
-    create_group = RecordingStudioApi.capability_action(:create_group)
-    list = RecordingStudioApi.capability_action(:list_conversations)
-    read = RecordingStudioApi.capability_action(:read_thread)
-    assert_equal :edit, send_message.required_role
-    assert_equal :edit, create_group.required_role
-    assert_equal :view, list.required_role
-    assert_equal :view, read.required_role
+    refute RecordingStudioApi.capability_action(:messages_send_message)
+    refute RecordingStudioApi.capability_action(:messages_list_conversations)
+    refute RecordingStudioApi.capability_action(:messages_create_group)
+    send_message = RecordingStudioApi.registered_endpoint(:messages_send_message)
+    create_group = RecordingStudioApi.registered_endpoint(:messages_create_group)
     assert_equal "Message - Send", send_message.openapi.fetch(:title)
     assert_equal "Group - Create", create_group.openapi.fetch(:title)
-    assert RecordingStudioApi.registered_endpoint(:send_message)
-    assert RecordingStudioApi.registered_endpoint(:unread_count)
+    assert RecordingStudioApi.registered_endpoint(:messages_list_conversations)
+    assert RecordingStudioApi.registered_endpoint(:messages_unread_count)
   end
 
   private
@@ -244,7 +269,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     )
     raise issued.error unless issued.success?
 
-    [issued.value.fetch(:access_token), provision.value.fetch(:api_client)]
+    [ issued.value.fetch(:access_token), provision.value.fetch(:api_client) ]
   end
 
   def call(method, path, token, params = {})
