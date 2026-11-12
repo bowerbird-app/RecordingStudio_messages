@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "devise/test/integration_helpers"
+require "cgi"
 
 class PublicContactTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
@@ -52,7 +53,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       body: "Please send the quieter crop."
     }
 
-    assert_redirected_to recording_studio_messages.public_contact_verify_path
+    assert_redirected_to otp_challenge_path
     assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
     assert_equal messages_before, RecordingStudioMessages::Message.count
     assert_equal notifications_before, message_received_count
@@ -65,13 +66,13 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal "registration", otp_purpose_for(intent)
-    code = otp_code_for(intent)
 
     follow_redirect!
-    assert_includes response.body, "ada@example.com"
+    assert_includes response.body, "a***@example.com"
+    refute_includes response.body, "ada@example.com"
     assert_select "input[name=code][maxlength='6']"
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: code }
+    deliver_code!(intent)
 
     assert_redirected_to recording_studio_messages.public_contact_sent_path
     follow_redirect!
@@ -130,7 +131,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: "Casey.Kept@example.com",
       body: "Still Casey."
     }
-    assert_redirected_to recording_studio_messages.public_contact_verify_path
+    assert_redirected_to otp_challenge_path
     assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
     assert_equal messages_before, RecordingStudioMessages::Message.count
     assert_equal notifications_before, message_received_count
@@ -140,12 +141,12 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal existing.id, intent.user_id
     assert_equal count, User.count
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+    deliver_code!(intent)
 
     assert_redirected_to recording_studio_messages.public_contact_sent_path
     follow_redirect!
     assert_includes response.body, "Message sent"
-    assert_nil session["warden.user.user.key"]
+    assert_equal existing.id, session["warden.user.user.key"]&.first&.first
     assert_equal existing.id, User.find_by!(email: "casey.kept@example.com").id
     assert_equal count, User.count
     assert_equal groups_before + 1, RecordingStudioMessages::MessageGroup.count
@@ -170,8 +171,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     real_code = otp_code_for(intent)
     wrong = real_code == "000000" ? "111111" : "000000"
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: wrong }
+    post otp_challenge_path, params: { code: wrong }
 
+    assert_response :unprocessable_entity
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
     assert_equal 0, RecordingStudioMessages::Message.count
     assert_equal 0, message_received_count
@@ -291,7 +293,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
           email: "ada@example.com",
           body: "Hello",
           current_actor: nil,
-          request: nil,
+          request: contact_request,
           session: {}
         )
       end
@@ -334,7 +336,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { name: "Ada Lovelace", email: "twice@example.com", body: "Once only." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     code = otp_code_for(intent)
-    post recording_studio_messages.public_contact_verify_path, params: { code: code }
+    deliver_code!(intent, code: code)
 
     user = User.find_by!(email: "twice@example.com")
     intent.reload
@@ -359,25 +361,22 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "text-[length:var(--text-xl)]"
   end
 
-  test "verify page shows the code field and the normalized email" do
+  test "code page is the Users screen with a masked email" do
     post contact_path, params: { name: "Ada Lovelace", email: "Ada@Example.com", body: "Hello there." }
+    assert_redirected_to otp_challenge_path
     follow_redirect!
 
     assert_response :success
-    assert_select "h1.fp-heading.font-semibold", text: "Verify it's you"
-    assert_includes response.body, "text-[length:var(--text-xl)]"
-    assert_includes response.body, "We sent a 6-digit code to ada@example.com."
+    assert_select "title", text: "Enter your code"
+    assert_includes response.body, "a***@example.com"
+    refute_includes response.body, "ada@example.com"
+    refute_includes response.body, "Verify it's you"
     refute_includes response.body, "Check your email"
     refute_includes response.body, "Confirm & send"
-    assert_select "[data-public-contact-step=verify].flex.flex-col"
-    assert_includes response.body, "gap-[var(--stack-gap-lg)]"
     assert_select "input[name=code][maxlength='6'][inputmode=numeric][autocomplete=one-time-code]"
-    assert_select "button", text: "Next"
-    assert_select "a.flat-pack-link.underline.self-center[data-turbo-method=post][data-turbo-frame=_top][href=?]",
-                  recording_studio_messages.public_contact_resend_path,
-                  text: "Resend code"
-    assert_select "button", text: "Resend code", count: 0
-    assert_select "title", text: "Verify it's you"
+    assert_select "button", text: "Continue"
+    assert_select "button", text: "Resend code"
+    assert_select "button", text: "Next", count: 0
   end
 
   test "signed-in form shows the actor name as a badge and hides the email" do
@@ -410,7 +409,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     code = otp_code_for(intent)
 
     travel 11.minutes do
-      post recording_studio_messages.public_contact_verify_path, params: { code: code }
+      post otp_challenge_path, params: { code: code }
+      assert_response :unprocessable_entity
     end
 
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
@@ -424,15 +424,21 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     code = otp_code_for(intent)
     intent.update!(expires_at: 1.hour.ago)
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: code }
+    post otp_challenge_path, params: { code: code }
+    assert_response :redirect
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: return_token_from(response.location) }
 
+    assert_response :unprocessable_entity
+    assert_includes response.body, "That contact form expired. Send it again."
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
     assert_equal 0, RecordingStudioMessages::Message.count
     assert_equal 0, message_received_count
     assert_nil intent.reload.message_group_id
+    assert User.find_by!(email: "expired-intent@example.com").confirmed?
   end
 
-  test "unconfirmed password user confirms the same account and keeps the password" do
+  test "unconfirmed password user is refused without a code or a new account" do
     existing = User.create!(
       email: "password-user@example.com",
       password: "Password123!",
@@ -449,7 +455,6 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       time_zone: "Eastern Time (US & Canada)"
     )
     count = User.count
-    groups_before = RecordingStudioMessages::MessageGroup.count
 
     post contact_path, params: {
       name: "Someone Else",
@@ -457,30 +462,18 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       body: "I already signed up."
     }
 
-    assert_redirected_to recording_studio_messages.public_contact_verify_path
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: "Confirm that email, then try again."
     assert_equal count, User.count
-    assert_equal groups_before, RecordingStudioMessages::MessageGroup.count
-    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    assert_equal existing.id, intent.user_id
-    assert_equal "registration", otp_purpose_for(intent)
-
-    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
-
-    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+    assert_equal 0, RecordingStudioMessages::Message.count
     existing.reload
-    assert_equal existing.id, User.find_by!(email: "password-user@example.com").id
-    assert_equal count, User.count
-    assert existing.confirmed?
+    assert_nil existing.confirmed_at
     assert_equal "password", existing.registered_with
     assert existing.valid_password?("Password123!")
     profile = RecordingStudioUser.profile_for(existing)
     assert_equal "Casey", profile.first_name
     assert_equal "Patron", profile.last_name
-    assert_equal "Eastern Time (US & Canada)", profile.time_zone
-    assert_equal 1, RecordingStudioMessages::Message.where(body: "I already signed up.").count
-    message = RecordingStudioMessages::Message.find_by!(body: "I already signed up.")
-    sender = RecordingStudio::Recording.find_by!(recordable: message).events.where(action: "created").order(:created_at).first.actor
-    assert_equal existing.id, sender.id
   end
 
   test "unconfirmed otp user is reused and then confirmed" do
@@ -493,14 +486,14 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       body: "Same account."
     }
 
-    assert_redirected_to recording_studio_messages.public_contact_verify_path
+    assert_redirected_to otp_challenge_path
     assert_equal count, User.count
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal existing.id, intent.user_id
     assert_equal "registration", otp_purpose_for(intent)
     assert_equal 0, RecordingStudioMessages::Message.count
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+    deliver_code!(intent)
 
     existing.reload
     assert_equal existing.id, User.find_by!(email: "otp-existing@example.com").id
@@ -521,7 +514,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
 
-    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+    deliver_code!(intent)
 
     user = User.find_by!(email: "madonna@example.com")
     profile = RecordingStudioUser.profile_for(user)
@@ -533,26 +526,30 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal 1, RecordingStudioMessages::Message.where(body: "One name.").count
   end
 
-  test "resend uses a separate rate limit and a second resend asks for a minute" do
+  test "Users resend replaces the session code and a second resend waits" do
     previous_cache = Rails.cache
     Rails.cache = ActiveSupport::Cache::MemoryStore.new
 
     post contact_path, params: { name: "Ada Lovelace", email: "resend@example.com", body: "Need another code." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     first_challenge_id = intent.otp_challenge_id
-    first_purpose = otp_purpose_for(intent)
 
-    post recording_studio_messages.public_contact_resend_path
-    assert_redirected_to recording_studio_messages.public_contact_verify_path
-    intent.reload
-    assert_not_equal first_challenge_id, intent.otp_challenge_id
-    assert_equal first_purpose, otp_purpose_for(intent)
+    post otp_resend_path
+    assert_redirected_to otp_challenge_path
+    assert_equal first_challenge_id, intent.reload.otp_challenge_id
+    assert_not_equal first_challenge_id, session[:otp_challenge_id]
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
 
-    post recording_studio_messages.public_contact_resend_path
-    assert_response :unprocessable_entity
-    assert_includes response.body, "Give it a minute, then try again."
+    fresh_code = RecordingStudioUser.otp_message(session[:otp_challenge_id]).fetch(:body)[/\d{6}/]
+    post otp_resend_path
+    assert_redirected_to otp_challenge_path
+    follow_redirect!
+    assert_includes response.body, "Please wait before requesting another code."
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
+
+    deliver_code!(intent, code: fresh_code)
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    assert_equal 1, RecordingStudioMessages::Message.where(body: "Need another code.").count
   ensure
     Rails.cache = previous_cache
   end
@@ -575,41 +572,34 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   test "modal keeps the code step, errors, resend, and sent screen in the frame" do
     post contact_path, params: modal_message, headers: modal_headers
 
-    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    assert_redirected_to contact_path(presentation: "modal")
     get response.location, headers: modal_headers
 
     assert_response :success
-    assert_select "turbo-frame#public_contact h1", text: "Verify it's you"
+    assert_select "turbo-frame#public_contact h1", count: 0
     assert_select "[data-public-contact-step=verify]"
-    assert_select "button", text: "Next"
-    assert_select "a.flat-pack-link.underline.self-center[data-turbo-method=post][data-turbo-frame=public_contact]", text: "Resend code"
-    assert_select "button", text: "Resend code", count: 0
-    assert_includes response.body, "ada@example.com"
+    assert_select "turbo-frame##{RecordingStudioUser::OtpCodeForm::FRAME_ID}"
+    assert_select "button", text: "Continue"
+    assert_select "button", text: "Resend code"
+    assert_includes response.body, "a***@example.com"
+    refute_includes response.body, "ada@example.com"
     refute_includes response.body, "min-h-dvh"
 
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     wrong = otp_code_for(intent) == "000000" ? "111111" : "000000"
-    post recording_studio_messages.public_contact_verify_path,
-         params: { code: wrong, presentation: "modal" },
-         headers: modal_headers
+    post otp_challenge_path, params: { code: wrong }, headers: inline_otp_headers
 
     assert_response :unprocessable_entity
-    assert_includes response.body, "That code did not match."
-    assert_select "[role=alert][class*='mb-[var(--stack-gap-lg)]']", text: "That code did not match."
-    assert_select "turbo-frame#public_contact input[name=code]"
+    assert_includes response.body, "That code did not work."
+    assert_select "turbo-frame##{RecordingStudioUser::OtpCodeForm::FRAME_ID} input[name=code]"
     assert_equal 0, RecordingStudioMessages::Message.count
 
-    post recording_studio_messages.public_contact_resend_path,
-         params: { presentation: "modal" },
-         headers: modal_headers
-    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
-    get response.location, headers: modal_headers
-    assert_includes response.body, "Fresh code on the way."
-    assert_select "[role=alert][class*='mb-[var(--stack-gap-lg)]']", text: "Fresh code on the way."
+    post otp_resend_path, headers: inline_otp_headers
+    assert_response :success
+    assert_includes response.body, "If an eligible account exists, we sent a code."
+    fresh_code = RecordingStudioUser.otp_message(session[:otp_challenge_id]).fetch(:body)[/\d{6}/]
 
-    post recording_studio_messages.public_contact_verify_path,
-         params: { code: otp_code_for(intent.reload), presentation: "modal" },
-         headers: modal_headers
+    deliver_modal_code!(intent, code: fresh_code)
     assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
     get response.location, headers: modal_headers
 
@@ -618,12 +608,14 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "[data-public-contact-step=sent]"
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."
-    assert_select "a", text: "View conversation", count: 0
+    assert_select "a[data-turbo-frame=_top]", text: "View conversation"
     assert_equal 1, RecordingStudioMessages::Message.count
 
+    sign_out :user
     get contact_path(presentation: "modal"), headers: modal_headers
     assert_select "input[name=name]"
     assert_select "h1", text: "Message sent", count: 0
+    assert_select "input[name=code]", count: 0
   end
 
   test "opening the modal again resumes the code step without a new code" do
@@ -634,9 +626,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     get contact_path(presentation: "modal"), headers: modal_headers
 
-    assert_select "turbo-frame#public_contact h1", text: "Verify it's you"
+    assert_select "turbo-frame#public_contact h1", count: 0
     assert_select "[data-public-contact-step=verify]"
-    assert_select "button", text: "Next"
+    assert_select "button", text: "Continue"
     assert_equal challenge_id, intent.reload.otp_challenge_id
     assert_equal codes_before, otp_notification_count
 
@@ -667,40 +659,46 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "a[data-turbo-frame=_top][data-fp-style=primary]", text: "View conversation"
   end
 
-  test "expired modal offers a fresh form and the page stays a 404" do
+  test "expired modal offers a fresh form and the old code routes are gone" do
     post contact_path, params: modal_message(email: "expired-modal@example.com"), headers: modal_headers
+    get response.location, headers: modal_headers
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     intent.update!(expires_at: 1.hour.ago)
 
-    get recording_studio_messages.public_contact_verify_path(presentation: "modal"), headers: modal_headers
+    get contact_path(presentation: "modal"), headers: modal_headers
     assert_response :unprocessable_entity
     assert_includes response.body, "That contact form expired. Send it again."
     assert_select "a[href=?]", contact_path(presentation: "modal"), text: "Send it again"
     assert_equal 0, RecordingStudioMessages::Message.count
 
-    get recording_studio_messages.public_contact_verify_path
+    get "/recording_studio_messages/public_contact/verify"
     assert_response :not_found
 
-    get recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    get "/recording_studio_messages/public_contact/verify", params: { presentation: "modal" }
     assert_response :not_found
 
-    post recording_studio_messages.public_contact_verify_path,
-         params: { code: otp_code_for(intent), presentation: "modal" },
+    post otp_challenge_path, params: { code: otp_code_for(intent) }, headers: inline_otp_headers
+    assert_response :success
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: return_token_from(response.body), presentation: "modal" },
          headers: modal_headers
     assert_response :unprocessable_entity
     assert_select "a", text: "Send it again"
     assert_select "input[name=code]", count: 0
     assert_equal 0, RecordingStudioMessages::Message.count
 
+    sign_out :user
     post contact_path, params: { name: "Ada Lovelace", email: "expired-page@example.com", body: "Too late." }
     page_intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     page_intent.update!(expires_at: 1.hour.ago)
-    post recording_studio_messages.public_contact_verify_path,
-         params: { code: otp_code_for(page_intent), presentation: "modal" }
+    post otp_challenge_path, params: { code: otp_code_for(page_intent) }
+    assert_response :redirect
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: return_token_from(response.location) }
     assert_response :unprocessable_entity
     assert_includes response.body, "That contact form expired. Send it again."
     assert_includes response.body, "min-h-dvh"
-    assert_select "input[name=code]"
+    assert_select "input[name=code]", count: 0
     assert_equal 0, RecordingStudioMessages::Message.count
   end
 
@@ -715,7 +713,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     sign_out @staff
     get contact_path(presentation: "modal"), headers: modal_headers
-    assert_select "h1", text: "Verify it's you"
+    assert_select "[data-public-contact-step=verify]"
+    assert_select "button", text: "Continue"
   end
 
   test "modal frame keeps a custom introduction and submit label" do
@@ -733,7 +732,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
            submit_label: "Send note"
          ),
          headers: modal_headers
-    assert_redirected_to recording_studio_messages.public_contact_verify_path(
+    assert_redirected_to contact_path(
       presentation: "modal",
       introduction: "We reply by email.",
       submit_label: "Send note"
@@ -742,13 +741,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get verify_path, headers: modal_headers
     assert_select "input[name=introduction][value=?]", "We reply by email."
     assert_select "input[name=submit_label][value=?]", "Send note"
-    assert_select "a[data-turbo-method=post][href=?]",
-                  recording_studio_messages.public_contact_resend_path(
-                    presentation: "modal",
-                    introduction: "We reply by email.",
-                    submit_label: "Send note"
-                  ),
-                  text: "Resend code"
+    assert_select "button", text: "Resend code"
 
     RecordingStudioMessages::PublicContactIntent.order(:created_at).last.update!(expires_at: 1.hour.ago)
     get verify_path, headers: modal_headers
@@ -796,12 +789,13 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_equal 0, RecordingStudioMessages::MessageGroup.count
   end
 
-  test "verified new visitor stays signed out by default" do
+  test "verified visitor is signed in even when the sign-in flag is off" do
     verify_contact(email: "default-off@example.com")
 
-    assert_nil session["warden.user.user.key"]
+    user = User.find_by!(email: "default-off@example.com")
+    assert_equal user.id, session["warden.user.user.key"]&.first&.first
     assert_select "[data-public-contact-success-redirect]", count: 0
-    assert_select "[data-public-contact-step=sent] a", count: 0
+    assert_select "a[href=?]", message_group_path_for_last_group, text: "View conversation"
   end
 
   test "sign in after verification signs in a newly registered visitor" do
@@ -835,8 +829,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
       wrong = otp_code_for(intent) == "000000" ? "111111" : "000000"
 
-      post recording_studio_messages.public_contact_verify_path, params: { code: wrong }
+      post otp_challenge_path, params: { code: wrong }
 
+      assert_response :unprocessable_entity
       assert_nil session["warden.user.user.key"]
     end
   end
@@ -845,7 +840,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     with_contact_config(public_contact_success_redirect_url: "/inbox") do
       verify_contact(email: "button-new@example.com")
 
-      assert_nil session["warden.user.user.key"]
+      user = User.find_by!(email: "button-new@example.com")
+      assert_equal user.id, session["warden.user.user.key"]&.first&.first
       assert_select "[data-public-contact-step=sent] a", count: 1
       assert_select "a[data-public-contact-success-redirect][href=?]", "/inbox", text: "View conversation"
     end
@@ -882,9 +878,9 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   test "success redirect button renders in the modal sent step and for signed-in senders" do
     with_contact_config(public_contact_success_redirect_url: "/inbox") do
       post contact_path, params: modal_message(email: "modal-button@example.com"), headers: modal_headers
+      get response.location, headers: modal_headers
       intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-      post recording_studio_messages.public_contact_verify_path,
-           params: { code: otp_code_for(intent), presentation: "modal" }, headers: modal_headers
+      deliver_modal_code!(intent)
       get recording_studio_messages.public_contact_sent_path(presentation: "modal"), headers: modal_headers
       assert_select "turbo-frame#public_contact [data-public-contact-step=sent] a", count: 1
       assert_select "turbo-frame#public_contact a[data-public-contact-success-redirect][href=?]", "/inbox"
@@ -924,15 +920,15 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     }
 
     with_contact_config(public_contact_recipient_resolver: resolver) do
-      session = {}
+      request = contact_request
       outcome = RecordingStudioMessages.begin_public_contact(
         mount_recording: @mount,
         name: "Ada Lovelace",
         email: "tagged-contact@example.com",
         body: "Hello from the center",
         current_actor: nil,
-        request: nil,
-        session: session,
+        request: request,
+        session: request.session,
         tags: { "press_center" => press, press_kit: kit }
       )
 
@@ -948,7 +944,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
         challenge_id: intent.otp_challenge_id,
         code: otp_code_for(intent),
         purpose: otp_purpose_for(intent),
-        session: session
+        session: request.session
       )
       assert verified.success?
 
@@ -981,7 +977,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
         email: nil,
         body: "Signed in",
         current_actor: @staff,
-        request: nil,
+        request: contact_request,
         session: {},
         tags: { "press_center" => press }
       )
@@ -991,7 +987,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
         email: nil,
         body: "No tags",
         current_actor: @staff,
-        request: nil,
+        request: contact_request,
         session: {}
       )
     end
@@ -1007,7 +1003,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: nil,
       body: "From the desk",
       current_actor: @staff,
-      request: nil,
+      request: contact_request,
       session: {},
       tags: { "press_center" => press }
     )
@@ -1030,7 +1026,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: "stale-trash-target@example.com",
       body: "Hello",
       current_actor: nil,
-      request: nil,
+      request: contact_request,
       session: session,
       tags: { "press_center" => press }
     )
@@ -1062,7 +1058,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: "stale-trash-mount@example.com",
       body: "Hello",
       current_actor: nil,
-      request: nil,
+      request: contact_request,
       session: session
     )
     intent = outcome.intent
@@ -1090,7 +1086,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: "stale-destroy-mount@example.com",
       body: "Hello",
       current_actor: nil,
-      request: nil,
+      request: contact_request,
       session: destroy_session
     )
     destroy_intent = destroy_outcome.intent
@@ -1110,7 +1106,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert destroy_intent.open?
   end
 
-  test "submit_code rejects a trashed mount before verifying the code" do
+  test "a trashed mount denies the return after Users has already confirmed the code" do
     post contact_path, params: { name: "Ada Lovelace", email: "verify-trash-mount@example.com", body: "Hello." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     user = User.find_by!(email: "verify-trash-mount@example.com")
@@ -1118,16 +1114,19 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudio::Recording.unscoped.where(id: @mount.id).update_all(trashed_at: Time.current)
 
     assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
-      post recording_studio_messages.public_contact_verify_path, params: { code: code }
+      post otp_challenge_path, params: { code: code }
+      assert_response :redirect
+      post recording_studio_messages.public_contact_return_path,
+           params: { contact_token: return_token_from(response.location) }
       assert_response :unprocessable_entity
       assert_select "[role=alert]", text: /couldn't send that message/i
     end
 
     user.reload
-    assert_nil user.confirmed_at
+    assert user.confirmed?
     intent.reload
     assert intent.open?
-    assert RecordingStudioUser.otp_proof(intent.otp_challenge_id).present?
+    assert_nil intent.message_group_id
   end
 
   test "a valid tag token tags the conversation for a signed-in sender" do
@@ -1159,15 +1158,14 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       body: "Please file this under the mailbox.",
       tag_token: token
     }
-    assert_redirected_to recording_studio_messages.public_contact_verify_path(tag_token: token)
+    assert_redirected_to otp_challenge_path
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal(
       { "press_center" => mailbox.id.to_s, "press_kit" => nested.id.to_s },
       intent.tags
     )
 
-    post recording_studio_messages.public_contact_verify_path,
-         params: { code: otp_code_for(intent), tag_token: token }
+    deliver_code!(intent)
     assert_redirected_to recording_studio_messages.public_contact_sent_path
 
     group = intent.reload.group_recording
@@ -1257,7 +1255,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "input[name=tag_token]", count: 0
 
     post contact_path, params: modal_message(email: "no-tags-token@example.com"), headers: modal_headers
-    assert_redirected_to recording_studio_messages.public_contact_verify_path(presentation: "modal")
+    assert_redirected_to contact_path(presentation: "modal")
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal({}, intent.tags)
   end
@@ -1275,7 +1273,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
          headers: modal_headers
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     intent.update!(expires_at: 1.hour.ago)
-    get recording_studio_messages.public_contact_verify_path(presentation: "modal", tag_token: token),
+    get contact_path(presentation: "modal", tag_token: token),
         headers: modal_headers
 
     assert_select "a[href=?]",
@@ -1291,7 +1289,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       email: "missing-target@example.com",
       body: "Hello",
       current_actor: nil,
-      request: nil,
+      request: contact_request,
       session: {},
       tags: { "press_center" => press }
     )
@@ -1312,6 +1310,76 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert intent.open?
   end
 
+  test "otp registration off denies a new address without creating a user" do
+    RecordingStudioUser.config.otp_registration_enabled = false
+
+    assert_no_difference -> { User.count } do
+      post contact_path, params: { name: "Ada Lovelace", email: "new-off@example.com", body: "Hello." }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: "Public contact needs Recording Studio Users email codes."
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+    assert_equal 0, RecordingStudioMessages::Message.count
+  ensure
+    RecordingStudioUser.config.otp_registration_enabled = true
+  end
+
+  test "a return token fulfills once and a second post returns the same conversation" do
+    post contact_path, params: { name: "Ada Lovelace", email: "replay@example.com", body: "Once." }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    post otp_challenge_path, params: { code: otp_code_for(intent) }
+    token = return_token_from(response.location)
+    follow_redirect!
+    assert_equal 0, RecordingStudioMessages::Message.count
+
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    group_id = intent.reload.message_group_id
+
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    assert_equal group_id, intent.reload.message_group_id
+    assert_equal 1, RecordingStudioMessages::Message.count
+  end
+
+  test "an expired or tampered return token is denied" do
+    post contact_path, params: { name: "Ada Lovelace", email: "stale-token@example.com", body: "Hello." }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    post otp_challenge_path, params: { code: otp_code_for(intent) }
+    token = return_token_from(response.location)
+
+    travel 16.minutes do
+      post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+      assert_response :unprocessable_entity
+      assert_select "[role=alert]", text: "That link expired. Start again."
+    end
+
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: "#{token}x" }
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: "That link expired. Start again."
+    assert_equal 0, RecordingStudioMessages::Message.count
+  end
+
+  test "a signed-out or different person cannot finish the return" do
+    post contact_path, params: { name: "Ada Lovelace", email: "wrong-person@example.com", body: "Hello." }
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    post otp_challenge_path, params: { code: otp_code_for(intent) }
+    token = return_token_from(response.location)
+
+    sign_out :user
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: "You cannot send this message."
+
+    sign_in @staff
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: "You cannot send this message."
+    assert_equal 0, RecordingStudioMessages::Message.count
+    assert intent.reload.open?
+  end
+
   private
 
   def press_recording(name)
@@ -1323,11 +1391,56 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { name: "Ada Lovelace", email: email, body: "Hello from #{email}." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal purpose, otp_purpose_for(intent)
-    post recording_studio_messages.public_contact_verify_path, params: { code: otp_code_for(intent) }
+    deliver_code!(intent)
     assert_redirected_to recording_studio_messages.public_contact_sent_path
     follow_redirect!
     assert_response :success
     intent
+  end
+
+  def deliver_code!(intent, code: nil)
+    post otp_challenge_path, params: { code: code || otp_code_for(intent) }
+    assert_response :redirect
+    token = return_token_from(response.location)
+    follow_redirect!
+    assert_response :success
+    assert_select "form#public-contact-finish"
+    assert_equal 0, RecordingStudioMessages::Message.count
+    post recording_studio_messages.public_contact_return_path, params: { contact_token: token }
+  end
+
+  def deliver_modal_code!(intent, code: nil)
+    post otp_challenge_path,
+         params: { code: code || otp_code_for(intent) },
+         headers: inline_otp_headers
+    assert_response :success
+    token = return_token_from(response.body)
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: token, presentation: "modal" },
+         headers: modal_headers
+  end
+
+  def otp_challenge_path
+    Rails.application.routes.url_helpers.recording_studio_user_otp_challenge_path(script_name: "")
+  end
+
+  def otp_resend_path
+    Rails.application.routes.url_helpers.recording_studio_user_otp_resend_path(script_name: "")
+  end
+
+  def inline_otp_headers
+    { "Turbo-Frame" => RecordingStudioUser::OtpCodeForm::FRAME_ID }
+  end
+
+  def return_token_from(source)
+    token = CGI.unescapeHTML(source.to_s)[/contact_token=([^"&\s<]+)/, 1]
+    token && CGI.unescape(token)
+  end
+
+  def contact_request
+    ActionDispatch::TestRequest.create.tap do |test_request|
+      test_request.session = ActionController::TestSession.new
+    end
   end
 
   def last_group_recording

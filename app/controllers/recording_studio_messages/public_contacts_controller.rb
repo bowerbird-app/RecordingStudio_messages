@@ -4,7 +4,7 @@ module RecordingStudioMessages
   class PublicContactsController < ActionController::Base
     include PublicContactHelper
     include PublicContactFlow
-    include PublicContactSignIn
+    include PublicContactResponse
 
     helper CopyHelper
     helper PublicContactHelper
@@ -20,8 +20,9 @@ module RecordingStudioMessages
     def show
       @mount = enabled_mount
       return missing_contact unless @mount
+      return render_code_step if resume_verification?
 
-      render :verify if resume_verification?
+      render_expired_step if expired_modal_intent?
     end
 
     def create
@@ -31,19 +32,18 @@ module RecordingStudioMessages
       redirect_for(start_contact)
     end
 
-    def verify
-      @intent = session_intent
-      return expired_contact if @intent.expired?
-      return unless @intent.fulfilled?
-
-      remember_sent(@intent.group_recording)
-      redirect_to_sent
+    def finish
+      load_return_intent!
     end
 
-    def submit_verification
-      @intent = session_intent
-      remember_sent(PublicContact.submit_code!(intent: @intent, code: params[:code], session: session))
-      sign_in_verified_contact(@intent)
+    def complete_return
+      load_return_intent!
+
+      actor = public_contact_actor
+      raise Error, Copy.t("errors.cannot_send") if actor.blank?
+
+      remember_sent(PublicContact.complete(intent: @intent, actor: actor))
+      session.delete(PublicContact::SESSION_KEY)
       redirect_to_sent
     end
 
@@ -51,12 +51,6 @@ module RecordingStudioMessages
       return missing_contact if session[PublicContactFlow::GROUP_SESSION_KEY].blank?
 
       @group_recording = sent_group
-    end
-
-    def resend
-      @intent = session_intent
-      PublicContact.resend!(intent: @intent, request: request, session: session)
-      redirect_to public_contact_verify_path(presentation_params), notice: Copy.t("flashes.code_resent")
     end
   end
 end

@@ -6,78 +6,42 @@ module RecordingStudioMessages
       private
 
       def queue_verification(mount:, name:, email:, text:, request:, session:, tags:)
-        raise Error, Copy.t("errors.users_required") unless users_otp_ready?
-
-        user, purpose = account_for(normalize_email(email))
-        stored_ids = Services::MessageGroupTags.tag_ids(tags)
+        require_otp_request!(request)
+        checked_email = normalize_email(email)
+        user = account_for(checked_email)
         ensure_recipient!(mount, user, tags: tags)
-        intent = store_intent(
-          mount: mount, user: user, purpose: purpose, name: name, email: normalize_email(email), text: text,
-          request: request, session: session, tag_ids: stored_ids
+        details = contact_details(checked_email, name, text, tags)
+        Outcome.new(intent: remember_intent(mount, user, request, session, details))
+      end
+
+      def require_otp_request!(request)
+        raise Error, Copy.t("errors.users_required") unless users_otp_ready?
+        raise ArgumentError, "request is required" if request.nil?
+      end
+
+      def contact_details(email, name, text, tags)
+        {
+          email: email, submitted_name: normalize_name(name), body: text,
+          tags: Services::MessageGroupTags.tag_ids(tags),
+          expires_at: PublicContactIntent::LIFETIME.from_now
+        }
+      end
+
+      def remember_intent(mount, user, request, session, details)
+        issued = send_challenge!(details.fetch(:email), request)
+        intent = PublicContactIntent.create!(
+          details.merge(
+            mount_recording_id: mount.id, user_id: user.id, otp_challenge_id: issued.challenge_id
+          )
         )
         session[SESSION_KEY] = intent.id
-        Outcome.new(intent: intent)
+        intent
       end
 
       def ensure_recipient!(mount, user, tags:)
         return if MountAccess.inherited?(mount)
 
         raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user, tags: tags)).nil?
-      end
-
-      def store_intent(mount:, user:, purpose:, name:, email:, text:, request:, session:, tag_ids:)
-        issued = issue_otp!(user: user, purpose: purpose, request: request, session: session, rate_limit_scope: :issue)
-        PublicContactIntent.create!(
-          mount_recording_id: mount.id,
-          user_id: user.id,
-          otp_challenge_id: issued.challenge_id,
-          email: email,
-          submitted_name: normalize_name(name),
-          body: text, tags: tag_ids,
-          expires_at: PublicContactIntent::LIFETIME.from_now
-        )
-      end
-
-      def accepted_user(intent, code, session)
-        result = verify_submitted_code(intent, code, session)
-        return result.user if result.success?
-
-        intent.reload
-        raise Error, Copy.t("errors.code_mismatch") unless intent.fulfilled?
-      end
-
-      def verify_submitted_code(intent, code, session)
-        proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
-        raise Error, Copy.t("errors.code_mismatch") if proof.nil?
-
-        RecordingStudioUser.verify_otp!(
-          challenge_id: intent.otp_challenge_id, code: code, purpose: proof.purpose, session: session
-        )
-      end
-
-      def deliver_verified(intent, user, session)
-        group = complete(intent: intent, actor: user)
-        session.delete(SESSION_KEY)
-        group
-      end
-
-      def refresh_code!(intent, request, session)
-        raise Error, Copy.t("errors.already_sent") if intent.fulfilled?
-        raise Error, Copy.t("errors.expired") if intent.expired?
-
-        live_contact_mount_id!(intent.mount_recording_id)
-        issued = resend_live_code(intent, request, session)
-        intent.update!(otp_challenge_id: issued.challenge_id)
-      end
-
-      def resend_live_code(intent, request, session)
-        user = RecordingStudioUser.config.user_class.find(intent.user_id)
-        proof = RecordingStudioUser.otp_proof(intent.otp_challenge_id)
-        raise Error, Copy.t("errors.confirm_code") if proof.nil?
-
-        issued_code!(
-          RecordingStudioUser.resend_otp!(user: user, purpose: proof.purpose, request: request, session: session)
-        )
       end
 
       def complete_locked(intent, actor)
@@ -115,11 +79,6 @@ module RecordingStudioMessages
         )
         intent.update!(message_group_id: group.id, body: nil)
         group
-      end
-
-      def finish(intent, session)
-        session.delete(SESSION_KEY)
-        intent.group_recording
       end
     end
   end

@@ -32,32 +32,6 @@ module RecordingStudioMessages
       PublicContact::TagToken.tags_for(mount: @mount, token: params[PublicContact::TagToken::PARAM])
     end
 
-    def redirect_for(outcome)
-      if outcome.group_recording
-        remember_sent(outcome.group_recording)
-        redirect_to_sent
-      else
-        redirect_to public_contact_verify_path(presentation_params)
-      end
-    end
-
-    def redirect_to_sent
-      redirect_to public_contact_sent_path(sent_presentation_params)
-    end
-
-    def sent_presentation_params
-      presentation_params.except(PublicContact::TagToken::PARAM, PublicContact::TagToken::PARAM.to_s)
-    end
-
-    def presentation_params
-      extra = tag_token_query
-      return extra unless modal_presentation?
-
-      { presentation: PublicContactHelper::MODAL }.merge(
-        modal_display_params(params[:introduction], params[:submit_label])
-      ).merge(extra)
-    end
-
     def resume_verification?
       return false unless modal_frame_request?
       return false if public_contact_actor.present?
@@ -74,11 +48,25 @@ module RecordingStudioMessages
     end
 
     def open_contact_intent
+      intent = stored_contact_intent
+      intent if intent&.open?
+    end
+
+    def expired_modal_intent?
+      return false unless modal_frame_request?
+
+      intent = stored_contact_intent
+      return false unless intent&.expired? && same_contact_mount?(intent)
+
+      @intent = intent
+      true
+    end
+
+    def stored_contact_intent
       intent_id = session[PublicContact::SESSION_KEY]
       return if intent_id.blank?
 
-      intent = PublicContactIntent.find_by(id: intent_id)
-      intent if intent&.open?
+      PublicContactIntent.find_by(id: intent_id)
     end
 
     def find_mount
@@ -88,10 +76,6 @@ module RecordingStudioMessages
       return unless recording&.recordable_type == MESSAGE_MOUNT_TYPE
 
       recording
-    end
-
-    def session_intent
-      PublicContactIntent.find(session[PublicContact::SESSION_KEY])
     end
 
     def remember_sent(group)
@@ -105,27 +89,8 @@ module RecordingStudioMessages
       recording
     end
 
-    def expired_contact
-      return missing_contact unless modal_frame_request?
-
-      render :expired, status: :unprocessable_entity
-    end
-
     def missing_contact(_error = nil)
       head :not_found
-    end
-
-    def contact_error(error)
-      if modal_frame_request? && @intent&.expired?
-        render :expired, status: :unprocessable_entity
-      else
-        flash.now[:alert] = error.message
-        render error_template, status: :unprocessable_entity
-      end
-    end
-
-    def error_template
-      %w[verify submit_verification resend].include?(action_name) ? :verify : :show
     end
   end
 end

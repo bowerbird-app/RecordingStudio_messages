@@ -40,21 +40,6 @@ module RecordingStudioMessages
       )
     end
 
-    def submit_code!(intent:, code:, session:)
-      return finish(intent, session) if intent.fulfilled?
-
-      live_contact_mount_id!(intent.mount_recording_id)
-      user = accepted_user(intent, code, session)
-      return finish(intent, session) unless user
-
-      deliver_verified(intent, user, session)
-    end
-
-    def resend!(intent:, request:, session:)
-      intent.with_lock { refresh_code!(intent, request, session) }
-      intent
-    end
-
     def complete(intent:, actor:)
       intent.with_lock { complete_locked(intent, actor) }
     end
@@ -68,3 +53,4 @@ require_relative "public_contact/inherited"
 require_relative "public_contact/verification"
 require_relative "public_contact/intake"
 require_relative "public_contact/tag_token"
+require_relative "public_contact/return_token"

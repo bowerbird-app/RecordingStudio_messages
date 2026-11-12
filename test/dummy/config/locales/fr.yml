@@ -53,6 +53,8 @@ fr:
         expired_title: Consultez vos e-mails
         expired_body: Ce formulaire a expiré. Envoyez-le à nouveau.
         send_again: Envoyer à nouveau
+        finishing: Envoi de votre note.
+        finish: Envoyer le message
         powered_by: "Propulsé par %{name}"
       composer:
         add_file: Ajouter un fichier
@@ -95,6 +97,8 @@ fr:
         cannot_send: Vous ne pouvez pas envoyer ce message.
         contact_target_missing: Nous n'avons pas pu envoyer ce message. Commencez-en un nouveau.
         taken_email: Cette adresse a déjà un compte. Essayez de vous connecter.
+        confirm_email: Confirmez cet e-mail, puis réessayez.
+        return_denied: Ce lien a expiré. Commencez à nouveau.
         rate_limited: Attendez une minute, puis réessayez.
         users_required: Le contact public a besoin des codes e-mail Recording Studio Users.
         no_recipient: Personne ne peut recevoir ce message.

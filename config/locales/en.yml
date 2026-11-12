@@ -17,6 +17,8 @@ en:
         expired_title: Check your email
         expired_body: That contact form expired. Send it again.
         send_again: Send it again
+        finishing: Sending your note.
+        finish: Send the message
         powered_by: "Powered by %{name}"
       composer:
         add_file: Add a file
@@ -59,6 +61,8 @@ en:
         cannot_send: You cannot send this message.
         contact_target_missing: We couldn't send that message. Start a new one.
         taken_email: That email already has an account. Try signing in.
+        confirm_email: Confirm that email, then try again.
+        return_denied: That link expired. Start again.
         rate_limited: Give it a minute, then try again.
         users_required: Public contact needs Recording Studio Users email codes.
         no_recipient: Nobody can receive this message.

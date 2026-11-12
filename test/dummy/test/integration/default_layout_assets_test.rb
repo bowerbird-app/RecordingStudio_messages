@@ -115,11 +115,11 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     refute_includes application_css, '@import "flat_pack/'
   end
 
-  test "Users gem sign in keeps its layout and loads Flatpack assets" do
+  test "Users gem sign in uses the configured layout and loads Flatpack assets" do
     get new_user_session_path
 
     assert_response :success
-    refute_includes response.body, "data-recording-studio-default-layout"
+    assert_includes response.body, "data-recording-studio-default-layout"
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "h2", text: "Welcome back"
     assert_select "input[type='email'][name='user[email]']"
@@ -140,7 +140,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "link[href*='flat_pack/rich_text']"
     assert_select "link[href*='flat_pack/application']"
     assert_select "form[action='/users/sign_in']"
-    assert_select "main.min-h-dvh.items-center.justify-center", count: 1
+    assert_select "div.flex.min-h-dvh.items-center.justify-center", count: 1
     assert_select "main.max-w-md", count: 0
     assert_includes response.body, "max-w-sm"
     refute_includes response.body, "Default: admin@admin.com / Password"

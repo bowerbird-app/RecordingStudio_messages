@@ -1,0 +1,20 @@
+<% content_for :title, messages_t("contact.sent_title") %>
+<%= render layout: "recording_studio_messages/public_contacts/step" do %>
+  <div class="flex flex-col gap-[var(--stack-gap-lg)]" data-public-contact-step="return">
+    <p><%= messages_t("contact.finishing") %></p>
+    <%= form_with url: public_contact_return_path, method: :post, id: "public-contact-finish" do %>
+      <%= hidden_field_tag RecordingStudioMessages::PublicContact::ReturnToken::PARAM, @contact_token %>
+      <%= render FlatPack::Button::Component.new(
+        text: messages_t("contact.finish"),
+        style: :primary,
+        size: :md,
+        type: "submit",
+        class: "w-full"
+      ) %>
+    <% end %>
+  </div>
+  <%= javascript_tag nonce: true do %>
+    var form = document.getElementById("public-contact-finish")
+    if (form && form.requestSubmit) form.requestSubmit()
+  <% end %>
+<% end %>

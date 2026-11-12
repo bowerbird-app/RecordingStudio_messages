@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-12
+
+Public contact uses Recording Studio Users 0.28.0 for the email code. This gem no longer draws its own code form, resend, or verify step. A person who enters the right code is signed in, including a new address that Users registers.
+
+### Changed
+
+- The full page redirects to Users' code screen. The modal draws `RecordingStudioUser::OtpCodeForm` inside the contact frame.
+- Users does not call back. The return path carries a signed, purpose-scoped token that lasts 15 minutes. `GET /public_contact/return` does not send. `POST /public_contact/return` finishes the contact when the signed-in person is the address on the pending intent. A second post returns the same conversation.
+- `public_contact_sign_in_after_verification` remains and does nothing. A verified code always signs the sender in.
+- A new address needs Users OTP registration. An existing confirmed account needs Users OTP login. An unconfirmed password account is refused with "Confirm that email, then try again."
+- When OTP registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created.
+
+### Removed
+
+- `RecordingStudioMessages::PublicContact.submit_code!` and `resend!`.
+- `GET` and `POST /public_contact/verify`, and `POST /public_contact/resend`.
+
+### Upgrade notes
+
+- Bump to **0.24.0**. No Messages migration. Users stays out of the gemspec. Pin `recording_studio_user`, `~> 0.28.0`, in the host Gemfile.
+- Turn on Users `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`. New-address public contact cannot send a code unless OTP registration is on. Login must be on for an address that already has a confirmed account.
+- `public_contact_sign_in_after_verification` is a deprecated no-op. Leave the setting or delete it. Verified senders are signed in either way. A wrong code still signs nobody in.
+- Signed-out `begin_public_contact` requires `request:`. Signed-in calls can still pass `request: nil`.
+- Stop posting to the old verify and resend routes. Stop calling `submit_code!` and `resend!`.
+- An unconfirmed password address has to confirm through the host's normal confirmation before public contact will accept it. This gem will not confirm that account.
+- The sent screen is unchanged. `public_contact_success_redirect_url` still replaces "View conversation" for every sender. With no redirect, a verified sender now sees "View conversation" because they are signed in.
+
 ## [0.23.0] - 2026-11-11
 
 Hosts can let people start a conversation from a Messages mount and pick who it goes to. The feature stays off until the host declares `contacts:` on `Messages.to`. There is no migration.

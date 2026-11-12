@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.23.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.24.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -70,8 +70,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.3.1", "< 1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.26.3"'
-    assert_includes gemfile, 'gem "recording_studio_user", "~> 0.16"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.28.0"'
+    assert_includes gemfile, 'gem "recording_studio_user", "~> 0.28.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
@@ -98,7 +98,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.21.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.13.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.10.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.26.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.28.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.5.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.11.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.1"'
@@ -413,7 +413,9 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes routes, "recording_studio_user_auth_for :users"
     assert_includes routes, "mount RecordingStudioUser::Engine"
     assert_includes initializer, 'config.user_class_name = "User"'
-    assert_includes initializer, "config.otp_enabled = false"
+    assert_includes initializer, "config.otp_enabled = true"
+    assert_includes initializer, "config.otp_registration_enabled = true"
+    assert_includes initializer, "config.otp_login_enabled = true"
     refute File.exist?(File.expand_path("dummy/app/views/devise/sessions/new.html.erb", __dir__))
   end
 
@@ -592,7 +594,7 @@ class RecordingStudioMessagesTest < Minitest::Test
       File.expand_path("../app/views/recording_studio_messages/public_contacts/_form.html.erb", __dir__)
     )
     verify = File.read(
-      File.expand_path("../app/views/recording_studio_messages/public_contacts/verify.html.erb", __dir__)
+      File.expand_path("../app/views/recording_studio_messages/public_contacts/code.html.erb", __dir__)
     )
     sent = File.read(
       File.expand_path("../app/views/recording_studio_messages/public_contacts/sent.html.erb", __dir__)
@@ -609,8 +611,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes modal, "flatPackModalLockCount"
     refute_includes modal, "document.body.style.overflow"
     assert_includes form, "FlatPack::Heading::Component.new(text: title, level: 1, size: :xl)"
-    assert_includes verify, "level: 1"
-    assert_includes verify, "size: :xl"
+    assert_includes verify, "RecordingStudioUser::OtpCodeForm"
+    assert_includes verify, "data-public-contact-step=\"verify\""
     refute_includes form, 'h1 class="text-xl font-semibold"'
     refute_includes verify, 'h1 class="text-xl font-semibold"'
     assert_includes sent, 'size: :"3xl"'
