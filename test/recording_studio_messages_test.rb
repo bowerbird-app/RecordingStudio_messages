@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.24.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.25.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -82,6 +82,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.3.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.21.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v4.1.1"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
     assert_equal ">= 0.1.349", gemfile_constraint(gemfile, "flat_pack")
     assert_equal "~> 0.24", gemfile_constraint(gemfile, "recording_studio_accessible")
@@ -107,6 +109,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.6.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.21.3"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v4.1.1"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
     assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.349"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
@@ -468,6 +472,11 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"RecordingStudioSiteSettings::SiteSetting"'
     assert_includes initializer_source, '"RecordingStudioTermsAndConditions::Terms"'
     assert_includes initializer_source, '"RecordingStudioPublishable::Publishable"'
+    assert_includes initializer_source, '"RecordingStudio::Access"'
+    assert_includes initializer_source, '"RecordingStudioApi::ApiClient"'
+    assert_includes initializer_source, '"RecordingStudioApi::ApiCredential"'
+    assert_includes initializer_source, '"RecordingStudioApi::ApiAccessToken"'
+    assert_includes initializer_source, '"RecordingStudioApi::AdminApi"'
   end
 
   def test_dummy_readme_explains_dummy_app_purpose
@@ -495,6 +504,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "access: :inherited"
     assert_includes readme, "contacts:"
     assert_includes readme, "allow_membership_change"
+    assert_includes readme, "recording_studio_api/api/v1/message_groups"
+    assert_includes readme, "RecordingStudioMessages.send_message"
     refute_includes readme, "show_access"
     refute_includes readme, "flatpack-c6p8f.ondigitalocean.app"
     refute_includes readme, "v3.0.0"

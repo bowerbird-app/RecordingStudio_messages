@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "engine_frontend"
+require_relative "api"
 
 module RecordingStudioMessages
   class Engine < ::Rails::Engine
@@ -109,6 +110,7 @@ module RecordingStudioMessages
 
       config.to_prepare do
         RecordingStudioMessages::MembershipLock.install_authorizer_wrap!
+        Api.register!
       end
     end
 
