@@ -13,7 +13,7 @@ Send, list, read, and create on Recording Studio API, plus rename, mark read, an
 
 ### Added
 
-- Scoped message endpoints on Recording Studio API (`messages_send_message`, `messages_read_thread`, `messages_rename_group`, `messages_mark_read`, `messages_create_group`, `messages_list_conversations`, `messages_unread_count`). `:messages` is not enabled on MessageGroup or MessageMount. A colliding type or endpoint name raises.
+- Scoped message endpoints on Recording Studio API (`messages_send_message`, `messages_read_thread`, `messages_rename_group`, `messages_mark_read`, `messages_create_group`, `messages_list_conversations`, `messages_unread_count`). `:messages` is not enabled on MessageGroup or MessageMount. A colliding type or endpoint name raises. `list_conversations` uses the HTML inbox page size (`MessageGroupsController::PAGE_SIZE`, 50), clamps a larger `limit`, and returns `after_id` only when the page is full. Type APIs register with `capability_actions: []`. Handlers map `RecordingStudioMessages::Error` and service `ArgumentError` input failures to 422.
 - Dummy mounts Recording Studio API `v0.21.3` so hosts and MCP adapters can use the same Accessible-gated surface.
 
 ### Upgrade notes

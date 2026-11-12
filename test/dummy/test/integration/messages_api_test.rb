@@ -51,17 +51,33 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   test "list_conversations pages after_id without overlap" do
-    extra = Array.new(3) do |index|
+    page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
+    extra = Array.new(page_size) do |index|
       group = RecordingStudioMessages.create_group(@mount, title: "Page #{index} #{SecureRandom.hex(2)}", actor: @owner)
       RecordingStudioMessages.send_message(
         group_recording: group, body: "Line #{index}", actor: @owner, notify: false
       )
       group
     end
+
+    default_page = call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
+    assert_response :success, response.body
+    default_ids = default_page.fetch("records").map { |row| row.fetch("id") }
+    assert_equal page_size, default_ids.size
+    assert_equal default_ids.last, default_page.fetch("after_id")
+
+    clamped = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: page_size + 25)
+    assert_response :success, response.body
+    clamped_ids = clamped.fetch("records").map { |row| row.fetch("id") }
+    assert_equal page_size, clamped_ids.size
+    assert_equal default_ids, clamped_ids
+    assert_equal default_ids.last, clamped.fetch("after_id")
+
     page_one = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: 2)
     assert_response :success, response.body
     first_ids = page_one.fetch("records").map { |row| row.fetch("id") }
     assert_equal 2, first_ids.size
+    assert_nil page_one.fetch("after_id")
 
     page_two = call(
       :get,
@@ -75,6 +91,19 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     refute_empty second_ids
     assert_empty first_ids & second_ids
     assert_includes(extra.map(&:id) + [ @group.id ], first_ids.first)
+    assert_nil page_two.fetch("after_id")
+
+    remainder = call(
+      :get,
+      "/desks/#{@mount.id}/conversations",
+      @editor_token,
+      after_id: default_ids.last
+    )
+    assert_response :success, response.body
+    leftover_ids = remainder.fetch("records").map { |row| row.fetch("id") }
+    assert_operator leftover_ids.size, :<, page_size
+    assert_empty default_ids & leftover_ids
+    assert_nil remainder.fetch("after_id")
   end
 
   test "read_thread goes through message_recordings" do
@@ -207,9 +236,8 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal %i[show], group.operations
     assert_equal %i[show], mount.operations
     assert_equal false, group.auto_capability_actions
-    assert_equal %w[messages_mark_read messages_read_thread messages_rename_group messages_send_message],
-                 group.capability_actions
-    assert_equal %w[messages_create_group], mount.capability_actions
+    assert_equal [], group.capability_actions
+    assert_equal [], mount.capability_actions
     refute RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
 
     refute RecordingStudioApi.capability_action(:messages_send_message)
@@ -221,6 +249,11 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "Group - Create", create_group.openapi.fetch(:title)
     assert RecordingStudioApi.registered_endpoint(:messages_list_conversations)
     assert RecordingStudioApi.registered_endpoint(:messages_unread_count)
+
+    assert_equal RecordingStudioMessages::Api::Registration.serialize_group(@group.recordable),
+                 RecordingStudioMessages::Api::Target.recordable_fields(@group)
+    assert_equal RecordingStudioMessages::Api::Registration.serialize_mount(@mount.recordable),
+                 RecordingStudioMessages::Api::Target.recordable_fields(@mount)
   end
 
   private

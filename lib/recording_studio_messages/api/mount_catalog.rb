@@ -23,7 +23,7 @@ module RecordingStudioMessages
           },
           limit: {
             type: :integer, required: false,
-            description: "Maximum number of conversations to return."
+            description: "Page size. Defaults to the HTML inbox size and never returns more."
           },
           tags: {
             type: :hash, required: false,

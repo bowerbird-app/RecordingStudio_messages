@@ -43,17 +43,24 @@ module RecordingStudioMessages
         def list
           mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
           Target.authorize!(@context, mount, :view)
-          { records: groups(mount).map { |group| Target.serialize(group) } }
+          page = groups(mount)
+          page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
+          {
+            records: page.map { |group| Target.serialize(group) },
+            after_id: (page.last.id if page.length >= page_size)
+          }
         end
 
         def groups(mount)
+          page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
+          requested = @context.params[:limit].presence
           RecordingStudioMessages.viewable_group_recordings(
             actor: @context.access_grant.actor,
             mount_recording: mount,
             tags: @context.params[:tags],
             unread: unread?,
             after: after_recording(mount),
-            limit: @context.params[:limit]
+            limit: requested ? [requested.to_i, page_size].min : page_size
           )
         end
 
