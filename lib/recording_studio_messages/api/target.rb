@@ -20,13 +20,6 @@ module RecordingStudioMessages
         found
       end
 
-      def hash_tags(context)
-        tags = context.params[:tags]
-        return tags if tags.nil? || tags.is_a?(Hash)
-
-        raise ::RecordingStudioApi::InvalidActionInputError, "tags must be a Hash"
-      end
-
       def serialize(recording)
         base_payload(recording).merge(recordable_fields(recording))
       end

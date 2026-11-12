@@ -237,12 +237,6 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
 
     call(:get, "/desks/#{@mount.id}/conversations", @editor_token, after_id: @other_group.id)
     assert_response :unprocessable_entity, response.body
-
-    call(:get, "/desks/#{@mount.id}/conversations", @editor_token, tags: "press_center")
-    assert_response :unprocessable_entity, response.body
-
-    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "Tagged", tags: "press_center")
-    assert_response :unprocessable_entity, response.body
   end
 
   test "messages api registration matches html roles and skips generic message create" do

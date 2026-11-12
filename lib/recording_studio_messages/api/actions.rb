@@ -59,7 +59,6 @@ module RecordingStudioMessages
           RecordingStudioMessages.viewable_group_recordings(
             actor: @context.access_grant.actor,
             mount_recording: mount,
-            tags: Target.hash_tags(@context),
             unread: unread?,
             after: after_recording(mount),
             limit: requested.nil? || requested == "" ? page_size : requested.to_i.clamp(1, page_size)
@@ -125,7 +124,6 @@ module RecordingStudioMessages
           {
             actor: @context.access_grant.actor,
             title: @context.params[:title],
-            tags: Target.hash_tags(@context),
             recipients: @context.params[:recipients],
             body: @context.params[:body]
           }
