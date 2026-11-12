@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-11-12
+
+Public contact follows Recording Studio Users 0.28.1. The modal finish POST uses the fresh CSRF token, a new address must tick live signup terms, and the return token is url-safe.
+
+### Changed
+
+- After an inline verify, the modal copies `csrf_token` from `recording_studio_user:signed_in` onto the finish POST. A token from before session rotation does not send the message. The code box is asked for an HTML response so Turbo swaps the frame and that script can run.
+- A new address sees the Users terms checkbox in the modal when live signup terms are pending. Unticked, the code does not finish the account, sign the person in, or send the message. Ticked, Users records acceptance with source `checkbox` and the message sends. An existing account does not see the checkbox.
+- The return token is url-safe. It still names one pending intent, lasts 15 minutes, and a second POST returns the same conversation.
+- The modal code box heading is "Verify it's you". The dialog title stays hidden on that step.
+
+### Upgrade notes
+
+- Bump to **0.24.1**. No Messages migration. Users stays out of the gemspec. Pin `recording_studio_user`, `~> 0.28.1`, tag `v0.28.1`. No Users migration.
+- Hosts that embed `public_contact_modal` get the checkbox and the refreshed token from this gem. The full page still uses Users' code screen.
+- A return token issued before this bump will not finish. Those tokens expire within 15 minutes.
+
 ## [0.24.0] - 2026-11-12
 
 Public contact uses Recording Studio Users 0.28.0 for the email code. This gem no longer draws its own code form, resend, or verify step. A person who enters the right code is signed in, including a new address that Users registers.

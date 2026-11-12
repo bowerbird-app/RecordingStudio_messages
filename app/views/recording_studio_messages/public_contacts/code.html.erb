@@ -2,7 +2,8 @@
 <%= render layout: "recording_studio_messages/public_contacts/step" do %>
   <div data-public-contact-step="verify">
     <%= render RecordingStudioUser::OtpCodeForm.new(
-      masked_email: RecordingStudioUser::OtpCodeForm.mask(@intent.email).to_s
+      masked_email: RecordingStudioUser::OtpCodeForm.mask(@intent.email).to_s,
+      title: messages_t("contact.verify_title")
     ) %>
     <%= form_with url: public_contact_return_path,
                   method: :post,
@@ -16,12 +17,45 @@
   <%= javascript_tag nonce: true do %>
     if (!document.documentElement.dataset.recordingStudioMessagesContactReturn) {
       document.documentElement.dataset.recordingStudioMessagesContactReturn = "true"
+      document.addEventListener("turbo:before-fetch-request", function (event) {
+        var target = event.target
+        if (!target || !target.closest || !target.closest("#public_contact")) return
+
+        var url = event.detail && event.detail.url
+        var path = url && url.pathname
+        if (!path || (path.indexOf("/otp/challenge") === -1 && path.indexOf("/otp/resend") === -1)) return
+
+        var headers = event.detail.fetchOptions && event.detail.fetchOptions.headers
+        if (!headers) return
+        if (typeof headers.set === "function") headers.set("Accept", "text/html, application/xhtml+xml")
+        else headers.Accept = "text/html, application/xhtml+xml"
+      })
       document.addEventListener("recording_studio_user:signed_in", function (event) {
-        var destination = event.detail && event.detail.return_to
+        var detail = event.detail || {}
+        var destination = detail.return_to
         if (!destination || destination.indexOf("/public_contact/return") === -1) return
 
         var form = document.getElementById("public-contact-return")
         if (!form) return
+
+        if (detail.csrf_token) {
+          var name = detail.csrf_param || "authenticity_token"
+          var input = null
+          var fields = form.elements
+          for (var i = 0; i < fields.length; i++) {
+            if (fields[i].name === name) {
+              input = fields[i]
+              break
+            }
+          }
+          if (!input) {
+            input = document.createElement("input")
+            input.type = "hidden"
+            input.name = name
+            form.appendChild(input)
+          }
+          input.value = detail.csrf_token
+        }
 
         if (form.requestSubmit) form.requestSubmit()
         else form.submit()
