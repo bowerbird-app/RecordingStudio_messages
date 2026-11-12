@@ -578,6 +578,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "turbo-frame#public_contact h1", count: 0
     assert_select "[data-public-contact-step=verify]"
+    assert_select "h2", text: "Verify it's you"
+    assert_select "input[name=accept_terms]", count: 0
     assert_select "turbo-frame##{RecordingStudioUser::OtpCodeForm::FRAME_ID}"
     assert_select "button", text: "Continue"
     assert_select "button", text: "Resend code"
@@ -1325,11 +1327,149 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudioUser.config.otp_registration_enabled = true
   end
 
-  test "a return token fulfills once and a second post returns the same conversation" do
+  test "modal verify fulfils with the rotated csrf token and a second post stays one conversation" do
+    with_forgery_protection do
+      get contact_path
+      param, old_token = csrf_meta
+      email = "rotate@example.com"
+
+      post contact_path,
+           params: modal_message(email: email).merge(param => old_token),
+           headers: modal_headers
+      assert_redirected_to contact_path(presentation: "modal")
+      get response.location, headers: modal_headers
+      assert_response :success
+
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      post otp_challenge_path,
+           params: { code: otp_code_for(intent), param => old_token },
+           headers: inline_otp_headers
+      assert_response :success
+      fresh = signed_in_csrf(response.body)
+      token = return_token_from(response.body)
+      refute_equal old_token, fresh.fetch("csrf_token")
+
+      post recording_studio_messages.public_contact_return_path,
+           params: { contact_token: token, presentation: "modal", param => old_token },
+           headers: modal_headers
+      assert_response :unprocessable_entity
+      assert_equal 0, RecordingStudioMessages::Message.count
+      assert intent.reload.open?
+
+      post recording_studio_messages.public_contact_return_path,
+           params: { contact_token: token, presentation: "modal", fresh.fetch("csrf_param") => fresh.fetch("csrf_token") },
+           headers: modal_headers
+      assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+      group_id = intent.reload.message_group_id
+
+      post recording_studio_messages.public_contact_return_path,
+           params: { contact_token: token, presentation: "modal", fresh.fetch("csrf_param") => fresh.fetch("csrf_token") },
+           headers: modal_headers
+      assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+      assert_equal group_id, intent.reload.message_group_id
+      assert_equal 1, RecordingStudioMessages::Message.where(body: "Please send the quieter crop.").count
+      assert User.find_by!(email: email).confirmed?
+    end
+  end
+
+  test "an unticked terms box does not finish a new address or send the message" do
+    publish_signup_terms!
+    email = "terms-off@example.com"
+    post contact_path, params: modal_message(email: email), headers: modal_headers
+    assert_redirected_to contact_path(presentation: "modal")
+    get response.location, headers: modal_headers
+
+    assert_select "input[type=checkbox][name=accept_terms][value=1]"
+    assert_select "h2", text: "Verify it's you"
+    user = User.find_by!(email: email)
+    refute user.confirmed?
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+
+    assert_no_difference -> { RecordingStudioTermsAndConditions::Acceptance.count } do
+      post otp_challenge_path,
+           params: { code: otp_code_for(intent) },
+           headers: inline_otp_headers
+    end
+
+    assert_response :unprocessable_entity
+    refute user.reload.confirmed?
+    assert_nil session["warden.user.user.key"]
+    assert_equal 0, RecordingStudioMessages::Message.count
+    assert intent.reload.open?
+    assert_equal 1, User.where(email: email).count
+  end
+
+  test "a ticked terms box records acceptance, sends once, and a second post stays one conversation" do
+    publish_signup_terms!
+    email = "terms-on@example.com"
+    post contact_path, params: modal_message(email: email), headers: modal_headers
+    get response.location, headers: modal_headers
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    user = User.find_by!(email: email)
+    code = otp_code_for(intent)
+
+    post otp_challenge_path, params: { code: code }, headers: inline_otp_headers
+    assert_response :unprocessable_entity
+    refute user.reload.confirmed?
+
+    post otp_challenge_path,
+         params: { code: code, accept_terms: "1" },
+         headers: inline_otp_headers
+    assert_response :success
+    assert user.reload.confirmed?
+    receipt = RecordingStudioTermsAndConditions::Acceptance.order(:created_at).last
+    assert_equal user.id, receipt.actor_id
+    assert_equal({ "source" => "checkbox" }, receipt.provenance)
+    token = return_token_from(response.body)
+
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: token, presentation: "modal" },
+         headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+    group_id = intent.reload.message_group_id
+
+    post recording_studio_messages.public_contact_return_path,
+         params: { contact_token: token, presentation: "modal" },
+         headers: modal_headers
+    assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+    assert_equal group_id, intent.reload.message_group_id
+    assert_equal 1, RecordingStudioMessages::Message.where(body: "Please send the quieter crop.").count
+  end
+
+  test "an existing account has no terms box and can send without ticking" do
+    publish_signup_terms!
+    existing = User.create!(
+      email: "casey.terms@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Casey Patron",
+      confirmed_at: Time.current
+    )
+    post contact_path, params: modal_message(email: existing.email), headers: modal_headers
+    get response.location, headers: modal_headers
+
+    assert_select "input[name=accept_terms]", count: 0
+    assert_select "h2", text: "Verify it's you"
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    assert_equal "login", otp_purpose_for(intent)
+    accept_live_terms!(existing)
+
+    deliver_modal_code!(intent)
+    assert_redirected_to recording_studio_messages.public_contact_sent_path(presentation: "modal")
+    assert_equal 1, RecordingStudioMessages::Message.count
+    receipts = RecordingStudioTermsAndConditions::Acceptance.where(actor_id: existing.id)
+    assert_equal [ "continue_notice" ], receipts.map { |receipt| receipt.provenance["source"] }
+  end
+
+  test "a url-safe return token fulfills once and a second post returns the same conversation" do
     post contact_path, params: { name: "Ada Lovelace", email: "replay@example.com", body: "Once." }
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     post otp_challenge_path, params: { code: otp_code_for(intent) }
     token = return_token_from(response.location)
+    assert_match(/\A[A-Za-z0-9_-]+\z/, token)
+    path = request_path(response.location)
+    assert_equal path, RecordingStudioUser::ReturnTo.accept(path)
+    assert_includes path, "contact_token=#{token}"
     follow_redirect!
     assert_equal 0, RecordingStudioMessages::Message.count
 
@@ -1435,6 +1575,49 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   def return_token_from(source)
     token = CGI.unescapeHTML(source.to_s)[/contact_token=([^"&\s<]+)/, 1]
     token && CGI.unescape(token)
+  end
+
+  def request_path(location)
+    uri = URI.parse(location.to_s)
+    uri.query.present? ? "#{uri.path}?#{uri.query}" : uri.path
+  end
+
+  def csrf_meta
+    param = css_select('meta[name="csrf-param"]').first["content"]
+    token = css_select('meta[name="csrf-token"]').first["content"]
+    [ param, token ]
+  end
+
+  def signed_in_csrf(body)
+    encoded = body.to_s[/var detail = (\{.*?\});/m, 1]
+    assert encoded, "signed-in event missing"
+    JSON.parse(encoded)
+  end
+
+  def with_forgery_protection
+    original = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    yield
+  ensure
+    ActionController::Base.allow_forgery_protection = original
+  end
+
+  def accept_live_terms!(user)
+    root = RecordingStudioTermsAndConditions::Gate.first_root_with_live_terms
+    RecordingStudioTermsAndConditions.pending_published_list(user, root).each do |terms|
+      RecordingStudioTermsAndConditions.accept!(user, terms, { "source" => "continue_notice" })
+    end
+  end
+
+  def publish_signup_terms!
+    recording = @root.record(RecordingStudioTermsAndConditions::Terms) do |terms|
+      terms.title = "Signup Terms"
+      terms.body = "Be kind on the way in."
+    end
+    RecordingStudioPublishable::Services::Publishables::Update.call(
+      parent_recording: recording,
+      attributes: { slug: "contact-terms-#{SecureRandom.hex(4)}", status: "published" }
+    ).value!
   end
 
   def contact_request

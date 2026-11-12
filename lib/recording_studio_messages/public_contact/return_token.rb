@@ -29,7 +29,11 @@ module RecordingStudioMessages
       end
 
       def verifier
-        Rails.application.message_verifier(PURPOSE)
+        ActiveSupport::MessageVerifier.new(
+          Rails.application.key_generator.generate_key(PURPOSE),
+          serializer: JSON,
+          url_safe: true
+        )
       end
     end
   end
