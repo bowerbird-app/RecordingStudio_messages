@@ -6,7 +6,7 @@ require "devise/test/integration_helpers"
 class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
-  test "sign in page uses the Users gem layout and is not squished by the default layout" do
+  test "sign in page uses the configured layout and keeps the centered card" do
     get new_user_session_path
 
     assert_response :success
@@ -17,9 +17,9 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat_pack/rich_text"
     assert_select "link[href*='flat_pack/application']"
     assert_includes response.body, "@hotwired/turbo-rails"
-    assert_select "main.min-h-dvh.items-center.justify-center", count: 1
+    assert_includes response.body, "data-recording-studio-default-layout"
+    assert_select "div.flex.min-h-dvh.items-center.justify-center", count: 1
     assert_select "main.max-w-md", count: 0
-    refute_includes response.body, "data-recording-studio-default-layout"
     refute_includes response.body, "mt-28"
     refute_includes response.body, "fixed inset-0"
     refute_includes response.body, "Default: admin@admin.com / Password"

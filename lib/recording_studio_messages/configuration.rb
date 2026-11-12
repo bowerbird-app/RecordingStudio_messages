@@ -72,6 +72,7 @@ module RecordingStudioMessages
       @admin_notification_root = @layout = nil
       @public_contact_recipient_resolver = nil
       @public_contact_sent_icon = "rocket-launch"
+      # Deprecated no-op. A verified public contact code always signs the visitor in.
       @public_contact_sign_in_after_verification = false
       @public_contact_success_redirect_url = @public_contact_success_redirect_label = nil
       @read_receipts = false

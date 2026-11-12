@@ -1,0 +1,31 @@
+<% content_for :title, messages_t("contact.verify_title") %>
+<%= render layout: "recording_studio_messages/public_contacts/step" do %>
+  <div data-public-contact-step="verify">
+    <%= render RecordingStudioUser::OtpCodeForm.new(
+      masked_email: RecordingStudioUser::OtpCodeForm.mask(@intent.email).to_s
+    ) %>
+    <%= form_with url: public_contact_return_path,
+                  method: :post,
+                  id: "public-contact-return",
+                  html: { hidden: true },
+                  data: { turbo_frame: public_contact_frame_id } do %>
+      <%= hidden_field_tag RecordingStudioMessages::PublicContact::ReturnToken::PARAM, @contact_token %>
+      <%= public_contact_modal_fields %>
+    <% end %>
+  </div>
+  <%= javascript_tag nonce: true do %>
+    if (!document.documentElement.dataset.recordingStudioMessagesContactReturn) {
+      document.documentElement.dataset.recordingStudioMessagesContactReturn = "true"
+      document.addEventListener("recording_studio_user:signed_in", function (event) {
+        var destination = event.detail && event.detail.return_to
+        if (!destination || destination.indexOf("/public_contact/return") === -1) return
+
+        var form = document.getElementById("public-contact-return")
+        if (!form) return
+
+        if (form.requestSubmit) form.requestSubmit()
+        else form.submit()
+      })
+    }
+  <% end %>
+<% end %>

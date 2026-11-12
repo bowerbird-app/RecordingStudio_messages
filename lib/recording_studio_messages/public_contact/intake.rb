@@ -6,13 +6,39 @@ module RecordingStudioMessages
       private
 
       def settle_identity!(actor, intent)
+        prove_email!(actor, intent)
+        apply_submitted_name!(actor, intent)
+      end
+
+      def prove_email!(actor, intent)
         RecordingStudioUser.complete_email_proof!(
           user: actor,
           challenge_id: intent.otp_challenge_id,
           profile_attributes: profile_attributes_for(intent)
         )
       rescue ArgumentError
-        raise Error, Copy.t("errors.confirm_code")
+        raise Error, Copy.t("errors.confirm_code") unless actor.reload.confirmed?
+      end
+
+      def apply_submitted_name!(actor, intent)
+        return unless actor.respond_to?(:registered_with_otp?) && actor.registered_with_otp?
+
+        profile = RecordingStudioUser.profile_for(actor)
+        return if profile.present? && !placeholder_profile?(actor, profile)
+
+        RecordingStudioUser.record_profile!(
+          actor,
+          actor: actor,
+          **profile_attributes_for(intent),
+          time_zone: nil
+        )
+      end
+
+      def placeholder_profile?(actor, profile)
+        defaults = RecordingStudioUser::Profile.default_attributes_for(actor)
+        profile.first_name.to_s == defaults[:first_name].to_s &&
+          profile.last_name.to_s == defaults[:last_name].to_s &&
+          profile.time_zone.to_s == defaults[:time_zone].to_s
       end
 
       def profile_attributes_for(intent)

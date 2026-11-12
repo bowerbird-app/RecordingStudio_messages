@@ -109,6 +109,17 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.24.0
+
+Messages `0.24.0` sends public contact codes through Recording Studio Users `0.28.0`. This gem no longer draws the code form.
+
+1. Install Messages `0.24.0`. There is no Messages migration. Users stays out of the gemspec. Pin `recording_studio_user`, `~> 0.28.0`.
+2. Turn on Users `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`. A new address cannot get a code unless OTP registration is on. An existing confirmed account cannot get a code unless OTP login is on. When registration is off, the visitor sees "Public contact needs Recording Studio Users email codes." and no account is created.
+3. `public_contact_sign_in_after_verification` is a deprecated no-op. A verified code always signs the person in. A wrong code signs nobody in. Leave the setting or delete it.
+4. Signed-out `begin_public_contact` requires `request:`. Stop calling `submit_code!` and `resend!`. Stop posting to `/public_contact/verify` and `/public_contact/resend`.
+5. An unconfirmed password address has to confirm through the host's normal confirmation first. Public contact will not confirm that account.
+6. `public_contact_success_redirect_url` still replaces the sent-screen button. With no redirect, a verified sender sees "View conversation" because they are signed in.
+
 ### Upgrading to 0.23.0
 
 Messages `0.23.0` adds an optional New message flow on a mount. Existing desks stay unchanged until you declare `contacts:`.
@@ -567,9 +578,9 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A successful post redirects to `public_contact_sent_path`. That screen centers the copy, with a hero icon above a larger "Message sent" and "Powered by" the site name. The page loads Flatpack's application stylesheet so primary buttons use the theme colors. The site name comes from Site Settings on that root when the host has it, otherwise the root's name. One primary button leaves the dialog. By default a signed-in sender sees "View conversation" to the new conversation. `public_contact_success_redirect_url` sends that same button to another URL for every sender. In the dialog, the Contact title is hidden on this step. The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to an image path or URL. A value that ends in a common image extension (png, jpg, jpeg, gif, webp, svg, avif, ico), starts with `/`, `http://`, or `https://`, or is any other asset path, renders an `<img>` in that same slot at the heroicon's size. `nil` hides the slot. Refreshing that page does not send again.
+The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.id)`. `GET /public_contact` renders the form. A signed-out visitor sees name, email, and message. A signed-in person sees a badge with their name and the message field. The email stays off that screen. Posting a different email does not change who sends. A signed-in post redirects to `public_contact_sent_path`. A signed-out post on the full page redirects to Recording Studio Users' code screen. That sent screen centers the copy, with a hero icon above a larger "Message sent" and "Powered by" the site name. The page loads Flatpack's application stylesheet so primary buttons use the theme colors. The site name comes from Site Settings on that root when the host has it, otherwise the root's name. One primary button leaves the dialog. By default a signed-in sender sees "View conversation" to the new conversation. A verified code signs the sender in, so they see that button too. `public_contact_success_redirect_url` sends that same button to another URL for every sender. In the dialog, the Contact title is hidden on the sent step. The icon defaults to `rocket-launch`. Set `public_contact_sent_icon` to another heroicon name, or to an image path or URL. A value that ends in a common image extension (png, jpg, jpeg, gif, webp, svg, avif, ico), starts with `/`, `http://`, or `https://`, or is any other asset path, renders an `<img>` in that same slot at the heroicon's size. `nil` hides the slot. Refreshing that page does not send again.
 
-`public_contact_form` renders that same form on a host page. The post still leaves for the full-page code step or the sent screen.
+`public_contact_form` renders that same form on a host page. A signed-out post still leaves for Users' code screen. A signed-in post still leaves for the sent screen.
 
 ```erb
 <%= public_contact_form(mount) %>
@@ -577,7 +588,7 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 <%= public_contact_form(mount, tags: { "press_center" => press_center }) %>
 ```
 
-`public_contact_modal` keeps every step in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose, the code step, resend, a wrong code, and "Message sent" replace that frame. On the code step the heading is "Verify it's you", the button is "Next", "Resend code" is a link, and the Contact title is hidden. A notice or error in the dialog has space under it. On "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows that step while the code is still open. After "Message sent", opening it again starts a new note. An expired code stays in the dialog with "Send it again".
+`public_contact_modal` keeps the contact steps in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose and "Message sent" replace that frame. The code step draws `RecordingStudioUser::OtpCodeForm` in the same frame. That box shows the masked email, a code field, Continue, and Resend. Resend and a wrong code stay inside Users' frame. A right code signs the person in and this gem posts back into `public_contact` to finish. On the code step and on "Message sent" the Contact title is hidden. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows the code box while the pending note is still open, and does not send a second code. After "Message sent", opening it again starts a new note. An expired pending note stays in the dialog with "Send it again".
 
 ```erb
 <%= public_contact_modal(mount) %>
@@ -593,11 +604,15 @@ Include `RecordingStudioMessages::PublicContactHelper` on the host controller th
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 
-Signed-out contact needs Recording Studio Users with `otp_enabled`. Users is not a dependency of this gem. The host mounts Users, turns OTP on, and registers the notification channels those codes use. Registration defaults to email. Login defaults to email and push.
+Signed-out contact needs Recording Studio Users 0.28.0. Users is not a dependency of this gem. Pin `recording_studio_user`, `~> 0.28.0`, in the host Gemfile. Mount Users, turn on `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`, and register the notification channels those codes use. New-address public contact sends a code only when OTP registration is on. An existing confirmed account sends a code only when OTP login is on. When registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created and nothing crashes.
 
-A signed-out send proves the typed address before anything is delivered. A new email gets a registration code and a new user. An existing unconfirmed user, whether that account was created with a password or with a code, is reused and gets a registration code. An existing confirmed user who can sign in gets a login code. This gem does not create a second user for an address that already exists. The address on the pending row is not trusted until `verify_otp!` succeeds.
+A signed-out send collects the address here, then Users sends the code. A new email is an OTP registration. Users creates the account when the code verifies, and the person is signed in. An existing unconfirmed OTP account is reused and gets a registration code. An existing confirmed account that can sign in gets a login code, then the person is signed in. An unconfirmed password account is refused with "Confirm that email, then try again." This gem does not confirm that account and does not send a code. This gem does not create a second user for an address that already exists.
 
-Users confirms the account through `complete_email_proof!`. That call stores the submitted name when the person has no profile yet. "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a surname or a time zone, and it does not revise a profile that already exists. `registered_with` stays the way the account was created, so a password still signs in after the code confirms the email.
+Signed-out `begin_public_contact` requires `request:`. Users stores the code on that request's session.
+
+Users does not call this gem back. Messages puts a signed token on the return path. The purpose is `recording_studio_messages.public_contact_return`. It lasts 15 minutes and names the pending intent. `GET /public_contact/return` shows a finish form and does not send. `POST /public_contact/return` sends when the signed-in person is that intent's address. An expired token, a tampered token, a signed-out visit, or a different signed-in person is refused. A second post returns the same conversation.
+
+The submitted name is stored for an OTP registration whose profile is still blank or still the Users placeholder (the email local-part, "Member", and UTC). "Ada Lovelace" is stored as Ada and Lovelace. "Madonna" is stored as Madonna with no surname. Messages does not invent a time zone, and it does not revise a password account's profile. `registered_with` stays the way the account was created.
 
 ```ruby
 outcome = RecordingStudioMessages.begin_public_contact(
@@ -619,11 +634,11 @@ end
 group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: verified_user)
 ```
 
-`complete_public_contact` is the host call after the code has been verified. Calling it again returns the same conversation and does not send a second message. The code form calls `RecordingStudioMessages::PublicContact.submit_code!` and `resend!` itself. Those two methods are not on the host facade.
+`complete_public_contact` is the host call after `verify_otp!` has consumed the code. Calling it again returns the same conversation and does not send a second message. The public pages do not call `submit_code!` or `resend!`. Those methods are gone. Resend is the button on the Users code screen.
 
-`begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation. If a tagged recording or the contact mount is missing or trashed when complete or verify runs, the gem reloads that row from the database and raises `RecordingStudioMessages::Error`. The check happens before identity confirmation. The intent stays open. No conversation is written. The visitor message is "We couldn't send that message. Start a new one."
+`begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation.
 
-`create_group` and `tag` do the same live reload. An unsaved recording raises `ArgumentError` with `tagged recording must be saved`. A missing or trashed recording raises `ArgumentError` with `tagged recording is missing`. Old tag rows stay. `tagged_group_recordings` still matches those rows by id.
+On `complete_public_contact`, a missing or trashed tagged recording or contact mount is reloaded from the database and raises `RecordingStudioMessages::Error` before the profile is written. The intent stays open. No conversation is written. The visitor message is "We couldn't send that message. Start a new one." The public return does that same check. Users has already confirmed the code by then, so the account can be confirmed even though the message was refused. `create_group` and `tag` do the same live reload. An unsaved recording raises `ArgumentError` with `tagged recording must be saved`. A missing or trashed recording raises `ArgumentError` with `tagged recording is missing`. Old tag rows stay. `tagged_group_recordings` still matches those rows by id.
 
 The engine contact form has no visible tag field. Pass `tags:` to `public_contact_form` or `public_contact_modal` when the popup should carry them. Call `begin_public_contact` from the host when you already have the hash in Ruby.
 
@@ -659,14 +674,7 @@ end
 
 ### After the message is sent
 
-`public_contact_sign_in_after_verification` (default `false`). When `true`, a
-signed-out visitor who enters the right email code is signed in through the
-host's Devise (`sign_in(scope, user)` with the scope Devise maps for that user;
-plain Warden `set_user(user, scope: :user)` when Devise helpers are absent).
-That covers both a brand-new OTP registration and an existing account that
-verified with a login code. A wrong or expired code never signs anyone in, and
-someone already signed in is left alone. Off, the visitor stays signed out
-after sending.
+`public_contact_sign_in_after_verification` (default `false`) is a deprecated no-op. A right code always signs the visitor in, whether the flag is true or false. That covers a new OTP registration and an existing account that verified with a login code. A wrong or expired code never signs anyone in. Someone already signed in is left on that account. Hosts can leave the setting or delete it.
 
 The "Message sent" step, on the full page and in the dialog, shows one primary
 button. It leaves the dialog (`turbo_frame: "_top"`).
@@ -686,7 +694,6 @@ for the translated "View conversation" (`contact.view_conversation`).
 
 ```ruby
 RecordingStudioMessages.configure do |config|
-  config.public_contact_sign_in_after_verification = true
   config.public_contact_success_redirect_url = lambda { |mount_recording:, group_recording:, user:, request:|
     Rails.application.routes.url_helpers.inbox_path
   }
@@ -699,9 +706,9 @@ On a `:members` mount, if nobody in that list is already an admin on the mount p
 ```text
 form
 └── pending intent, body stored for 24 hours
-    └── email code
-        └── verify_otp!
-            └── confirmed user, profile written from the submitted name when none exists
+    └── Users email code
+        └── signed-in person matches the pending address
+            └── POST /public_contact/return
                 └── create_group (`:members` uses the admin recipient; `:inherited` uses the sender)
                     └── `:members` grants opener, sender, and other recipients; `:inherited` grants only the sender `:edit`
                         └── send_message
@@ -803,7 +810,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users stays on `v0.26.3` because `v0.27.0` wraps sign-in in Default Layout. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.349`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.349`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users is on `v0.28.0` so public contact can use its code screen. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.349`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.349`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -816,7 +823,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.6.1` | `0.6.1` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.349` | `v0.1.349` | `0.1.349` |
 | `view_component` | `4.19.0` | | `4.19.0` |
-| `recording_studio_user` (dummy host only) | `~> 0.16` | `v0.26.3` | `0.26.3` |
+| `recording_studio_user` (dummy host only) | `~> 0.28.0` | `v0.28.0` | `0.28.0` |
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |
 | `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.6.2` | `2.6.2` |
 | `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.7.0` | `0.7.0` |

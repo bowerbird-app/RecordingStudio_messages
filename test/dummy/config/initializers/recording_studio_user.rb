@@ -6,8 +6,7 @@ RecordingStudioUser.configure do |config|
   config.mount_path = "/recording_studio_users"
   config.profile_route_path = "profile"
   config.admin_route_path = "admin"
-  # Profile and sign-in-method screens are product pages, so they use core's
-  # default layout. The gem's auth screens keep their own centered layout.
+  # Users 0.28 draws sign-in inside this layout. The card stays centered.
   config.layout = "recording_studio/default_layout"
   # Leave additional_profile_attributes at the gem default so :locale stays
   # allowlisted for Recording Studio Internationalization.
@@ -52,9 +51,11 @@ RecordingStudioUser.configure do |config|
   config.omniauth_providers = {}
   # When false, unknown provider emails do not create a User (fail closed).
   config.omniauth_create_account = true
-  # Optional email OTP. Leave false unless the host has run OTP migrations
-  # and installed recording_studio_notifications.
-  config.otp_enabled = false
+  # Public contact uses Users one-time codes. Login and registration both
+  # have to be on, or a new address is refused instead of shown a code page.
+  config.otp_enabled = true
+  config.otp_registration_enabled = true
+  config.otp_login_enabled = true
 end
 
 # Host Devise must skip sessions/registrations/passwords and mount Users auth.

@@ -27,7 +27,7 @@ gem "recording_studio_notifications", ">= 0.3.1", "< 1",
 gem "recording_studio_trashable",
     github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.11.3",
     require: false
-gem "recording_studio_user", "~> 0.16", github: "bowerbird-app/RecordingStudio_users", tag: "v0.26.3"
+gem "recording_studio_user", "~> 0.28.0", github: "bowerbird-app/RecordingStudio_users", tag: "v0.28.0"
 gem "view_component", "4.19.0"
 
 gem "devise"
