@@ -106,6 +106,18 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_nil remainder.fetch("after_id")
   end
 
+  test "list_conversations clamps limit below 1" do
+    zero = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: 0)
+    assert_response :success, response.body
+    assert_equal 1, zero.fetch("records").size
+    assert_nil zero.fetch("after_id")
+
+    negative = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: -1)
+    assert_response :success, response.body
+    assert_equal 1, negative.fetch("records").size
+    assert_nil negative.fetch("after_id")
+  end
+
   test "read_thread goes through message_recordings" do
     thread = call(:get, "/conversations/#{@group.id}/messages", @editor_token)
     assert_response :success, response.body
@@ -224,6 +236,12 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity, response.body
 
     call(:get, "/desks/#{@mount.id}/conversations", @editor_token, after_id: @other_group.id)
+    assert_response :unprocessable_entity, response.body
+
+    call(:get, "/desks/#{@mount.id}/conversations", @editor_token, tags: "press_center")
+    assert_response :unprocessable_entity, response.body
+
+    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "Tagged", tags: "press_center")
     assert_response :unprocessable_entity, response.body
   end
 

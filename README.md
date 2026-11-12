@@ -123,7 +123,7 @@ bin/rails db:migrate
 ```
 
 3. Turn on `:api_access_point` on roots that should hold API clients, and add `RecordingStudioApi::ApiClient` to `access_actor_types`. Recording Studio MCP needs no extra Messages code.
-4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so you need an admin API client. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.
+4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so you need an admin API client. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface. List `limit` is 1 through the HTML inbox size. A blank create title with no recipients, and tags that are not a Hash, are 422 at the API handler.
 
 | Verb | Path | Accessible role |
 |---|---|---|

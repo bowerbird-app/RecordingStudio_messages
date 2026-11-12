@@ -62,12 +62,12 @@ class ApiSourceTest < Minitest::Test
     end
     assert_equal "write something", domain.message
 
-    required = assert_raises(RecordingStudioApi::InvalidActionInputError) do
+    missing_mount = assert_raises(ArgumentError) do
       RecordingStudioMessages::Api::Errors.wrap do
         RecordingStudioMessages.create_group(nil, actor: :missing)
       end
     end
-    assert_equal "mount recording is required", required.message
+    assert_equal "mount recording is required", missing_mount.message
 
     assert_raises(ArgumentError) do
       RecordingStudioMessages::Api::Errors.wrap { Integer("nope") }

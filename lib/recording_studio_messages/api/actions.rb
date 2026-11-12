@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "errors"
+require_relative "group_catalog"
+require_relative "mount_catalog"
 require_relative "target"
 
 module RecordingStudioMessages
@@ -17,7 +19,7 @@ module RecordingStudioMessages
 
         def deliver
           group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, :edit)
+          Target.authorize!(@context, group, GroupCatalog::SEND_MESSAGE.fetch(:required_role))
           Target.serialize(RecordingStudioMessages.send_message(**line(group)))
         end
 
@@ -42,7 +44,7 @@ module RecordingStudioMessages
 
         def list
           mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
-          Target.authorize!(@context, mount, :view)
+          Target.authorize!(@context, mount, MountCatalog::LIST_CONVERSATIONS.fetch(:required_role))
           page = groups(mount)
           page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
           {
@@ -53,14 +55,14 @@ module RecordingStudioMessages
 
         def groups(mount)
           page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
-          requested = @context.params[:limit].presence
+          requested = @context.params[:limit]
           RecordingStudioMessages.viewable_group_recordings(
             actor: @context.access_grant.actor,
             mount_recording: mount,
-            tags: @context.params[:tags],
+            tags: Target.hash_tags(@context),
             unread: unread?,
             after: after_recording(mount),
-            limit: requested ? [requested.to_i, page_size].min : page_size
+            limit: requested.nil? || requested == "" ? page_size : requested.to_i.clamp(1, page_size)
           )
         end
 
@@ -95,7 +97,7 @@ module RecordingStudioMessages
 
         def read
           group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, :view)
+          Target.authorize!(@context, group, GroupCatalog::READ_THREAD.fetch(:required_role))
           { records: RecordingStudioMessages.message_recordings(group).map { |row| Target.serialize(row) } }
         end
       end
@@ -111,7 +113,11 @@ module RecordingStudioMessages
 
         def create
           mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
-          Target.authorize!(@context, mount, :edit)
+          Target.authorize!(@context, mount, MountCatalog::CREATE_GROUP.fetch(:required_role))
+          title = @context.params[:title]
+          recipients = @context.params[:recipients]
+          raise ::RecordingStudioApi::InvalidActionInputError, "title is required" if title.blank? && recipients.nil?
+
           Target.serialize(RecordingStudioMessages.create_group(mount, **attrs))
         end
 
@@ -119,7 +125,7 @@ module RecordingStudioMessages
           {
             actor: @context.access_grant.actor,
             title: @context.params[:title],
-            tags: @context.params[:tags],
+            tags: Target.hash_tags(@context),
             recipients: @context.params[:recipients],
             body: @context.params[:body]
           }
@@ -137,7 +143,7 @@ module RecordingStudioMessages
 
         def rename
           group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, :edit)
+          Target.authorize!(@context, group, GroupCatalog::RENAME_GROUP.fetch(:required_role))
           Target.serialize(RecordingStudioMessages.rename_group(**attrs(group)))
         end
 
@@ -161,7 +167,7 @@ module RecordingStudioMessages
 
         def mark
           group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, :view)
+          Target.authorize!(@context, group, GroupCatalog::MARK_READ.fetch(:required_role))
           RecordingStudioMessages.mark_read(group_recording: group, actor: @context.access_grant.actor)
           Target.serialize(group.reload)
         end
@@ -178,7 +184,7 @@ module RecordingStudioMessages
 
         def count
           recording = @context.access_grant.access_recording || @context.root_recording
-          Target.authorize!(@context, recording, :view)
+          Target.authorize!(@context, recording, MountCatalog::UNREAD_COUNT.fetch(:required_role))
           actor = @context.access_grant.actor
           unread = RecordingStudioMessages.my_group_recordings(actor: actor, unread: true)
           scoped = unread.merge(@context.access_grant.accessible_recordings)
