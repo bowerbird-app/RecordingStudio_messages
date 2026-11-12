@@ -24,10 +24,6 @@ module RecordingStudioMessages
           limit: {
             type: :integer, required: false,
             description: "Page size. Defaults to the HTML inbox size and never returns more."
-          },
-          tags: {
-            type: :hash, required: false,
-            description: "Tag filter passed to viewable_group_recordings."
           }
         }
       }.freeze
@@ -55,10 +51,6 @@ module RecordingStudioMessages
           recipients: {
             type: :array, required: false,
             description: "People to add. Each item is a type and id, or a token."
-          },
-          tags: {
-            type: :hash, required: false,
-            description: "Optional tags written with the conversation."
           }
         }
       }.freeze
