@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-11-12
+
+Send, list, read, and create on Recording Studio API, plus rename, mark read, and unread count. Handlers call `RecordingStudioMessages.send_message`, `.viewable_group_recordings`, `.message_recordings`, `.create_group`, `.rename_group`, `.mark_read`, and `.unread_count`. Generic Message create stays off. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.
+
+### Added
+
+- Message and group capability actions on Recording Studio API, with matching named endpoints so MCP can call `capability_action` or the endpoint path.
+- Dummy mounts Recording Studio API `v0.21.3` so hosts and MCP adapters can use the same Accessible-gated surface.
+
+### Upgrade notes
+
+- Bump to **0.25.0**. No Messages migration. This gem still has no gemspec dependency on Recording Studio API.
+- Hosts that already have Recording Studio API get these actions when this gem loads. Install and mount API (and MCP, if you use it) as those gems document.
+- Access matches the HTML screens: `:view` to list, read, mark read, and unread count; `:edit` to send, create, and rename. A conversation in another workspace is 404.
+- `create_group` still grants Accessible membership through the existing helper. On a `:members` desk that means the API client must be allowed to manage access (admin), the same as a person creating a conversation.
+
 ## [0.24.1] - 2026-11-12
 
 Public contact follows Recording Studio Users 0.28.1. The modal finish POST uses the fresh CSRF token, a new address must tick live signup terms, and the return token is url-safe.
@@ -836,7 +852,8 @@ First version of Recording Studio Messages. The engine is renamed from the addon
 - Do not add a Notifications → Messages edge
 - Do not enable Message types in this slice
 
-[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/bowerbird-app/RecordingStudio_messages/releases/tag/v0.25.0
 [0.8.3]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.8.2...v0.8.3
 [0.8.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.7.0...v0.8.0
 [0.6.0]: https://github.com/bowerbird-app/RecordingStudio_messages/compare/v0.5.2...v0.6.0

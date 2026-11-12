@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   mount RecordingStudioAccessible::Engine, at: "/recording_studio_accessible"
   mount RecordingStudioAccessible::Engine, at: "/admin/access", as: :recording_studio_admin_access
   mount RecordingStudioAttachable::Engine, at: "/recording_studio_attachable"
+  mount RecordingStudioApi::Engine, at: "/recording_studio_api"
   mount RecordingStudioSiteSettings::Engine, at: "/recording_studio_site_settings"
   mount RecordingStudioTermsAndConditions::Engine, at: "/recording_studio_terms_and_conditions"
   mount RecordingStudioPublishable::Engine, at: "/", as: :recording_studio_publishable

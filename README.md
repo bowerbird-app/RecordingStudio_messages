@@ -109,6 +109,34 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.25.0
+
+Messages `0.25.0` exposes send, list, read, and create on Recording Studio API, plus rename, mark read, and unread count. MCP uses that same registration. Generic Message create is not used, because it would skip `RecordingStudioMessages.send_message`.
+
+1. Install Messages `0.25.0`. There is no Messages migration. Recording Studio API stays out of the gemspec.
+2. Install and mount Recording Studio API in the host if you want the JSON surface:
+
+```sh
+bin/rails generate recording_studio_api:install
+bin/rails generate recording_studio_api:migrations
+bin/rails db:migrate
+```
+
+3. Turn on `:api_access_point` on roots that should hold API clients, and add `RecordingStudioApi::ApiClient` to `access_actor_types`. Recording Studio MCP needs no extra Messages code.
+4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper, so a `:members` desk needs an API client that can manage access. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.
+
+| Verb | Path | Accessible role |
+|---|---|---|
+| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/send_message` | `:edit` on the conversation |
+| GET | `/recording_studio_api/api/v1/message_mounts/:id/actions/list_conversations` | `:view` on the desk |
+| GET | `/recording_studio_api/api/v1/message_groups/:id/actions/read_thread` | `:view` on the conversation |
+| POST | `/recording_studio_api/api/v1/message_mounts/:id/actions/create_group` | `:edit` on the desk |
+| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/rename_group` | `:edit` on the conversation |
+| POST | `/recording_studio_api/api/v1/message_groups/:id/actions/mark_read` | `:view` on the conversation |
+| GET | `/recording_studio_api/api/v1/unread_count` | `:view` on the access recording |
+
+Named endpoints sit beside those member actions (`/conversations/:id/send_message`, `/desks/:id/conversations`, `/conversations/:id/messages`, `/desks/:id/create_group`, `/conversations/:id/rename_group`, `/conversations/:id/mark_read`).
+
 ### Upgrading to 0.24.1
 
 Messages `0.24.1` follows Recording Studio Users `0.28.1` on the public contact code step.
@@ -819,7 +847,7 @@ The dummy proves two mounts at once:
 - `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users is on `v0.28.1` so public contact can use its code screen. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.349`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.349`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
+The dummy mounts Recording Studio API at `/recording_studio_api`. Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.6.2` and mounts Site Settings (`v0.5.1`) and Terms and Conditions (`v0.13.4`). Publishable is on `v0.11.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable stays on `v0.10.0` because `v0.11.4` drops the blank layout the dummy switcher page uses. Users is on `v0.28.1` so public contact can use its code screen. Both require Cache `v0.5.1`. Recording Studio is on `v6.3.0`. Accessible is on `v0.24.1`. Attachable is on `v0.21.1`. Notifications is on `v0.13.1`. Metrics is on `v0.6.1`. Logs is on `v0.7.0` because Admin loads it. Trashable is on `v0.11.3` with `require: false`. Internationalization is on `v0.1.7` and is dummy-only. Flatpack is on `v0.1.349`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0` and `flat_pack >= 0.1.349`. Accessible `v0.24.1` allows `recording_studio ~> 6.1`. Terms and Conditions `v0.13.4` and `v0.14.2` still require `recording_studio ~> 4.2`, so this dummy cannot drop the Bundler shim until that gem ships a 6.x tag. The Gemfiles load `test/support/widen_recording_studio_requirement.rb` so this dummy can boot. Delete that file when those tags allow `>= 6.1.0`. Site Settings 0.5.1 still includes `RecordingStudio::UsesDefaultLayout`, so the dummy defines an empty module until that gem stops.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -836,6 +864,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.5.1` | `0.5.0` |
 | `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.6.2` | `2.6.2` |
 | `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.7.0` | `0.7.0` |
+| `recording_studio_api` (dummy host only) | | `v0.21.3` | `0.21.3` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 
