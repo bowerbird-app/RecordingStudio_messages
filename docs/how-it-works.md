@@ -42,7 +42,7 @@ Use the public helpers:
 - `my_group_recordings` to list the kept conversations one actor was added to, across every mount
 - `tagged_group_recordings` to list kept conversations on one mount without an actor
 - `tag` / `untag` to join a conversation to a host recording by a host-chosen key
-- `send_message` to write a line, attach files, optionally attach recording references, stamp `last_message_at`, upsert the sender's read cursor, and notify everyone else who has a grant
+- `send_message` to write a line, attach files, optionally attach recording references, stamp `last_message_at`, upsert the sender's read cursor, and notify. On `:members` that is every other direct grant. On `:inherited` that is everyone with effective access of at least `:view` (mount, ancestor, or root), except the sender. Inherited people still get no grant. An explicit `recipients:` list passed to the notifier replaces that set
 - `register_composer_action` / `register_message_embed` so another gem can add a + item and a typed card without this gem naming that gem
 - `mark_read` / `unread?` / `unread_count` for that private cursor
 - `seen_by` when the host opts into seen faces

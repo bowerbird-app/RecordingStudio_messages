@@ -35,8 +35,23 @@ module RecordingStudioMessages
 
       def notify_candidates
         return Array(@recipients).compact if @recipients
+        return actors_with_effective_access if inherited_group?
 
         RecordingStudioMessages.granted_actors(@group_recording)
+      end
+
+      def inherited_group?
+        MountAccess.inherited?(@group_recording&.parent_recording)
+      end
+
+      def actors_with_effective_access
+        return [] unless defined?(RecordingStudioAccessible)
+        return [] if @group_recording.blank?
+
+        RecordingStudioAccessible.actors_with_access(
+          recording: @group_recording,
+          minimum_role: :view
+        ).filter_map(&:actor).uniq
       end
 
       def notification_attributes(recipients, root_recording:)

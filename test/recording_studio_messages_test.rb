@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.25.1", ::RecordingStudioMessages::VERSION
+    assert_equal "0.26.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -37,10 +37,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
 
     assert_equal ">= 6.1.0", gemspec_constraint(gemspec, "recording_studio")
-    assert_includes gemspec, 'spec.add_dependency "recording_studio_accessible", ">= 0.24.0", "< 1.0"'
-    accessible_requirement = Gem::Requirement.new(">= 0.24.0", "< 1.0")
-    assert accessible_requirement.satisfied_by?(Gem::Version.new("0.24.0"))
-    assert accessible_requirement.satisfied_by?(Gem::Version.new("0.32.0"))
+    assert_includes gemspec, 'spec.add_dependency "recording_studio_accessible", ">= 0.33.0", "< 1.0"'
+    accessible_requirement = Gem::Requirement.new(">= 0.33.0", "< 1.0")
+    assert accessible_requirement.satisfied_by?(Gem::Version.new("0.33.0"))
+    refute accessible_requirement.satisfied_by?(Gem::Version.new("0.32.0"))
     refute accessible_requirement.satisfied_by?(Gem::Version.new("0.23.9"))
     refute accessible_requirement.satisfied_by?(Gem::Version.new("1.0.0"))
     assert_includes gemspec, 'spec.add_dependency "recording_studio_attachable", ">= 0.13.0", "< 1.0"'
@@ -76,8 +76,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v6.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.32.0"'
-    assert_includes gemfile, 'gem "recording_studio_accessible", ">= 0.24.0", "< 1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.33.0"'
+    assert_includes gemfile, 'gem "recording_studio_accessible", ">= 0.33.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.23.0"'
     assert_includes gemfile, 'gem "recording_studio_attachable", ">= 0.13.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.15.0"'
@@ -100,7 +100,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v4.1.1"'
     assert_equal ">= 6.1.0", gemfile_constraint(gemfile, "recording_studio")
     assert_equal ">= 0.1.349", gemfile_constraint(gemfile, "flat_pack")
-    assert_equal ">= 0.24.0", gemfile_constraint(gemfile, "recording_studio_accessible")
+    assert_equal ">= 0.33.0", gemfile_constraint(gemfile, "recording_studio_accessible")
     refute_includes gemfile, "widen_recording_studio_requirement"
     refute_includes gemfile, 'branch: "main"'
     refute_includes gemfile, 'tag: "v0.3.4"'
@@ -112,7 +112,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v6.7.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.32.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.33.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.23.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.15.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.15.0"'

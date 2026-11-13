@@ -32,7 +32,7 @@ Add the gem next to Recording Studio 6.1, Accessible, Attachable, Notifications,
 ```ruby
 # Gemfile
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.7.0"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.32.0"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.33.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.23.0"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.15.0"
 gem "flat_pack", github: "bowerbird-app/flatpack", tag: "v0.1.357"
@@ -43,7 +43,7 @@ gem "recording_studio_messages", github: "bowerbird-app/RecordingStudio_messages
 ```ruby
 # gemspec / host Gemfile constraints
 gem "recording_studio", ">= 6.1.0"
-gem "recording_studio_accessible", ">= 0.24.0", "< 1.0"
+gem "recording_studio_accessible", ">= 0.33.0", "< 1.0"
 gem "recording_studio_attachable", ">= 0.13.0", "< 1.0"
 gem "recording_studio_notifications", ">= 0.3.1", "< 1"
 gem "flat_pack", ">= 0.1.349"
@@ -108,6 +108,13 @@ RecordingStudioMessages.send_message(
 Pin `recording_studio_messages/controllers` in the host importmap so `recording-studio-messages--composer` loads. The dummy pin sits next to the Admin pin. Message bodies auto-link `http` and `https` only. The helper escapes first, then wraps. `javascript:` and `data:` stay text.
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
+
+### Upgrading to 0.26.0
+
+Messages `0.26.0` notifies everyone with effective access on an `:inherited` mount. `:members` mounts still notify direct grants only. People who only inherit still get no grant.
+
+1. Install Messages `0.26.0`. There is no Messages migration.
+2. Pin Accessible `>= 0.33.0, < 1.0` and git tag `v0.33.0`. `send_message` on an `:inherited` mount calls `RecordingStudioAccessible.actors_with_access`.
 
 ### Upgrading to 0.25.0
 
@@ -498,7 +505,7 @@ Pass `contacts:` when people on that desk should start a conversation and pick w
 | `:members` (default) | A shared desk whose people are the conversation members | Grants `:admin` to `admin:` when passed, otherwise to the creating actor | Needs an opener. The first resolver recipient who is already an admin on the mount path opens the conversation. Other resolver recipients and the sender get `:edit`. An empty list, or a list with no admin, raises "Nobody can receive this message." |
 | `:inherited` | A desk under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody. `recipients:` grants `:edit` to the creator and each recipient | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
 
-Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). A staff member who starts a quiet thread gets no direct grant, so that thread does not appear in `/my_messages`. `recipients:` is the exception. It grants `:edit` to the creator and each recipient. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
+Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). `send_message` notifies everyone with effective access of at least `:view`, including people granted only on the mount or root. The sender is left out. Their notification settings decide delivery. Those people still get no direct grant, so a quiet thread does not appear in `/my_messages`. `recipients:` is the exception for grants. It grants `:edit` to the creator and each recipient. An explicit `recipients:` list passed to the notifier is who gets `:message_received` instead. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
 
 Existing direct grants stay as they are. There is no migration. Hosts that already mint staff grants on every new conversation under an owner root should add `access: :inherited` so new conversations stop doing that.
 
@@ -585,7 +592,7 @@ Pass `recipients:` and `body:` to start a conversation with people. The actor ne
 
 `tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the desk. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
 
-Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies every other granted actor with `:message_received`. The URL should open that same panel.
+Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies with `:message_received`. On a `:members` mount that is every other direct grant. On an `:inherited` mount that is everyone with effective access of at least `:view`, including access inherited from the mount or root. The sender is left out. Inherited people still get no grant. An explicit `recipients:` list passed to the notifier replaces that set. The URL should open that same panel.
 
 `:message_received` stays root-scoped. By default every copy is filed under the conversation's root, so a ticket owner sees it when that workspace is selected. Staff who should see the same notice in the Admin inbox need a host opt-in:
 
@@ -682,7 +689,7 @@ Set `public_contact_recipient_resolver` to a callable. When the callable lists `
 
 On a `:members` mount the first recipient who is already an admin on the mount path is the actor for `create_group`. Admin on an ancestor counts. Every other recipient gets an `:edit` grant on the new conversation. The sender gets `:edit` too, unless they are that admin. A second grant would replace `:admin`. `create_group` does not notify. `send_message` notifies the other direct grants, which is why those grants exist.
 
-On an `:inherited` mount there is no opener. `create_group` writes no staff grant. The sender gets a direct `:edit` grant. Resolver recipients are notified and are not granted. An empty resolver is fine.
+On an `:inherited` mount there is no opener. `create_group` writes no staff grant. The sender gets a direct `:edit` grant. Public contact passes the resolver list as `recipients:`, so those people are notified and are not granted. An empty resolver notifies no one. A later `send_message` on that thread notifies everyone with effective access of at least `:view`, including team members who only inherit from the mount or root. They still get no grant.
 
 There is no file field on this form.
 
@@ -847,14 +854,14 @@ The dummy proves two mounts at once:
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
 The dummy mounts Recording Studio API at `/recording_studio_api`.
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.13.0` and mounts Site Settings (`v0.5.6`) and Terms and Conditions (`v0.18.0`). Publishable is on `v0.15.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.15.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.28.1` so public contact can use its code screen. Cache is `v0.6.3`. Recording Studio is on `v6.7.0`. The dummy sets `config.allow_unauthorized_writes = true` so seeds and tests can `record!` under Recording Studio 6.5. Accessible is on `v0.32.0`. Attachable is on `v0.23.0` and needs API `v0.23.0`. Notifications is on `v0.15.0`. Metrics is on `v0.8.0`. Logs is on `v0.7.4` because Admin loads it. Trashable is on `v0.14.0` with `require: false`, and the dummy schema has `purge_at`. Internationalization is on `v0.2.2` and is dummy-only. Flatpack is on `v0.1.357`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.24.0, < 1.0`, and `recording_studio_attachable >= 0.13.0, < 1.0`. Terms registers `Section` and `Clause`.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.13.0` and mounts Site Settings (`v0.5.6`) and Terms and Conditions (`v0.18.0`). Publishable is on `v0.15.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.15.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.28.1` so public contact can use its code screen. Cache is `v0.6.3`. Recording Studio is on `v6.7.0`. The dummy sets `config.allow_unauthorized_writes = true` so seeds and tests can `record!` under Recording Studio 6.5. Accessible is on `v0.33.0`. Attachable is on `v0.23.0` and needs API `v0.23.0`. Notifications is on `v0.15.0`. Metrics is on `v0.8.0`. Logs is on `v0.7.4` because Admin loads it. Trashable is on `v0.14.0` with `require: false`, and the dummy schema has `purge_at`. Internationalization is on `v0.2.2` and is dummy-only. Flatpack is on `v0.1.357`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.33.0, < 1.0`, and `recording_studio_attachable >= 0.13.0, < 1.0`. Terms registers `Section` and `Clause`.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Locked `VERSION` |
 |---|---|---|---|
 | `recording_studio` | `>= 6.1.0` | `v6.7.0` | `6.7.0` |
-| `recording_studio_accessible` | `>= 0.24.0, < 1.0` | `v0.32.0` | `0.32.0` |
+| `recording_studio_accessible` | `>= 0.33.0, < 1.0` | `v0.33.0` | `0.33.0` |
 | `recording_studio_attachable` | `>= 0.13.0, < 1.0` | `v0.23.0` | `0.23.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.15.0` | `0.15.0` |
 | `recording_studio_metrics` | `>= 0.3.0, < 1.0` | `v0.8.0` | `0.8.0` |

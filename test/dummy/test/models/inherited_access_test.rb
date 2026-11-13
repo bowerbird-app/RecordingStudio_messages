@@ -135,6 +135,72 @@ class InheritedAccessTest < ActiveSupport::TestCase
     )
   end
 
+  test "inherited send notifies actors granted only on the mount or root and skips the sender" do
+    mount_only = User.create!(
+      email: "mount-only-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Mount Only"
+    )
+    RecordingStudio.enable_capability(:accessible, on: RecordingStudioMessages::MessageMount)
+    grant_recording!(@mount, mount_only, :edit)
+    grant_recording!(@mount, @editor, :view)
+    group = RecordingStudioMessages.create_group(@mount, title: "Inherited notice", actor: @owner)
+
+    assert_equal [], RecordingStudioMessages.granted_actors(group)
+
+    RecordingStudioMessages.send_message(
+      group_recording: group, body: "The team should hear this.", actor: @owner
+    )
+
+    assert_notified mount_only
+    assert_notified @editor
+    assert_equal 1, message_received_count(@editor)
+    assert_notified @viewer
+    refute_notified @owner
+    refute_notified @stranger
+  end
+
+  test "members send still notifies only direct grants" do
+    group = RecordingStudioMessages.create_group(@members_mount, title: "Members notice", actor: @owner)
+    customer = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Member"
+    )
+    grant_group!(group, customer, :edit)
+
+    RecordingStudioMessages.send_message(
+      group_recording: group, body: "Direct grants only.", actor: @owner
+    )
+
+    assert_notified customer
+    refute_notified @editor
+    refute_notified @viewer
+    refute_notified @owner
+  end
+
+  test "explicit recipients still win on an inherited mount" do
+    group = RecordingStudioMessages.create_group(@mount, title: "Resolver list", actor: @owner)
+    message = RecordingStudioMessages.send_message(
+      group_recording: group, body: "Held.", actor: @owner, notify: false
+    )
+
+    RecordingStudioMessages::Services::NotifyGrantedActors.call(
+      group_recording: group,
+      message_recording: message,
+      actor: @owner,
+      body: "Held.",
+      url: "/inbox",
+      recipients: [@editor]
+    )
+
+    assert_notified @editor
+    refute_notified @viewer
+    refute_notified @owner
+  end
+
   test "explicit panel grant still appears in my messages" do
     group = RecordingStudioMessages.create_group(@mount, title: "Invited", actor: @owner)
     grant_group!(group, @editor, :edit)
@@ -155,13 +221,39 @@ class InheritedAccessTest < ActiveSupport::TestCase
   end
 
   def grant_group!(group, actor, role)
+    grant_recording!(group, actor, role)
+  end
+
+  def grant_recording!(recording, actor, role)
     result = RecordingStudioAccessible.grant_access(
-      recording: group,
+      recording: recording,
       actor: actor,
       role: role,
       manager_actor: @owner
     )
     raise result.error if result.failure?
+  end
+
+  def assert_notified(actor)
+    assert message_received_for(actor), "#{actor.name} should be notified"
+  end
+
+  def refute_notified(actor)
+    assert_nil message_received_for(actor), "#{actor.name} should not be notified"
+  end
+
+  def message_received_for(actor)
+    RecordingStudioNotifications::Notification.find_by(
+      notification_type: "message_received",
+      recipient: actor
+    )
+  end
+
+  def message_received_count(actor)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received",
+      recipient: actor
+    ).count
   end
 
   def viewable(actor:)

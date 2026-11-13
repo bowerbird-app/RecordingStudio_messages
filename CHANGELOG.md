@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-13
+
+`send_message` on an `:inherited` mount notifies everyone with effective access of at least `:view`. `:members` mounts still notify direct grants only. Inherited people still get no grant.
+
+### Changed
+
+- `Services::NotifyGrantedActors` on an `:inherited` conversation calls `RecordingStudioAccessible.actors_with_access(recording:, minimum_role: :view)` and drops the sender. Actors are deduped. `:members` still uses `RecordingStudioMessages.granted_actors`. An explicit `recipients:` list still replaces that set.
+- Development and the dummy pin Accessible `v0.33.0`. The gemspec floor is `recording_studio_accessible >= 0.33.0, < 1.0`.
+
+### Upgrade notes
+
+- Bump to **0.26.0**. No Messages migration.
+- Pin Accessible `v0.33.0` (`>= 0.33.0, < 1.0`). `actors_with_access` is not in 0.32.
+- Hosts on `:inherited` mounts will notify people who only inherit from the mount or root. They still receive no direct grant, and `/my_messages` still lists direct grants only. `:members` desks are unchanged. Notification settings still decide delivery.
+
 ## [0.25.1] - 2026-11-13
 
 Open the Accessible and Attachable gemspec ranges so the latest family tags resolve, and pin development and the dummy to those tags.
