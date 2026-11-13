@@ -14,6 +14,8 @@ RecordingStudio.configure do |config|
     "RecordingStudioMessages::Message",
     "RecordingStudioSiteSettings::SiteSetting",
     "RecordingStudioTermsAndConditions::Terms",
+    "RecordingStudioTermsAndConditions::Section",
+    "RecordingStudioTermsAndConditions::Clause",
     "RecordingStudioPublishable::Publishable",
     "RecordingStudioAttachable::Attachment"
   ]
@@ -26,6 +28,10 @@ RecordingStudio.configure do |config|
   ]
 
   config.require_recordable_declarations = true
+
+  # Recording Studio 6.5 fails closed without an authorizer. Dummy seeds and
+  # tests write as the host, including agents, so keep those writes open.
+  config.allow_unauthorized_writes = true
 
   config.app_name = "Dummy host" if config.respond_to?(:app_name=)
 
