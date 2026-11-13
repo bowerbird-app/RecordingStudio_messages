@@ -5,7 +5,8 @@ require "test_helper"
 class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
   test "dummy app loads root switchable config and controller support" do
     assert_equal [ "all_workspaces" ], RecordingStudioRootSwitchable.configuration.scopes.keys
-    assert_equal "recording_studio_root_switchable/blank", RecordingStudioRootSwitchable.configuration.layout
+    assert_nil RecordingStudioRootSwitchable.configuration.layout
+    assert RecordingStudio.configuration.allow_unauthorized_writes
     assert_equal "recording_studio/default_layout", RecordingStudioUser.config.layout
     assert_includes ApplicationController.ancestors, RecordingStudio::RootSwitchable::ControllerSupport
     assert_includes ApplicationController.ancestors, RecordingStudio::ControllerLayout
@@ -25,6 +26,10 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
     connection = ActiveRecord::Base.connection
 
     assert connection.column_exists?(:recording_studio_recordings, :root_recording_id)
+    assert connection.column_exists?(:recording_studio_recordings, :purge_at)
+    assert connection.table_exists?(:recording_studio_terms_and_conditions_sections)
+    assert connection.table_exists?(:recording_studio_terms_and_conditions_clauses)
+    assert connection.column_exists?(:recording_studio_terms_and_conditions_terms, :release_manifest)
     assert connection.table_exists?(:recording_studio_accesses)
     assert connection.table_exists?(:recording_studio_access_invitations)
     assert connection.table_exists?(:recording_studio_access_constraints)

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-11-13
+
+Open the Accessible and Attachable gemspec ranges so the latest family tags resolve, and pin development and the dummy to those tags.
+
+### Changed
+
+- Gemspec `recording_studio_accessible` is `>= 0.24.0, < 1.0` (was `~> 0.24`). Gemspec `recording_studio_attachable` is `>= 0.13.0, < 1.0` (was `~> 0.13`). `recording_studio` stays `>= 6.1.0`. `flat_pack` stays `>= 0.1.349`.
+- Development and the dummy pin Flatpack `v0.1.357`, Recording Studio `v6.7.0`, Accessible `v0.32.0`, Admin `v2.13.0`, API `v0.23.0`, Attachable `v0.23.0`, Cache `v0.6.3`, Icons `v0.2.1`, Logs `v0.7.4`, Metrics `v0.8.0`, Moveable `v4.1.1`, Notifications `v0.15.0`, and Trashable `v0.14.0`. Users stays `v0.28.1`. The dummy also pins Publishable `v0.15.0`, Root Switchable `v0.15.0`, Site Settings `v0.5.6`, Terms and Conditions `v0.18.0`, and Internationalization `v0.2.2`.
+- Attachable `v0.23.0` depends on Recording Studio API, so the root Gemfile pins API, Moveable, Icons, and Redis next to the other git gems.
+- The dummy sets `config.allow_unauthorized_writes = true` because Recording Studio 6.5 refuses writes that have no authorizer. The switcher layout is `nil` (Root Switchable 0.15 removed `recording_studio_root_switchable/blank`). The switch page requires Accessible `:view` on the current root. Terms registers `Section` and `Clause`. Dummy migrations add Trashable `purge_at` and the Terms outline tables.
+
+### Removed
+
+- `test/support/widen_recording_studio_requirement.rb`. The pinned tags allow Recording Studio 6.x, so Bundler no longer rewrites their gemspecs.
+
+### Upgrade notes
+
+- Bump to **0.25.1**. No Messages migration.
+- Hosts that install Accessible `0.32` or Attachable `0.23` need these open ranges. `~> 0.24` and `~> 0.13` will not resolve those tags.
+- Attachable `0.23` needs Recording Studio API `~> 0.23` in the host Gemfile (git tag `v0.23.0`), plus Moveable, Icons, and Redis, because those gems are not on RubyGems.
+- Recording Studio `6.5` fails closed. Set `config.authorize_write` or `config.allow_unauthorized_writes = true` before `record!`.
+- Hosts on Trashable `0.14` run `bin/rails generate recording_studio_trashable:migrations` and migrate, then `bin/rails recording_studio_trashable:restamp_purge_at` once.
+- Hosts on Terms `0.18` register `RecordingStudioTermsAndConditions::Section` and `Clause`, generate that gem's migrations, and run `recording_studio_terms_and_conditions:seed_outline`.
+- Root Switchable `0.15` checks Accessible `:view` on the current root before the switch page. Drop `layout "recording_studio_root_switchable/blank"`.
+
 ## [0.25.0] - 2026-11-12
 
 Send, list, read, and create on Recording Studio API, plus rename, mark read, and unread count. Handlers call `RecordingStudioMessages.send_message`, `.viewable_group_recordings`, `.message_recordings`, `.create_group`, `.rename_group`, `.mark_read`, and `.unread_count`. Generic Message create stays off. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface.

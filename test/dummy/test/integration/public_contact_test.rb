@@ -202,8 +202,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Message sent"
-    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
-    assert_includes response.body, "text-[length:var(--text-3xl)]"
+    assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
+    assert_includes response.body, "fp-heading--3xl"
     assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."
@@ -223,8 +223,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     post contact_path, params: { body: "Show the rocket." }
     follow_redirect!
 
-    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
-    assert_includes response.body, "text-[length:var(--text-3xl)]"
+    assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
+    assert_includes response.body, "fp-heading--3xl"
     assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
     assert_select "[data-public-contact-step=sent] img", count: 0
 
@@ -237,8 +237,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
     assert_select "[data-public-contact-step=sent] img", count: 0
-    assert_select ".text-center h1.fp-heading.font-semibold", text: "Message sent"
-    assert_includes response.body, "text-[length:var(--text-3xl)]"
+    assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
+    assert_includes response.body, "fp-heading--3xl"
   ensure
     RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end
@@ -357,8 +357,8 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Message"
     assert_includes response.body, "Send message"
     assert_includes response.body, "Contact"
-    assert_select "h1.fp-heading.font-semibold", text: "Contact"
-    assert_includes response.body, "text-[length:var(--text-xl)]"
+    assert_select "h1.fp-heading.fp-heading--xl", text: "Contact"
+    assert_includes response.body, "fp-heading--xl"
   end
 
   test "code page is the Users screen with a masked email" do
@@ -1452,6 +1452,15 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Verify it's you"
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     assert_equal "login", otp_purpose_for(intent)
+    # Root Switchable 0.15 only lists roots the actor can view. Accept the live
+    # terms on this workspace before the code signs them in.
+    grant = RecordingStudioAccessible.grant_access(
+      recording: @root,
+      actor: existing,
+      role: :view,
+      manager_actor: @staff
+    )
+    raise grant.error if grant.failure?
     accept_live_terms!(existing)
 
     deliver_modal_code!(intent)
@@ -1603,7 +1612,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   end
 
   def accept_live_terms!(user)
-    root = RecordingStudioTermsAndConditions::Gate.first_root_with_live_terms
+    root = RecordingStudioTermsAndConditions::Gate.first_root_with_live_terms(user)
     RecordingStudioTermsAndConditions.pending_published_list(user, root).each do |terms|
       RecordingStudioTermsAndConditions.accept!(user, terms, { "source" => "continue_notice" })
     end

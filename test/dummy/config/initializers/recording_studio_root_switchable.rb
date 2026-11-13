@@ -5,9 +5,9 @@ RecordingStudioRootSwitchable.configure do |config|
     Current.actor || controller.current_user
   end
 
-  # The switcher screens draw their own PageNav, so they use the gem's own shell.
-  # Rendering them inside the host layout would stack a second back button.
-  config.layout = "recording_studio_root_switchable/blank"
+  # Root Switchable 0.15 removed recording_studio_root_switchable/blank.
+  # nil follows Recording Studio's default layout, which draws one page nav.
+  config.layout = nil
 
   config.after_switch_redirect = lambda do |controller:, return_to:, **|
     candidate_path = return_to.presence
