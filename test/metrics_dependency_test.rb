@@ -19,8 +19,8 @@ class MetricsDependencyTest < Minitest::Test
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
     assert_includes dummy_lock, "tag: v0.8.0"
     assert_includes dummy_lock, "recording_studio_metrics (0.8.0)"
-    assert_includes root_lock, "recording_studio_messages (0.27.0)"
-    assert_includes dummy_lock, "recording_studio_messages (0.27.0)"
+    assert_includes root_lock, "recording_studio_messages (0.28.0)"
+    assert_includes dummy_lock, "recording_studio_messages (0.28.0)"
   end
 
   def test_engine_registers_metrics_on_reload

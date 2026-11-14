@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 find_or_record_child = lambda do |recordable, root_recording, parent_recording|
-  RecordingStudio::Recording.find_by(
+  RecordingStudio::Recording.kept.find_by(
     root_recording: root_recording,
     parent_recording: parent_recording,
-    recordable: recordable,
-    trashed_at: nil
+    recordable: recordable
   ) || RecordingStudio.record!(
     action: "created",
     recordable: recordable,
@@ -167,7 +166,7 @@ begin
     recordable = RecordingStudioMessages::Message.find_by(body: body)
     next if recordable.blank?
 
-    RecordingStudio::Recording.find_by(recordable: recordable, parent_recording: support_group, trashed_at: nil)
+    RecordingStudio::Recording.kept.find_by(recordable: recordable, parent_recording: support_group)
   end
   if support_messages.size >= 3
     origin = Time.zone.now.change(hour: 10, min: 0, sec: 0)
