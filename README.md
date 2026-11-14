@@ -109,6 +109,13 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.27.0
+
+Messages `0.27.0` adds a trusted-write marker so a host write policy can allow Message and MessageGroup writes that come from this gem.
+
+1. Install Messages `0.27.0`. There is no Messages migration.
+2. Point `config.authorize_write` at `RecordingStudioMessages.trusted_write_context` for those two types. The README section "Trusted writes" shows a policy that allows them only while the marker is set, and that can reject `:rename_group`.
+
 ### Upgrading to 0.26.0
 
 Messages `0.26.0` notifies everyone with effective access on an `:inherited` mount. `:members` mounts still notify direct grants only. People who only inherit still get no grant.
@@ -493,6 +500,51 @@ end
 
 `create_group` already uses that for the owner grant. Support `sync_staff_grants`
 will use the same helper when Support enables the lock.
+
+### Trusted writes
+
+`RecordingStudioMessages.trusted_write_context` tells a host write policy that
+the gem itself is writing a message or a conversation. Outside those writes it
+is nil. Inside, it is a frozen value with `action` and `mount_recording`.
+
+| `action` | When it is set |
+|---|---|
+| `:create_group` | `CreateGroup` is inside `RecordingStudio.record!` for the new conversation |
+| `:send_message` | `SendMessagePersist` is inside `RecordingStudio.record!` for the line, and again while it stamps `last_message_at` on the conversation |
+| `:rename_group` | `RenameGroup` is inside `root.revise`, after the `:edit` check |
+
+The marker is restored when the block ends, including when the write raises.
+A nested write sees its own action, then the outer action comes back. A failed
+check in that service (send or rename without `:edit`, or create that never
+reaches the write) leaves the context nil. `ensure_mount` does not set it.
+Public contact and Support call `create_group` and `send_message`, so those
+paths get the same marker. `trusted_write` is for this gem. Hosts read the
+context.
+
+This policy allows Message and MessageGroup writes only while the marker is
+present, and it rejects rename:
+
+```ruby
+RecordingStudio.configure do |config|
+  config.authorize_write = lambda do |recordable:, **|
+    type = recordable.class.name
+    message_types = [
+      "RecordingStudioMessages::Message",
+      "RecordingStudioMessages::MessageGroup"
+    ]
+    next true unless message_types.include?(type)
+
+    context = RecordingStudioMessages.trusted_write_context
+    next false if context.nil?
+    next false if context.action == :rename_group
+
+    true
+  end
+end
+```
+
+Other recordable types still follow the rest of the host policy. Drop the
+`:rename_group` line to allow rename as well.
 
 ### Choose an access mode
 

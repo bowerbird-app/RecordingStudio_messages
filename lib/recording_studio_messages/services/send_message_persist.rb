@@ -40,23 +40,31 @@ module RecordingStudioMessages
       end
 
       def record_message
-        RecordingStudio.record!(
-          action: "created",
-          recordable: RecordingStudioMessages::Message.new(body: @body),
-          root_recording: @group_recording.root_recording || @group_recording,
-          parent_recording: @group_recording,
-          actor: @actor
-        ).recording
+        RecordingStudioMessages.trusted_write(action: :send_message, mount_recording: group_mount) do
+          RecordingStudio.record!(
+            action: "created",
+            recordable: RecordingStudioMessages::Message.new(body: @body),
+            root_recording: @group_recording.root_recording || @group_recording,
+            parent_recording: @group_recording,
+            actor: @actor
+          ).recording
+        end
       end
 
       def stamp_last_message_at!(message_recording)
         recordable = @group_recording.recordable
         return unless recordable.respond_to?(:last_message_at)
 
-        RecordingStudioMessages::MessageGroup.unscoped.where(id: recordable.id).update_all(
-          last_message_at: message_recording.created_at
-        )
+        RecordingStudioMessages.trusted_write(action: :send_message, mount_recording: group_mount) do
+          RecordingStudioMessages::MessageGroup.unscoped.where(id: recordable.id).update_all(
+            last_message_at: message_recording.created_at
+          )
+        end
         recordable.reload
+      end
+
+      def group_mount
+        @group_recording.parent_recording
       end
 
       def mark_sender_read!(message_recording)
