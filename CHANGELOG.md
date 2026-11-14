@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2026-11-14
+
+A host `config.authorize_write` that rejects a Message or MessageGroup write raises `RecordingStudio::AuthorizationError`. The write services turn that into `RecordingStudioMessages::NotAuthorized` so existing callers keep their denial.
+
+### Changed
+
+- `trusted_write` rescues `RecordingStudio::AuthorizationError` around the block `CreateGroup`, `SendMessagePersist`, and `RenameGroup` already use, and raises `RecordingStudioMessages::NotAuthorized`. Create uses "You can't start a message here." Send uses "You cannot send to this conversation." Rename uses "You cannot open this conversation."
+- Rename answers that denial with the same empty forbidden response it uses when the person cannot edit. Public contact already rescues `RecordingStudioMessages::Error` (`NotAuthorized` is a subclass) and shows "You cannot send this message." The API already maps `NotAuthorized` to `RecordingStudioApi::AuthorizationError`.
+
+### Upgrade notes
+
+- Bump to **0.28.0**. No Messages migration.
+- Hosts do not rescue `RecordingStudio::AuthorizationError` from these services. Rescue `RecordingStudioMessages::NotAuthorized`, or the existing `Error` handler, and keep the denial you already show.
+
 ## [0.27.0] - 2026-11-14
 
 Host write policies can tell a gem Message or MessageGroup write from any other write. `RecordingStudioMessages.trusted_write_context` is set only around those writes.

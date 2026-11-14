@@ -109,6 +109,13 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.28.0
+
+Messages `0.28.0` turns a rejected Message or MessageGroup write into `RecordingStudioMessages::NotAuthorized`.
+
+1. Install Messages `0.28.0`. There is no Messages migration.
+2. When `config.authorize_write` returns false for those types, the service write raises `NotAuthorized` instead of `RecordingStudio::AuthorizationError`. Desk, rename, public contact, and API callers keep the denial they already show.
+
 ### Upgrading to 0.27.0
 
 Messages `0.27.0` adds a trusted-write marker so a host write policy can allow Message and MessageGroup writes that come from this gem.
@@ -545,6 +552,13 @@ end
 
 Other recordable types still follow the rest of the host policy. Drop the
 `:rename_group` line to allow rename as well.
+
+A false result raises `RecordingStudio::AuthorizationError`. `trusted_write`
+turns that into `RecordingStudioMessages::NotAuthorized` on that same span.
+Create says "You can't start a message here." Send says "You cannot send to
+this conversation." Rename says "You cannot open this conversation." Desk send
+and create, rename, public contact, and the API keep their existing denial
+response.
 
 ### Choose an access mode
 
