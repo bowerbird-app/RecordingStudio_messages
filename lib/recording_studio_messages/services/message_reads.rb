@@ -107,6 +107,7 @@ module RecordingStudioMessages
         return [] if @actor.blank? || ids.empty?
 
         RecordingStudio::Recording.unscoped
+                                  .kept
                                   .where(id: ids, recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE)
                                   .joins(group_join)
                                   .joins(read_join)
@@ -177,11 +178,11 @@ module RecordingStudioMessages
           INNER JOIN recording_studio_recordings access_recordings
             ON access_recordings.recordable_id = recording_studio_accesses.id
             AND access_recordings.recordable_type = #{quoted(ACCESS_TYPE)}
-            AND access_recordings.trashed_at IS NULL
+            AND #{RecordingStudio.kept_sql('access_recordings')}
           INNER JOIN recording_studio_recordings
             ON recording_studio_recordings.id = access_recordings.parent_recording_id
             AND recording_studio_recordings.recordable_type = #{quoted(RecordingStudioMessages::MESSAGE_GROUP_TYPE)}
-            AND recording_studio_recordings.trashed_at IS NULL
+            AND #{RecordingStudio.kept_sql('recording_studio_recordings')}
           INNER JOIN recording_studio_message_groups
             ON recording_studio_message_groups.id = recording_studio_recordings.recordable_id
         SQL
@@ -219,7 +220,7 @@ module RecordingStudioMessages
               ON manager_accesses.id = manager_recordings.recordable_id
               AND manager_recordings.recordable_type = #{quoted(ACCESS_TYPE)}
             WHERE manager_recordings.id = recording_studio_accesses.depends_on_recording_id
-              AND manager_recordings.trashed_at IS NULL
+              AND #{RecordingStudio.kept_sql('manager_recordings')}
               AND manager_recordings.root_recording_id = access_recordings.root_recording_id
               AND #{ranked_role_sql('manager_accesses')}
               AND #{ranked_role_sql('recording_studio_accesses')}

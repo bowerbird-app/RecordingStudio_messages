@@ -40,7 +40,6 @@ module RecordingStudioMessages
 
       def attachable?(recording)
         recording.present? &&
-          recording.trashed_at.blank? &&
           viewer_can_see?(recording) &&
           under_mount?(recording)
       end
@@ -49,7 +48,7 @@ module RecordingStudioMessages
         id = recording_id_for(item)
         return if id.blank?
 
-        RecordingStudio::Recording.unscoped.find_by(id: id)
+        RecordingStudio::Recording.unscoped.kept.find_by(id: id)
       end
 
       def recording_id_for(item)
