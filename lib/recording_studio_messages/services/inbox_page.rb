@@ -71,9 +71,9 @@ module RecordingStudioMessages
         return {} if group_ids.empty?
 
         recordings = RecordingStudio::Recording.unscoped
+                                               .kept
                                                .where(parent_recording_id: group_ids)
                                                .where(recordable_type: RecordingStudioMessages::MESSAGE_TYPE)
-                                               .where(trashed_at: nil)
                                                .includes(:recordable)
                                                .order(:created_at, :id)
         recordings.to_h do |recording|
@@ -95,12 +95,7 @@ module RecordingStudioMessages
       end
 
       def kept_recordings
-        scope = RecordingStudio::Recording.unscoped
-        unless RecordingStudio::Recording.respond_to?(:recording_studio_trashable_kept_sql)
-          return scope.where(trashed_at: nil)
-        end
-
-        scope.where(RecordingStudio::Recording.recording_studio_trashable_kept_sql)
+        RecordingStudio::Recording.unscoped.kept
       end
     end
   end

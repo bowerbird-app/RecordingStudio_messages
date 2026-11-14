@@ -119,7 +119,7 @@ class MetricsTest < ActiveSupport::TestCase
   private
 
   def live_recordings(recordable_type)
-    RecordingStudio::Recording.where(recordable_type: recordable_type, trashed_at: nil)
+    RecordingStudio::Recording.kept.where(recordable_type: recordable_type)
   end
 
   def execute_metric(identifier)

@@ -31,7 +31,7 @@ Add the gem next to Recording Studio 6.1, Accessible, Attachable, Notifications,
 
 ```ruby
 # Gemfile
-gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.7.0"
+gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.14.0"
 gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.33.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.23.0"
 gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.15.0"
@@ -906,13 +906,13 @@ The dummy proves two mounts at once:
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
 The dummy mounts Recording Studio API at `/recording_studio_api`.
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.13.0` and mounts Site Settings (`v0.5.6`) and Terms and Conditions (`v0.18.0`). Publishable is on `v0.15.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.15.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.28.1` so public contact can use its code screen. Cache is `v0.6.3`. Recording Studio is on `v6.7.0`. The dummy sets `config.allow_unauthorized_writes = true` so seeds and tests can `record!` under Recording Studio 6.5. Accessible is on `v0.33.0`. Attachable is on `v0.23.0` and needs API `v0.23.0`. Notifications is on `v0.15.0`. Metrics is on `v0.8.0`. Logs is on `v0.7.4` because Admin loads it. Trashable is on `v0.14.0` with `require: false`, and the dummy schema has `purge_at`. Internationalization is on `v0.2.2` and is dummy-only. Flatpack is on `v0.1.357`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.1.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.33.0, < 1.0`, and `recording_studio_attachable >= 0.13.0, < 1.0`. Terms registers `Section` and `Clause`.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.13.0` and mounts Site Settings (`v0.5.6`) and Terms and Conditions (`v0.18.0`). Publishable is on `v0.15.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.15.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.28.1` so public contact can use its code screen. Cache is `v0.6.3`. Recording Studio is on `v6.14.0`. The dummy sets `config.allow_unauthorized_writes = true` so seeds and tests can `record!` under Recording Studio 6.5. Accessible is on `v0.33.0`. Attachable is on `v0.23.0` and needs API `v0.23.0`. Notifications is on `v0.15.0`. Metrics is on `v0.8.0`. Logs is on `v0.7.4` because Admin loads it. Trashable is on `v0.14.0` with `require: false`, and the dummy schema has `purge_at`. Internationalization is on `v0.2.2` and is dummy-only. Flatpack is on `v0.1.357`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 6.14.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.33.0, < 1.0`, and `recording_studio_attachable >= 0.13.0, < 1.0`. Terms registers `Section` and `Clause`.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Locked `VERSION` |
 |---|---|---|---|
-| `recording_studio` | `>= 6.1.0` | `v6.7.0` | `6.7.0` |
+| `recording_studio` | `>= 6.14.0` | `v6.14.0` | `6.14.0` |
 | `recording_studio_accessible` | `>= 0.33.0, < 1.0` | `v0.33.0` | `0.33.0` |
 | `recording_studio_attachable` | `>= 0.13.0, < 1.0` | `v0.23.0` | `0.23.0` |
 | `recording_studio_notifications` | `>= 0.3.1, < 1` | `v0.15.0` | `0.15.0` |

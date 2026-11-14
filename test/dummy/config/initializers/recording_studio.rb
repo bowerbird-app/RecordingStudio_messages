@@ -43,3 +43,22 @@ RecordingStudio.configure do |config|
 
   config.recordable_dup_strategy = :dup
 end
+
+# Trashable 0.14 does not register a recording filter. 0.16 does, and that tag
+# is not published. Register the same :trashable filter here so Recording.kept
+# skips trashed rows in this host. Drop this when the dummy pins Trashable 0.16.
+module DummyKeptFilter
+  module_function
+
+  def register!
+    return if RecordingStudio.kept_sql.include?("trashed_at")
+
+    RecordingStudio.register_recording_filter(:trashable, sql: lambda { |table|
+      "#{table}.trashed_at IS NULL"
+    }) do |recordings|
+      recordings.where(trashed_at: nil)
+    end
+  end
+end
+
+DummyKeptFilter.register!

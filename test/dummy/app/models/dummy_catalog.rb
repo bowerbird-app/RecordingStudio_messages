@@ -30,10 +30,9 @@ module DummyCatalog
     end
 
     def group_recordings_under(mount)
-      RecordingStudio::Recording.unscoped.where(
+      RecordingStudio::Recording.unscoped.kept.where(
         parent_recording_id: mount.id,
-        recordable_type: "RecordingStudioMessages::MessageGroup",
-        trashed_at: nil
+        recordable_type: "RecordingStudioMessages::MessageGroup"
       ).includes(:recordable)
     end
 

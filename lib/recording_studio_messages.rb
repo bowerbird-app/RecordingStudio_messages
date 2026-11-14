@@ -166,10 +166,9 @@ module RecordingStudioMessages
     def message_recordings(group_recording)
       return RecordingStudio::Recording.none if group_recording.blank?
 
-      RecordingStudio::Recording.unscoped.where(
+      RecordingStudio::Recording.unscoped.kept.where(
         parent_recording_id: group_recording.id,
-        recordable_type: MESSAGE_TYPE,
-        trashed_at: nil
+        recordable_type: MESSAGE_TYPE
       ).includes(:recordable, events: :actor).order(:created_at)
     end
 

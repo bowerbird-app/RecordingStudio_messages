@@ -37,17 +37,16 @@ module RecordingStudioMessages
       end
 
       def load_targets(ids)
-        RecordingStudio::Recording.unscoped.where(id: ids).includes(:recordable).index_by do |recording|
+        RecordingStudio::Recording.unscoped.kept.where(id: ids).includes(:recordable).index_by do |recording|
           recording.id.to_s
         end
       end
 
       def allowed_ids(targets)
-        live = targets.select { |recording| recording.trashed_at.blank? }
-        return [] if live.empty?
+        return [] if targets.empty?
 
-        parents = load_parents(live.map(&:parent_recording_id).uniq.compact)
-        live.group_by { |recording| recording.parent_recording_id.to_s }.flat_map do |parent_id, children|
+        parents = load_parents(targets.map(&:parent_recording_id).uniq.compact)
+        targets.group_by { |recording| recording.parent_recording_id.to_s }.flat_map do |parent_id, children|
           ids_for_parent(parents[parent_id], children)
         end
       end
@@ -63,7 +62,7 @@ module RecordingStudioMessages
       end
 
       def load_parents(ids)
-        RecordingStudio::Recording.unscoped.where(id: ids, trashed_at: nil).index_by do |recording|
+        RecordingStudio::Recording.unscoped.kept.where(id: ids).index_by do |recording|
           recording.id.to_s
         end
       end

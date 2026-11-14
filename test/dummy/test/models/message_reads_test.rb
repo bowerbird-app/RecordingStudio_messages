@@ -147,6 +147,29 @@ class MessageReadsTest < ActiveSupport::TestCase
     assert_nil notice_for(kept, @viewer).read_at
   end
 
+  test "unread_ids_among skips a trashed conversation" do
+    group = seed_unread("Trashed thread")
+
+    assert_includes unread_ids(group), group.id
+
+    group.update_columns(trashed_at: Time.current)
+
+    refute_includes unread_ids(group), group.id
+    assert_nil RecordingStudioMessages::Services::LiveRecording.find(group.id)
+  end
+
+  test "unread_ids_among runs when no kept filter is registered" do
+    group = seed_unread("Unfiltered thread")
+    group.update_columns(trashed_at: Time.current)
+    RecordingStudio.unregister_recording_filter(:trashable)
+
+    assert_equal "1=1", RecordingStudio.kept_sql
+    assert_includes unread_ids(group), group.id
+    assert_equal group.id, RecordingStudioMessages::Services::LiveRecording.find(group.id).id
+  ensure
+    DummyKeptFilter.register!
+  end
+
   private
 
   def support_mount
@@ -191,6 +214,10 @@ class MessageReadsTest < ActiveSupport::TestCase
       last_message_at: time
     )
     recording.recordable.reload
+  end
+
+  def unread_ids(group)
+    RecordingStudioMessages::Services::MessageReads.unread_ids_among([group.id], actor: @viewer)
   end
 
   def titles(recordings)
