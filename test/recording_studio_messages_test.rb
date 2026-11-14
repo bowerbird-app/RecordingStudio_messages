@@ -166,6 +166,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes dummy_lock, "view_component (4.19.0)"
   end
 
+  def test_dummy_bridges_api_kept_sql_until_api_drops_the_old_helper
+    bridge = File.read(File.expand_path("dummy/config/initializers/recording_kept_sql_bridge.rb", __dir__))
+
+    assert_includes bridge, "def recording_studio_trashable_kept_sql(table = table_name)"
+    assert_includes bridge, "RecordingStudio.kept_sql(table)"
+  end
+
   def test_library_does_not_read_trashed_at_or_call_trashable
     roots = [
       File.expand_path("../lib", __dir__),

@@ -17,7 +17,7 @@ Kept conversations, messages, grants, and tags go through `RecordingStudio::Reco
 - `unread_ids_among` skips trashed conversations.
 - Gemspec requires `recording_studio >= 6.14.0`. Development and the dummy pin tag `v6.14.0`. The dummy copies core's `root_recording_id` events migration.
 - Development and the dummy pin Accessible `v0.42.0`. The gemspec floor is `recording_studio_accessible >= 0.42.0, < 1.0`.
-- Trashable stays a development pin at `v0.16.0` and is not a gemspec dependency. Trashable registers the `:trashable` recording filter. The dummy does not.
+- Trashable stays a development pin at `v0.16.0` and is not a gemspec dependency. Trashable registers the `:trashable` recording filter. The dummy does not. The dummy defines `recording_studio_trashable_kept_sql` as `RecordingStudio.kept_sql` because API `0.23` still calls that method.
 
 ### Upgrade notes
 
