@@ -75,7 +75,7 @@ module RecordingStudioMessages
         return {} if stored.blank?
         raise ArgumentError, "tags must be a Hash" unless stored.is_a?(Hash)
 
-        found = RecordingStudio::Recording.unscoped.where(id: stored.values, trashed_at: nil).index_by do |recording|
+        found = RecordingStudio::Recording.unscoped.kept.where(id: stored.values).index_by do |recording|
           recording.id.to_s
         end
         stored.each_with_object({}) do |(key, id), loaded|
@@ -114,9 +114,9 @@ module RecordingStudioMessages
       end
 
       def kept_groups(mount_recording)
-        RecordingStudio::Recording.unscoped.where(
+        RecordingStudio::Recording.unscoped.kept.where(
           parent_recording_id: mount_recording.id,
-          recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE, trashed_at: nil
+          recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE
         )
       end
 

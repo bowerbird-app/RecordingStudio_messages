@@ -47,7 +47,7 @@ module RecordingStudioMessages
         missing = parent_ids.uniq - @loaded.keys
         return if missing.empty?
 
-        RecordingStudio::Recording.unscoped.where(id: missing, trashed_at: nil).find_each do |recording|
+        RecordingStudio::Recording.unscoped.kept.where(id: missing).find_each do |recording|
           @loaded[recording.id.to_s] = recording
         end
         raise NotInTree unless missing.all? { |id| @loaded.key?(id) }

@@ -188,7 +188,7 @@ module RecordingStudioMessages
       return false if @mount_recording.blank? || recording.blank?
       return false unless recording.recordable_type == MESSAGE_GROUP_TYPE
       return false unless recording.parent_recording_id == @mount_recording.id
-      return false if recording.trashed_at.present?
+      return false unless RecordingStudio::Recording.unscoped.kept.exists?(id: recording.id)
 
       RecordingStudioAccessible.authorized?(
         actor: current_messages_actor,

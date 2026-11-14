@@ -80,7 +80,7 @@ module RecordingStudioMessages
 
     def recordings_scope(recordable_type)
       lambda do |relation|
-        relation.where(recordable_type: recordable_type, trashed_at: nil)
+        relation.kept.where(recordable_type: recordable_type)
       end
     end
 

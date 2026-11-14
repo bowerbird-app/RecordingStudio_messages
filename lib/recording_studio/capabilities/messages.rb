@@ -11,10 +11,9 @@ module RecordingStudio
         MESSAGE_MOUNT_TYPE = "RecordingStudioMessages::MessageMount"
 
         def message_mounts
-          RecordingStudio::Recording.unscoped.where(
+          RecordingStudio::Recording.unscoped.kept.where(
             parent_recording_id: id,
-            recordable_type: MESSAGE_MOUNT_TYPE,
-            trashed_at: nil
+            recordable_type: MESSAGE_MOUNT_TYPE
           )
         end
 

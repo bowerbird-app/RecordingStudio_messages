@@ -6,7 +6,7 @@ module RecordingStudioMessages
       module_function
 
       def find(id)
-        RecordingStudio::Recording.unscoped.find_by(id: id, trashed_at: nil) if id.present?
+        RecordingStudio::Recording.unscoped.kept.find_by(id: id) if id.present?
       end
     end
   end

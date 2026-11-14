@@ -38,7 +38,7 @@ module RecordingStudioMessages
 
       def self.backfill_last_message_at!
         RecordingStudioMessages::MessageGroup.find_each do |group|
-          recording = RecordingStudio::Recording.unscoped.find_by(
+          recording = RecordingStudio::Recording.unscoped.kept.find_by(
             recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE,
             recordable_id: group.id
           )
@@ -53,7 +53,8 @@ module RecordingStudioMessages
 
       def granted_group_ids
         RecordingStudio::Recording.unscoped
-                                  .where(recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE, trashed_at: nil)
+                                  .kept
+                                  .where(recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE)
                                   .joins(access_joins)
                                   .where(recording_studio_accesses: actor_filter.merge(role: ranked_roles))
                                   .where(dependent_access_sql)
@@ -65,7 +66,7 @@ module RecordingStudioMessages
           INNER JOIN recording_studio_recordings access_recordings
             ON access_recordings.parent_recording_id = recording_studio_recordings.id
             AND access_recordings.recordable_type = #{quoted(ACCESS_TYPE)}
-            AND access_recordings.trashed_at IS NULL
+            AND #{RecordingStudio.kept_sql('access_recordings')}
           INNER JOIN recording_studio_accesses
             ON recording_studio_accesses.id = access_recordings.recordable_id
         SQL
@@ -81,7 +82,7 @@ module RecordingStudioMessages
               ON manager_accesses.id = manager_recordings.recordable_id
               AND manager_recordings.recordable_type = #{quoted(ACCESS_TYPE)}
             WHERE manager_recordings.id = recording_studio_accesses.depends_on_recording_id
-              AND manager_recordings.trashed_at IS NULL
+              AND #{RecordingStudio.kept_sql('manager_recordings')}
               AND manager_recordings.root_recording_id = access_recordings.root_recording_id
               AND #{ranked_role_sql('manager_accesses')}
               AND #{ranked_role_sql('recording_studio_accesses')}
