@@ -68,8 +68,14 @@ module RecordingStudioMessages
     def contact_error(error)
       return render_expired_contact if modal_frame_request? && @intent&.expired?
 
-      flash.now[:alert] = error.message
+      flash.now[:alert] = contact_denial_copy(error)
       render(@mount.present? ? error_template : :denied, status: :unprocessable_entity)
+    end
+
+    def contact_denial_copy(error)
+      return Copy.t("errors.cannot_send") if error.is_a?(NotAuthorized)
+
+      error.message
     end
 
     def render_expired_contact

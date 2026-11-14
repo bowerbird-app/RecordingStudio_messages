@@ -42,6 +42,32 @@ class TrustedWriteTest < Minitest::Test
     assert_nil RecordingStudioMessages.trusted_write_context
   end
 
+  def test_a_rejected_write_becomes_not_authorized_and_restores_context
+    error = assert_raises(RecordingStudioMessages::NotAuthorized) do
+      RecordingStudioMessages.trusted_write(action: :send_message, mount_recording: @mount) do
+        raise RecordingStudio::AuthorizationError, "denied"
+      end
+    end
+
+    assert_equal RecordingStudioMessages::Copy.t("errors.cannot_send_conversation"), error.message
+    assert_nil RecordingStudioMessages.trusted_write_context
+
+    create_error = assert_raises(RecordingStudioMessages::NotAuthorized) do
+      RecordingStudioMessages.trusted_write(action: :create_group, mount_recording: @mount) do
+        raise RecordingStudio::AuthorizationError, "denied"
+      end
+    end
+    rename_error = assert_raises(RecordingStudioMessages::NotAuthorized) do
+      RecordingStudioMessages.trusted_write(action: :rename_group, mount_recording: @mount) do
+        raise RecordingStudio::AuthorizationError, "denied"
+      end
+    end
+
+    assert_equal RecordingStudioMessages::Copy.t("errors.cannot_start"), create_error.message
+    assert_equal RecordingStudioMessages::Copy.t("flashes.cannot_open"), rename_error.message
+    assert_nil RecordingStudioMessages.trusted_write_context
+  end
+
   def test_context_is_restored_when_the_block_raises
     during = nil
 
@@ -102,6 +128,34 @@ class TrustedWriteTest < Minitest::Test
     assert_includes readme, ":send_message"
     assert_includes readme, ":rename_group"
     assert_includes readme, "config.authorize_write"
+    assert_includes readme, "RecordingStudioMessages::NotAuthorized"
+    assert_includes readme, "RecordingStudio::AuthorizationError"
+  end
+
+  def test_write_denial_is_mapped_on_the_service_write_span
+    marker = source("trusted_write.rb")
+    rename_controller = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/message_groups_rename.rb", __dir__)
+    )
+    contact = File.read(
+      File.expand_path("../app/controllers/recording_studio_messages/public_contact_response.rb", __dir__)
+    )
+    api_errors = source("api/errors.rb")
+
+    assert_includes marker, "rescue RecordingStudio::AuthorizationError"
+    assert_includes marker, "raise RecordingStudioMessages::NotAuthorized, Copy.t(DENIAL_COPY.fetch(action))"
+    assert_includes marker, 'create_group: "errors.cannot_start"'
+    assert_includes marker, 'send_message: "errors.cannot_send_conversation"'
+    assert_includes marker, 'rename_group: "flashes.cannot_open"'
+    assert_includes rename_controller, "rescue RecordingStudioMessages::NotAuthorized"
+    assert_includes rename_controller, "head(:forbidden)"
+    assert_includes contact, "return Copy.t(\"errors.cannot_send\") if error.is_a?(NotAuthorized)"
+    assert_includes api_errors, "rescue RecordingStudioMessages::NotAuthorized => e"
+    assert_includes api_errors, "raise ::RecordingStudioApi::AuthorizationError, e.message"
+
+    Dir[File.expand_path("../app/controllers/**/*.rb", __dir__)].each do |path|
+      refute_includes File.read(path), "RecordingStudio::AuthorizationError", path
+    end
   end
 
   private
