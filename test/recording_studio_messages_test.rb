@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.26.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.27.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -515,6 +515,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes readme, "access: :inherited"
     assert_includes readme, "contacts:"
     assert_includes readme, "allow_membership_change"
+    assert_includes readme, "trusted_write_context"
+    assert_includes readme, ":rename_group"
     assert_includes readme, "recording_studio_api/api/v1/message_groups"
     assert_includes readme, "RecordingStudioMessages.send_message"
     refute_includes readme, "show_access"

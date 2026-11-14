@@ -14,6 +14,7 @@ require "recording_studio_messages/metrics"
 require "recording_studio_messages/configuration"
 require "recording_studio/capabilities/messages"
 require "recording_studio_messages/membership_lock"
+require "recording_studio_messages/trusted_write"
 require "recording_studio_messages/mount_access"
 require "recording_studio_messages/contacts"
 require "recording_studio_messages/public_contact"
@@ -200,6 +201,14 @@ module RecordingStudioMessages
 
     def allow_membership_change(&)
       MembershipLock.allow_membership_change(&)
+    end
+
+    def trusted_write(...)
+      TrustedWrite.trusted_write(...)
+    end
+
+    def trusted_write_context
+      TrustedWrite.context
     end
 
     def register_messages_capability!

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-14
+
+Host write policies can tell a gem Message or MessageGroup write from any other write. `RecordingStudioMessages.trusted_write_context` is set only around those writes.
+
+### Added
+
+- `RecordingStudioMessages.trusted_write_context` returns nil, or a frozen value with `action` (`:create_group`, `:send_message`, or `:rename_group`) and `mount_recording`.
+- `RecordingStudioMessages.trusted_write(action:, mount_recording:) { ... }` sets that marker for the block and restores the previous value afterwards, including when the block raises. Services call it. Hosts read the context.
+- `Services::CreateGroup` sets `:create_group` around `RecordingStudio.record!`. `Services::SendMessagePersist` sets `:send_message` around `RecordingStudio.record!` and around the conversation `last_message_at` update. `Services::RenameGroup` sets `:rename_group` around `root.revise`, after the existing `:edit` check. `EnsureMount` does not set it.
+
+### Upgrade notes
+
+- Bump to **0.27.0**. No Messages migration.
+- To allow Message and MessageGroup writes only from this gem, read `trusted_write_context` in `config.authorize_write`. A nil context means the write did not come from these services. Returning false for `:rename_group` keeps rename closed while create and send stay open. See the README.
+
 ## [0.26.0] - 2026-11-13
 
 `send_message` on an `:inherited` mount notifies everyone with effective access of at least `:view`. `:members` mounts still notify direct grants only. Inherited people still get no grant.

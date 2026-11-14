@@ -49,13 +49,15 @@ module RecordingStudioMessages
 
       def record_group
         group = RecordingStudioMessages::MessageGroup.new(title: @title)
-        RecordingStudio.record!(
-          action: "created",
-          recordable: group,
-          root_recording: @mount_recording.root_recording || @mount_recording,
-          parent_recording: @mount_recording,
-          actor: @actor
-        ).recording
+        RecordingStudioMessages.trusted_write(action: :create_group, mount_recording: @mount_recording) do
+          RecordingStudio.record!(
+            action: "created",
+            recordable: group,
+            root_recording: @mount_recording.root_recording || @mount_recording,
+            parent_recording: @mount_recording,
+            actor: @actor
+          ).recording
+        end
       end
 
       def validate!

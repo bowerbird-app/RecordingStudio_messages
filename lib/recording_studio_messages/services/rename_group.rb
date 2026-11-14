@@ -54,8 +54,11 @@ module RecordingStudioMessages
 
       def revise_title
         root = @group_recording.root_recording || @group_recording.parent_recording
-        root.revise(@group_recording, actor: @actor) do |group|
-          group.title = @title
+        mount = @group_recording.parent_recording
+        RecordingStudioMessages.trusted_write(action: :rename_group, mount_recording: mount) do
+          root.revise(@group_recording, actor: @actor) do |group|
+            group.title = @title
+          end
         end
       end
 
