@@ -38,16 +38,22 @@ module RecordingStudioMessages
     end
 
     def apply_rename
+      save_rename
+      @group_recording.reload
+      @rename_inbox = rename_inbox
+      respond_after_rename
+    rescue RecordingStudioMessages::NotAuthorized
+      head(:forbidden)
+    rescue RecordingStudioMessages::Error
+      head :unprocessable_entity
+    end
+
+    def save_rename
       RecordingStudioMessages.rename_group(
         group_recording: @group_recording,
         title: rename_title,
         actor: current_messages_actor
       )
-      @group_recording.reload
-      @rename_inbox = rename_inbox
-      respond_after_rename
-    rescue RecordingStudioMessages::Error
-      head :unprocessable_entity
     end
 
     def respond_after_rename
