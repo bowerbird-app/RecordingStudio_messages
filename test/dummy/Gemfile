@@ -5,7 +5,7 @@ gem "recording_studio_messages", path: "../.."
 
 # RecordingStudio engine
 gem "recording_studio", github: "bowerbird-app/RecordingStudio", tag: "v6.14.0"
-gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.33.0"
+gem "recording_studio_accessible", github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.42.0"
 gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag: "v2.13.0"
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.23.0"
 # Required by recording_studio_user and root_switchable (git-only).
@@ -20,10 +20,9 @@ gem "recording_studio_notifications", github: "bowerbird-app/RecordingStudio_not
 gem "recording_studio_publishable", github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.15.0"
 gem "recording_studio_site_settings", github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.6"
 gem "recording_studio_terms_and_conditions", github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.18.0"
-# Admin and Accessible load Trashable query helpers only; pin for Bundler.
+# Accessible 0.42 needs Trashable >= 0.16. The engine registers the kept filter.
 gem "recording_studio_trashable",
-    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.14.0",
-    require: false
+    github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.16.0"
 gem "recording_studio_user", github: "bowerbird-app/RecordingStudio_users", tag: "v0.28.1"
 gem "view_component", "4.19.0"
 

@@ -16,13 +16,15 @@ Kept conversations, messages, grants, and tags go through `RecordingStudio::Reco
 - Inbox, thread, unread, tag, reference, and metrics queries use `Recording.kept`. Join SQL uses `RecordingStudio.kept_sql` with the table alias.
 - `unread_ids_among` skips trashed conversations.
 - Gemspec requires `recording_studio >= 6.14.0`. Development and the dummy pin tag `v6.14.0`. The dummy copies core's `root_recording_id` events migration.
-- Trashable stays a development pin at `v0.14.0` and is not a gemspec dependency. The dummy registers the `:trashable` recording filter so kept queries skip trashed rows until Trashable `0.16.0` is tagged.
+- Development and the dummy pin Accessible `v0.42.0`. The gemspec floor is `recording_studio_accessible >= 0.42.0, < 1.0`.
+- Trashable stays a development pin at `v0.16.0` and is not a gemspec dependency. Trashable registers the `:trashable` recording filter. The dummy does not.
 
 ### Upgrade notes
 
 - Bump to **0.28.0**. No Messages migration.
 - Pin Recording Studio `v6.14.0` (`>= 6.14.0`). Copy core migration `20261114090000_add_root_recording_id_to_recording_studio_events` if the host has not already.
-- With no recording filter registered, `kept` matches every recording. Install Trashable `0.16.0` when that tag exists so trashed rows drop out. Do not pin Trashable `>= 0.16.0` before the tag.
+- Pin Accessible `v0.42.0` (`>= 0.42.0, < 1.0`). Accessible 0.42 needs Trashable `>= 0.16.0`.
+- Pin Trashable `v0.16.0`. That release registers the kept filter. Drop a host copy of the same `:trashable` filter. With no filter registered, `kept` still matches every recording.
 
 ## [0.27.0] - 2026-11-14
 

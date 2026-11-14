@@ -167,7 +167,8 @@ class MessageReadsTest < ActiveSupport::TestCase
     assert_includes unread_ids(group), group.id
     assert_equal group.id, RecordingStudioMessages::Services::LiveRecording.find(group.id).id
   ensure
-    DummyKeptFilter.register!
+    RecordingStudio.unregister_recording_filter(:trashable)
+    RecordingStudioTrashable::RecordingFilter.register!
   end
 
   private
