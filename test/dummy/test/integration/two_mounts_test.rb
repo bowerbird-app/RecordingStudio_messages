@@ -61,7 +61,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
 
   test "catalog keeps the seeded desks when another conversation reuses the title" do
     leftover_workspace = Workspace.create!(name: "Leftover #{SecureRandom.hex(4)}")
-    leftover_root = RecordingStudio.root_recording_for(leftover_workspace)
+    leftover_root = RecordingStudio.create_root_recording!(leftover_workspace, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: leftover_root, actor: @staff)
     leftover_mount = leftover_root.ensure_message_mount("support", actor: @staff)
     leftover_group = RecordingStudioMessages.create_group(

@@ -26,7 +26,7 @@ class InheritedContactAccessTest < ActionDispatch::IntegrationTest
       confirmed_at: Time.current
     )
     @workspace = Workspace.create!(name: "Contact access #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     Current.actor = @staff
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     mailbox = Mailbox.create!(name: "Contact mailbox #{SecureRandom.hex(4)}")

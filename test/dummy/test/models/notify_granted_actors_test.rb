@@ -17,7 +17,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
       name: "Casey Patron"
     )
     @workspace = Workspace.create!(name: "Notify #{SecureRandom.hex(4)}")
-    @ticket_root = RecordingStudio.root_recording_for(@workspace)
+    @ticket_root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @ticket_root, actor: @staff)
     @mount = @ticket_root.ensure_message_mount("support", actor: @staff)
     @group = RecordingStudioMessages.create_group(@mount, title: "Root filing", actor: @staff)
@@ -30,7 +30,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     raise result.error if result.failure?
 
     @admin_root_recordable = AdminRoot.create!(name: "Notify Admin #{SecureRandom.hex(4)}")
-    @admin_root = RecordingStudio.root_recording_for(@admin_root_recordable)
+    @admin_root = RecordingStudio.create_root_recording!(@admin_root_recordable, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @admin_root, actor: @staff)
   end
 

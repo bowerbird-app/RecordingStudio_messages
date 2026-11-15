@@ -25,7 +25,7 @@ class TrustedWriteTest < ActiveSupport::TestCase
     )
     Current.actor = @owner
     @workspace = Workspace.create!(name: "Trusted #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @owner)
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @owner)
     raise result.error if result.failure?
 
@@ -184,7 +184,7 @@ class TrustedWriteTest < ActiveSupport::TestCase
 
     with_write_policy(captures) do
       fresh = Workspace.create!(name: "Mount #{SecureRandom.hex(4)}")
-      root = RecordingStudio.root_recording_for(fresh)
+      root = RecordingStudio.create_root_recording!(fresh, actor: @owner)
       result = RecordingStudioAccessible.bootstrap_owner_access!(recording: root, actor: @owner)
       raise result.error if result.failure?
 

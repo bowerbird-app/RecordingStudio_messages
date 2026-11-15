@@ -69,10 +69,10 @@ previous_actor = Current.actor
 Current.actor = staff
 
 begin
-  root_recording = RecordingStudio.root_recording_for(workspace)
-  accessible_root_recording = RecordingStudio.root_recording_for(accessible_workspace)
-  private_root_recording = RecordingStudio.root_recording_for(private_workspace)
-  admin_root_recording = RecordingStudio.root_recording_for(admin_root)
+  root_recording = RecordingStudio.create_root_recording!(workspace, actor: staff)
+  accessible_root_recording = RecordingStudio.create_root_recording!(accessible_workspace, actor: staff)
+  private_root_recording = RecordingStudio.create_root_recording!(private_workspace, actor: staff)
+  admin_root_recording = RecordingStudio.create_root_recording!(admin_root, actor: staff)
 
   folder_recording = find_or_record_child.call(folder, root_recording, root_recording)
   find_or_record_child.call(page, root_recording, folder_recording)

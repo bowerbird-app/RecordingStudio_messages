@@ -22,7 +22,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       confirmed_at: Time.current
     )
     @workspace = Workspace.create!(name: "Contact #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     Current.actor = @staff
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     mailbox = Mailbox.create!(name: "Contact mailbox #{SecureRandom.hex(4)}")
@@ -1533,7 +1533,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
   def press_recording(name)
     workspace = Workspace.create!(name: "#{name} #{SecureRandom.hex(4)}")
-    RecordingStudio.root_recording_for(workspace)
+    RecordingStudio.create_root_recording!(workspace, actor: @staff)
   end
 
   def verify_contact(email:, purpose: "registration")

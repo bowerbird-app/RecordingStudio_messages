@@ -280,7 +280,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   def owned_root(recordable, actor: @owner)
-    root = RecordingStudio.root_recording_for(recordable)
+    root = RecordingStudio.create_root_recording!(recordable, actor: actor)
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: root, actor:)
     raise result.error if result.failure?
 

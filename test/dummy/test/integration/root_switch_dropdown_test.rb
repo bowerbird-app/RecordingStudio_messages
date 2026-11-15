@@ -36,7 +36,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
     sign_in user
 
     workspace = Workspace.create!(name: "Dropdown Workspace")
-    RecordingStudio.root_recording_for(workspace)
+    RecordingStudio.create_root_recording!(workspace, actor: user)
 
     get root_path
 
@@ -129,7 +129,7 @@ class RootSwitchDropdownTest < ActionDispatch::IntegrationTest
   private
 
   def grant_workspace_view!(workspace, user)
-    root = RecordingStudio.root_recording_for(workspace)
+    root = RecordingStudio.create_root_recording!(workspace, actor: user)
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: root, actor: user)
     raise result.error if result.failure?
 

@@ -203,7 +203,7 @@ class MessageTimestampsTest < ActionDispatch::IntegrationTest
 
   def support_mount
     workspace = Workspace.create!(name: "Times #{SecureRandom.hex(4)}")
-    root = RecordingStudio.root_recording_for(workspace)
+    root = RecordingStudio.create_root_recording!(workspace, actor: @owner)
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: root, actor: @owner)
     raise result.error if result.failure?
 

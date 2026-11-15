@@ -198,7 +198,7 @@ The `gem_template` helper provides access to all engine routes.
 
 This template's dummy app uses RecordingStudio `recording_studio/v3.0.0`. Keep
 `config.require_recordable_declarations = true`, declare every configured recordable with
-`recording_studio_recordable(...)`, and create roots with `RecordingStudio.root_recording_for(recordable)`.
+`recording_studio_recordable(...)`, and create roots with `RecordingStudio.create_root_recording!(recordable, actor:)`. `root_recording_for` only finds an existing root.
 Child recordings must be created with an explicit `parent_recording`.
 
 ---
