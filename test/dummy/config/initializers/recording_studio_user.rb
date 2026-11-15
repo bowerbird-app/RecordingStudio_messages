@@ -11,6 +11,8 @@ RecordingStudioUser.configure do |config|
   # Leave additional_profile_attributes at the gem default so :locale stays
   # allowlisted for Recording Studio Internationalization.
   config.require_password_confirmation = false
+  # Users 0.30 defaults this to 12. Seed and demo passwords stay "Password".
+  config.minimum_password_length = 6
   # Devise login page heading (host sessions#new). Leave unset to follow I18n.
   # config.login_title = "Welcome back"
   # OmniAuth. Leave this empty: Continue-with buttons appear only for providers

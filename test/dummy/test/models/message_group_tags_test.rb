@@ -308,6 +308,7 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
 
     stale_gone = @press_kit
     gone_id = stale_gone.id
+    RecordingStudio::Event.where(recording_id: gone_id).delete_all
     RecordingStudio::Recording.unscoped.where(id: gone_id).delete_all
     assert_equal gone_id, stale_gone.id
 
@@ -389,7 +390,7 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
 
   def support_mount(prefix)
     workspace = Workspace.create!(name: "#{prefix} #{SecureRandom.hex(4)}")
-    root = RecordingStudio.root_recording_for(workspace)
+    root = RecordingStudio.create_root_recording!(workspace, actor: @owner)
     result = RecordingStudioAccessible.bootstrap_owner_access!(recording: root, actor: @owner)
     raise result.error if result.failure?
 
@@ -398,7 +399,7 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
 
   def host_recording(name)
     workspace = Workspace.create!(name: "#{name} #{SecureRandom.hex(4)}")
-    RecordingStudio.root_recording_for(workspace)
+    RecordingStudio.create_root_recording!(workspace, actor: @owner)
   end
 
   def grant!(recording, actor)

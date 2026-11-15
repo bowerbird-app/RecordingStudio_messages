@@ -17,7 +17,7 @@ class MessageReferencesTest < ActiveSupport::TestCase
       name: "Casey Patron"
     )
     @workspace = Workspace.create!(name: "Refs #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     @mount = @root.ensure_message_mount("support", actor: @staff)
     @group = RecordingStudioMessages.create_group(@mount, title: "Refs conversation", actor: @staff)
@@ -95,7 +95,7 @@ class MessageReferencesTest < ActiveSupport::TestCase
 
   test "send_message refuses a target outside the mount parent tree" do
     other = Workspace.create!(name: "Other #{SecureRandom.hex(4)}")
-    other_root = RecordingStudio.root_recording_for(other)
+    other_root = RecordingStudio.create_root_recording!(other, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: other_root, actor: @staff)
     outsider = record_page!("Elsewhere", parent: other_root, root: other_root)
     Current.actor = @staff

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-11-15
+
+Requires Recording Studio 7. Roots are created with `create_root_recording!`. `root_recording_for` only finds an existing root.
+
+### Changed
+
+- Gemspec requires `recording_studio >= 7.0, < 8.0`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`.
+- Development and the dummy pin Recording Studio `v7.0.0`. Companion pins that reject core 7 move to Accessible `v0.44.0`, Attachable `v0.28.0`, API `v0.24.0`, Publishable `v0.18.1`, Trashable `v0.17.0`, Root Switchable `v0.16.0`, Moveable `v5.0.0`, Notifications `v0.18.0`, Admin `v2.16.0`, Metrics `v0.9.0`, Logs `v0.8.0`, Users `v0.30.0`, Internationalization `v0.3.0`, and Terms `v0.19.1`. Flatpack is `v0.1.376` because Attachable 0.28 requires it. Cache, Icons, and Site Settings stay. Terms `v0.19.1` still requires Moveable `< 5`, so the dummy checks out that tag and opens the cap to `>= 5.0.0, < 6.0`. Puma is `8.1.0`. The dummy pins `msgpack >= 1.8.7`.
+- Seeds and tests that created a root with `root_recording_for` call `create_root_recording!(recordable, actor:)`. Lookups stay on `root_recording_for`.
+- The dummy sets `config.authorize_write` so a present actor may write, including a new root. It does not set `allow_unauthorized_writes`.
+- Kept queries stay on `Recording.kept` and `RecordingStudio.kept_sql`. The dummy no longer defines `recording_studio_trashable_kept_sql`. API 0.24 uses the core helpers. Trashable 0.17 does not provide that method.
+
+### Upgrade notes
+
+- Bump to **0.30.0**. No Messages migration.
+- Install Recording Studio `>= 7.0, < 8.0` (tag `v7.0.0`). Copy core migration `20261114090000_add_root_recording_id_to_recording_studio_events` if `recording_studio_events.root_recording_id` is missing.
+- Pin Accessible `>= 0.44.0, < 1.0` (tag `v0.44.0`), Attachable `>= 0.28.0, < 1.0` (tag `v0.28.0`), Metrics `>= 0.9.0, < 1.0` (tag `v0.9.0`), and Notifications `>= 0.18.0, < 1` (tag `v0.18.0`). Attachable 0.28 needs API `v0.24.0`, Moveable `v5.0.0`, and Flatpack `v0.1.376`. Accessible 0.44 needs Trashable `>= 0.17.0`.
+- Replace `root_recording_for` calls that created a root with `create_root_recording!(recordable, actor:)`. Leave lookups on `root_recording_for` and handle `nil`.
+- Set `config.authorize_write` and pass an actor on writes. A new root is authorized with `root_recording` nil. Do not set `allow_unauthorized_writes`.
+- Users `v0.30.0` defaults `minimum_password_length` to 12. The dummy sets it to 6 so the demo password stays `Password`.
+
 ## [0.29.0] - 2026-11-14
 
 A host `config.authorize_write` that rejects a Message or MessageGroup write raises `RecordingStudio::AuthorizationError`. The write services turn that into `RecordingStudioMessages::NotAuthorized` so existing callers keep their denial.

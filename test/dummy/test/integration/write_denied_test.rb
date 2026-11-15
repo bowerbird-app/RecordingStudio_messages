@@ -154,7 +154,7 @@ class PublicContactWriteDeniedTest < ActionDispatch::IntegrationTest
       confirmed_at: Time.current
     )
     @workspace = Workspace.create!(name: "Denied contact #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     Current.actor = @staff
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     mailbox = Mailbox.create!(name: "Denied mailbox #{SecureRandom.hex(4)}")

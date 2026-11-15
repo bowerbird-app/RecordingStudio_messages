@@ -17,7 +17,7 @@ class SendMessageTest < ActiveSupport::TestCase
       name: "Casey Patron"
     )
     @workspace = Workspace.create!(name: "Send #{SecureRandom.hex(4)}")
-    @root = RecordingStudio.root_recording_for(@workspace)
+    @root = RecordingStudio.create_root_recording!(@workspace, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     @mount = @root.ensure_message_mount("support", actor: @staff)
     @group = RecordingStudioMessages.create_group(@mount, title: "Notify conversation", actor: @staff)
