@@ -172,6 +172,22 @@ GIT
       recording_studio_attachable (~> 0.5)
 
 GIT
+  remote: https://github.com/bowerbird-app/RecordingStudio_terms_and_conditions.git
+  revision: 14024810f54e1168e89fb85ba8ef06897c646e60
+  tag: v0.20.0
+  specs:
+    recording_studio_terms_and_conditions (0.20.0)
+      flat_pack (>= 0.1.196)
+      rails (~> 8.1.0)
+      recording_studio (>= 7.0, < 8.0)
+      recording_studio_accessible (>= 0.44.0, < 1.0)
+      recording_studio_admin (>= 2.16.0, < 3.0)
+      recording_studio_metrics (>= 0.9.0, < 1.0)
+      recording_studio_moveable (>= 5.0, < 6.0)
+      recording_studio_publishable (>= 0.18.1, < 1.0)
+      recording_studio_user (>= 0.30.0, < 1.0)
+
+GIT
   remote: https://github.com/bowerbird-app/RecordingStudio_trashable.git
   revision: f286625ad346d5ec03ba7916f9b6f23137a0f43d
   tag: v0.17.0
@@ -220,7 +236,7 @@ GIT
 PATH
   remote: ../..
   specs:
-    recording_studio_messages (0.30.0)
+    recording_studio_messages (0.30.1)
       flat_pack (>= 0.1.349)
       rails (~> 8.1.0)
       recording_studio (>= 7.0, < 8.0)
@@ -228,20 +244,6 @@ PATH
       recording_studio_attachable (>= 0.28.0, < 1.0)
       recording_studio_metrics (>= 0.9.0, < 1.0)
       recording_studio_notifications (>= 0.18.0, < 1)
-
-PATH
-  remote: tmp/recording_studio_terms_and_conditions
-  specs:
-    recording_studio_terms_and_conditions (0.19.1)
-      flat_pack (>= 0.1.196)
-      rails (~> 8.1.0)
-      recording_studio (>= 6.7.0, < 8.0)
-      recording_studio_accessible (>= 0.24.2, < 1)
-      recording_studio_admin (>= 2.0.6, < 3)
-      recording_studio_metrics (>= 0.3.0, < 1.0)
-      recording_studio_moveable (>= 5.0.0, < 6.0)
-      recording_studio_publishable (~> 0.6)
-      recording_studio_user (>= 0.12.2)
 
 GEM
   remote: https://rubygems.org/
@@ -925,14 +927,14 @@ CHECKSUMS
   recording_studio_icons (0.2.1)
   recording_studio_internationalization (0.3.0)
   recording_studio_logs (0.8.0)
-  recording_studio_messages (0.30.0)
+  recording_studio_messages (0.30.1)
   recording_studio_metrics (0.9.0)
   recording_studio_moveable (5.0.0)
   recording_studio_notifications (0.18.0)
   recording_studio_publishable (0.18.1)
   recording_studio_root_switchable (0.16.0)
   recording_studio_site_settings (0.5.6)
-  recording_studio_terms_and_conditions (0.19.1)
+  recording_studio_terms_and_conditions (0.20.0)
   recording_studio_trashable (0.17.0)
   recording_studio_user (0.30.0)
   redis (5.4.1) sha256=b5e675b57ad22b15c9bcc765d5ac26f60b675408af916d31527af9bd5a81faae

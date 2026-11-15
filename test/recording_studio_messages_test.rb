@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.30.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.30.1", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -118,9 +118,10 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.18.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.6"'
-    assert_includes gemfile, "https://github.com/bowerbird-app/RecordingStudio_terms_and_conditions.git"
-    assert_includes gemfile, "--branch\", \"v0.19.1\""
-    assert_includes gemfile, 'spec.add_dependency "recording_studio_moveable", ">= 5.0.0", "< 6.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.20.0"'
+    refute_includes gemfile, "tmp/recording_studio_terms_and_conditions"
+    refute_includes gemfile, "--branch\", \"v0.19.1\""
+    refute_includes gemfile, 'spec.add_dependency "recording_studio_moveable", ">= 5.0.0", "< 6.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.16.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.17.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
@@ -165,6 +166,11 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes dummy_lock, "flat_pack (0.1.376)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
+    assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_terms_and_conditions.git"
+    assert_includes dummy_lock, "tag: v0.20.0"
+    assert_includes dummy_lock, "recording_studio_terms_and_conditions (0.20.0)"
+    refute_includes dummy_lock, "remote: tmp/recording_studio_terms_and_conditions"
+    refute_includes dummy_lock, "recording_studio_terms_and_conditions (0.19.1)"
   end
 
   def test_dummy_does_not_restore_trashable_kept_sql

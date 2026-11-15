@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-11-15
+
+The dummy pins Terms `v0.20.0`. That release accepts Moveable 5, so the dummy no longer rewrites the Terms gemspec.
+
+### Changed
+
+- The dummy pins `recording_studio_terms_and_conditions` at tag `v0.20.0`. The checkout of `v0.19.1` and the Moveable cap rewrite are gone.
+
+### Upgrade notes
+
+- Bump to **0.30.1**. No Messages migration.
+- Hosts that pin Terms can use tag `v0.20.0`. It allows Recording Studio 7 and Moveable `>= 5.0.0, < 6.0` without a local gemspec edit.
+
 ## [0.30.0] - 2026-11-15
 
 Requires Recording Studio 7. Roots are created with `create_root_recording!`. `root_recording_for` only finds an existing root.
