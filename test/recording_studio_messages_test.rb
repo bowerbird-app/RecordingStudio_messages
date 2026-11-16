@@ -109,28 +109,28 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_dummy_gemfile_pins_verified_family_github_tags
     gemfile = File.read(File.expand_path("dummy/Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.44.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.28.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.18.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.3.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.45.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.31.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.19.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.16.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.30.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v0.18.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.5.6"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.20.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.32.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.7.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v1.1.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.6.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_terms_and_conditions", tag: "v0.22.0"'
     refute_includes gemfile, "tmp/recording_studio_terms_and_conditions"
     refute_includes gemfile, "--branch\", \"v0.19.1\""
     refute_includes gemfile, 'spec.add_dependency "recording_studio_moveable", ">= 5.0.0", "< 6.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.16.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.17.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_admin", tag: "v2.18.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_trashable", tag: "v1.0.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.26.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v1.2.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.4.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v6.0.0"'
     refute_includes gemfile, "1adc7722ec58fcfeb43ff1e2e96849936a6e9411"
-    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.376"'
+    assert_includes gemfile, 'github: "bowerbird-app/flatpack", tag: "v0.1.377"'
     assert_includes gemfile, 'gem "view_component", "4.19.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_Internationalization", tag: "v0.3.0"'
     refute_includes gemfile, "widen_recording_studio_requirement"
@@ -153,22 +153,22 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes root_lock, "recording_studio_notifications (0.18.0)"
     assert_includes root_lock, "recording_studio_notifications (>= 0.18.0, < 1)"
     refute_includes root_lock, "recording_studio_notifications (0.15.0)"
-    assert_includes dummy_lock, "tag: v0.18.0"
-    assert_includes dummy_lock, "recording_studio_notifications (0.18.0)"
+    assert_includes dummy_lock, "tag: v0.19.1"
+    assert_includes dummy_lock, "recording_studio_notifications (0.19.1)"
     refute_includes dummy_lock, "recording_studio_notifications (0.15.0)"
     assert_includes root_lock, "tag: v7.0.0"
     assert_includes root_lock, "recording_studio (7.0.0)"
-    assert_includes dummy_lock, "tag: v7.0.0"
-    assert_includes dummy_lock, "recording_studio (7.0.0)"
+    assert_includes dummy_lock, "tag: v7.3.0"
+    assert_includes dummy_lock, "recording_studio (7.3.0)"
     assert_includes root_lock, "tag: v0.1.376"
     assert_includes root_lock, "flat_pack (0.1.376)"
-    assert_includes dummy_lock, "tag: v0.1.376"
-    assert_includes dummy_lock, "flat_pack (0.1.376)"
+    assert_includes dummy_lock, "tag: v0.1.377"
+    assert_includes dummy_lock, "flat_pack (0.1.377)"
     assert_includes root_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "view_component (4.19.0)"
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_terms_and_conditions.git"
-    assert_includes dummy_lock, "tag: v0.20.0"
-    assert_includes dummy_lock, "recording_studio_terms_and_conditions (0.20.0)"
+    assert_includes dummy_lock, "tag: v0.22.0"
+    assert_includes dummy_lock, "recording_studio_terms_and_conditions (0.22.0)"
     refute_includes dummy_lock, "remote: tmp/recording_studio_terms_and_conditions"
     refute_includes dummy_lock, "recording_studio_terms_and_conditions (0.19.1)"
   end
@@ -512,6 +512,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"Mailbox"'
     assert_includes initializer_source, '"AdminRoot"'
     assert_includes initializer_source, '"RecordingStudioSiteSettings::SiteSetting"'
+    assert_includes initializer_source, '"RecordingStudioTermsAndConditions::Library"'
     assert_includes initializer_source, '"RecordingStudioTermsAndConditions::Terms"'
     assert_includes initializer_source, '"RecordingStudioTermsAndConditions::Section"'
     assert_includes initializer_source, '"RecordingStudioTermsAndConditions::Clause"'
@@ -521,6 +522,13 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes initializer_source, '"RecordingStudioApi::ApiCredential"'
     assert_includes initializer_source, '"RecordingStudioApi::ApiAccessToken"'
     assert_includes initializer_source, '"RecordingStudioApi::AdminApi"'
+    assert_includes initializer_source, "admin_root_recordable_type_names.empty?"
+    accessible = File.read(File.expand_path("dummy/config/initializers/recording_studio_accessible.rb", __dir__))
+    assert_includes accessible, 'Workspace.find_by(name: "Studio Workspace")'
+    assert_includes accessible, "RecordingStudio.root_recording_for(workspace)"
+    admin = File.read(File.expand_path("dummy/config/initializers/recording_studio_admin.rb", __dir__))
+    assert_includes admin, 'Workspace.find_by(name: "Studio Workspace")'
+    assert_includes admin, "RecordingStudio.root_recording_for(workspace)"
   end
 
   def test_dummy_readme_explains_dummy_app_purpose

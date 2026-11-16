@@ -143,7 +143,10 @@ Devise.setup do |config|
   # without confirming their account.
   # Default is 0.days, meaning the user cannot access the website without
   # confirming their account.
-  # config.allow_unconfirmed_access_for = 2.days
+  # Users 0.32 enables confirmable even when one-time codes are off. Devise 5
+  # otherwise blocks sign-in until the address is confirmed. Desk tests sign in
+  # accounts they just created, so the dummy keeps that access open.
+  config.allow_unconfirmed_access_for = nil
 
   # A period that the user is allowed to confirm their account before their
   # token becomes invalid. For example, if set to 3.days, the user can confirm

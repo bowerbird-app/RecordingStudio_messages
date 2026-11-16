@@ -20,7 +20,19 @@ class RecordingStudioHostTemplateTest < ActiveSupport::TestCase
 
   test "dummy app validates recordable declarations" do
     assert RecordingStudio.validate_recordable_declarations!
-    assert_equal [ "AdminRoot", "RecordingStudioUser::People", "Workspace" ],
+    if RecordingStudioApi::Engine.admin_root_recordable_type_names.any?
+      assert_includes RecordingStudio.configuration.recordable_types.map(&:to_s),
+                      "RecordingStudioApi::AdminApi"
+    else
+      refute_includes RecordingStudio.configuration.recordable_types.map(&:to_s),
+                      "RecordingStudioApi::AdminApi"
+    end
+    assert_equal [
+      "AdminRoot",
+      "RecordingStudioTermsAndConditions::Library",
+      "RecordingStudioUser::People",
+      "Workspace"
+    ],
                  RecordingStudio.root_recordable_types.sort
     assert RecordingStudio.shared_root_type?("RecordingStudioUser::People")
     assert_equal [ "Workspace", "Folder" ], RecordingStudio.allowed_parent_types_for("Page")
