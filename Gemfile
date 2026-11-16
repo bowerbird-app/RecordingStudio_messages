@@ -28,7 +28,7 @@ gem "recording_studio_user", ">= 0.30.0", github: "bowerbird-app/RecordingStudio
 gem "view_component", "4.19.0"
 
 # Attachable 0.28 depends on Recording Studio API, which depends on Moveable, Icons, and Redis.
-gem "recording_studio_api", github: "bowerbird-app/RecordingStudio_api", tag: "v0.24.0"
+gem "recording_studio_api", github: "bowerbird-app/RecordingStudio_api", tag: "v0.26.0"
 gem "recording_studio_icons", github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"
 gem "recording_studio_moveable", github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"
 gem "redis", "~> 5.3"

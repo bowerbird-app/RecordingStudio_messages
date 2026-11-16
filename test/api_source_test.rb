@@ -55,6 +55,34 @@ class ApiSourceTest < Minitest::Test
     refute send_message.input_contract.as_json.fetch(:reject_unknown)
   end
 
+  def test_endpoints_declare_recordable_type_and_required_role
+    group = RecordingStudioMessages::MESSAGE_GROUP_TYPE
+    mount = RecordingStudioMessages::MESSAGE_MOUNT_TYPE
+    scoped = {
+      messages_send_message: [group, :edit],
+      messages_read_thread: [group, :view],
+      messages_rename_group: [group, :edit],
+      messages_mark_read: [group, :view],
+      messages_list_conversations: [mount, :view],
+      messages_create_group: [mount, :edit]
+    }
+
+    scoped.each do |name, (type, role)|
+      endpoint = RecordingStudioApi.registered_endpoint(name)
+
+      assert_equal type, endpoint.recordable_type, name.to_s
+      assert_equal role, endpoint.required_role, name.to_s
+      assert endpoint.scopes_recording?, name.to_s
+      refute endpoint.owns_scoping?, name.to_s
+    end
+
+    unread = RecordingStudioApi.registered_endpoint(:messages_unread_count)
+    assert_nil unread.recordable_type
+    assert_equal :view, unread.required_role
+    refute unread.scopes_recording?
+    refute unread.owns_scoping?
+  end
+
   def test_wrap_maps_facade_input_errors_and_leaves_other_argument_errors
     not_authorized = assert_raises(RecordingStudioApi::AuthorizationError) do
       RecordingStudioMessages::Api::Errors.wrap do
