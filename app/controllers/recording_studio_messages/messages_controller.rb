@@ -70,7 +70,7 @@ module RecordingStudioMessages
       candidate = params[:return_to].to_s
       return if candidate.blank?
       return unless candidate.start_with?("/")
-      return if candidate.start_with?("//")
+      return if candidate.start_with?("//", "/\\")
 
       candidate
     end

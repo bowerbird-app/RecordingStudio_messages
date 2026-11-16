@@ -109,6 +109,15 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.30.2
+
+Messages `0.30.2` refuses generic Message create and destroy, drops message text from notices filed on another root, and ignores an open `return_to`.
+
+1. Install Messages `0.30.2`. There is no Messages migration.
+2. `POST /recording_studio_api/api/v1/messages` and `DELETE /recording_studio_api/api/v1/messages/:id` now return `unsupported_action`. Send a line with `POST /recording_studio_api/api/v1/conversations/:id/send_message`. `GET /recording_studio_api/api/v1/messages/:id` still works for an actor who can view the line.
+3. A `:message_received` notice filed on a root other than the conversation root has no message text. The title is still the conversation name. A notice filed on the conversation root still includes the truncated line.
+4. Send `return_to` is kept only when it starts with one `/` and the next character is not `/` or `\`. Anything else, including `/\example.com`, sends the person back to the conversation.
+
 ### Upgrading to 0.30.1
 
 Messages `0.30.1` is the same gem. The dummy pins Terms `v0.20.0`.
@@ -697,7 +706,7 @@ end
 
 Set `admin_notification_root` to an Admin root `Recording`, or a callable that returns one. Recipients with Accessible `:view` on that recording (the same staff check as operations metrics) get the notice filed there. Everyone else, including the ticket owner, stays on the conversation root. Tickets, mounts, and groups do not move. Leave it `nil` to keep today's filing. This gem does not add an Admin dependency. Support and hosts that already resolve the Admin root through `Api::Access.admin_root_recording` pass that recording in.
 
-Notifications requires `root_recording` to match the attached `recording` when both are set. Staff copies that file under Admin omit `recording` and keep the URL plus `message_group_id` / `message_id` in metadata. Ticket-root copies still attach the message recording.
+Notifications requires `root_recording` to match the attached `recording` when both are set. Staff copies that file under Admin omit `recording` and the message text. They keep the URL plus `message_group_id` and `message_id` in metadata. The title stays the conversation name. Ticket-root copies still attach the message recording and include the truncated line.
 
 ## Public contact
 

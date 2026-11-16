@@ -55,13 +55,14 @@ module RecordingStudioMessages
       end
 
       def notification_attributes(recipients, root_recording:)
+        on_ticket_root = same_root?(root_recording, ticket_root)
         attributes = {
           recipients: recipients,
           notification_type: :message_received,
           actor: @actor,
           root_recording: root_recording
-        }.merge(notification_copy)
-        attributes[:recording] = @message_recording if same_root?(root_recording, ticket_root)
+        }.merge(notification_copy(on_ticket_root: on_ticket_root))
+        attributes[:recording] = @message_recording if on_ticket_root
         attributes
       end
 
@@ -92,10 +93,10 @@ module RecordingStudioMessages
         )
       end
 
-      def notification_copy
+      def notification_copy(on_ticket_root:)
         {
           title: notification_title,
-          body: @body.to_s.truncate(120),
+          body: on_ticket_root ? @body.to_s.truncate(120) : nil,
           url: @url,
           metadata: {
             message_group_id: @group_recording.id,

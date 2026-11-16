@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.2] - 2026-11-16
+
+Generic Message create and destroy are refused. Notices filed on another root omit the line. Send `return_to` rejects a protocol-relative path.
+
+### Security
+
+- `Message` is registered with Recording Studio API as show only (`operations: %i[show]`, `auto_capability_actions: false`, no capability actions). `POST /recording_studio_api/api/v1/messages` and `DELETE /recording_studio_api/api/v1/messages/:id` return `unsupported_action`. `GET /recording_studio_api/api/v1/messages/:id` still returns the line to an actor who can view it. Send still goes through `send_message`.
+- A `:message_received` notice whose root is not the conversation root omits the message text. The title stays the conversation name. A notice filed on the conversation root still includes the truncated line and the message recording.
+- Send `return_to` is accepted only when it starts with a single `/` that is not followed by `/` or `\`.
+
+### Upgrade notes
+
+- Bump to **0.30.2**. No Messages migration.
+- Hosts with API clients that create or destroy a message through the generic resource endpoints will now be refused. Use `conversations/:id/send_message`. Show still works.
+- Staff notices filed under `admin_notification_root` no longer include the message text.
+- A send `return_to` that starts with `/\` is ignored. The response goes back to the conversation.
+
 ## [0.30.1] - 2026-11-15
 
 The dummy pins Terms `v0.20.0`. That release accepts Moveable 5, so the dummy no longer rewrites the Terms gemspec.

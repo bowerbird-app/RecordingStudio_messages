@@ -12,6 +12,7 @@ module RecordingStudioMessages
       def register!(api)
         register_type(api, MESSAGE_GROUP_TYPE, %i[title], [], :serialize_group)
         register_type(api, MESSAGE_MOUNT_TYPE, %i[key], [], :serialize_mount)
+        register_type(api, MESSAGE_TYPE, %i[body], [], :serialize_message)
         GroupCatalog::ACTIONS.each { |name, spec| register_endpoint(api, name, spec) }
         MountCatalog::ENDPOINTS.each { |name, spec| register_endpoint(api, name, spec) }
       end
@@ -73,6 +74,10 @@ module RecordingStudioMessages
 
       def serialize_mount(mount, **)
         { key: mount.key }
+      end
+
+      def serialize_message(message, **)
+        { body: message.body }
       end
     end
   end

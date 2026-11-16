@@ -18,12 +18,20 @@ class ApiSourceTest < Minitest::Test
       RecordingStudioMessages::MESSAGE_GROUP_TYPE
     )
 
+    message = RecordingStudioApi.recordable_registration_for(
+      RecordingStudioMessages::MESSAGE_TYPE
+    )
+
     assert mount
     assert group
+    assert message
+    assert_equal %i[show], message.operations
     assert_equal [], mount.capability_actions
     assert_equal [], group.capability_actions
+    assert_equal [], message.capability_actions
     assert_equal false, mount.auto_capability_actions
     assert_equal false, group.auto_capability_actions
+    assert_equal false, message.auto_capability_actions
     assert RecordingStudioApi.registered_endpoint(:messages_send_message)
     assert RecordingStudioApi.registered_endpoint(:messages_list_conversations)
     refute RecordingStudioApi.capability_action(:messages_send_message)
@@ -93,6 +101,16 @@ class ApiSourceTest < Minitest::Test
     assert_equal(
       RecordingStudioMessages::Api::Registration.serialize_mount(mount),
       RecordingStudioMessages::Api::Target.recordable_fields(mount_recording)
+    )
+
+    message = Struct.new(:body).new("Hello from the desk.")
+    message_recording = Struct.new(:recordable, :recordable_type).new(
+      message, RecordingStudioMessages::MESSAGE_TYPE
+    )
+    assert_equal({ body: "Hello from the desk." }, RecordingStudioMessages::Api::Registration.serialize_message(message))
+    assert_equal(
+      RecordingStudioMessages::Api::Registration.serialize_message(message),
+      RecordingStudioMessages::Api::Target.recordable_fields(message_recording)
     )
   end
 end
