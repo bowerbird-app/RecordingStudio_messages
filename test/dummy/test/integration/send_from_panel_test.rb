@@ -49,4 +49,20 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
     assert_includes response.body, body
     refute_includes response.body, "Sent."
   end
+
+  test "return_to with a second slash or a backslash stays on the conversation" do
+    sign_in @staff
+    group = DummyCatalog.support_group_recording
+    conversation = recording_studio_messages.message_group_path(group)
+
+    [ "/\\evil.example", "//evil.example" ].each do |return_to|
+      post recording_studio_messages.message_group_messages_path(group), params: {
+        message: { body: "Stay on the desk." },
+        return_to: return_to
+      }
+
+      assert_redirected_to conversation
+      refute_includes response.location.to_s, "evil.example"
+    end
+  end
 end

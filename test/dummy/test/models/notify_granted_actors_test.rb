@@ -52,6 +52,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     assert_equal @ticket_root.id, staff_note.root_recording_id
     assert_equal @staff, staff_note.recipient
     assert_equal RecordingStudioMessages::MESSAGE_TYPE, staff_note.recording.recordable_type
+    assert_equal "Default filing stays on the ticket.", staff_note.body
   end
 
   test "opted-in staff recipient is filed under the admin root" do
@@ -67,6 +68,8 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     staff_note = last_message_received_for(@staff)
     assert_equal @admin_root.id, staff_note.root_recording_id
     assert_nil staff_note.recording_id
+    assert staff_note.body.blank?
+    refute_includes staff_note.title.to_s, "Staff should see this in Admin."
     assert_equal @group.id, staff_note.metadata["message_group_id"]
     assert_equal @ticket_root, @group.root_recording
   end
@@ -85,6 +88,27 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     assert_equal @customer, customer_note.recipient
     assert_equal @ticket_root.id, customer_note.root_recording_id
     refute_equal @admin_root.id, customer_note.root_recording_id
+    assert_equal "Casey keeps the workspace inbox.", customer_note.body
+  end
+
+  test "admin root notice omits the message text" do
+    RecordingStudioMessages.configuration.admin_notification_root = @admin_root
+    secret = "Quiet line #{SecureRandom.hex(4)} stays off the admin copy."
+
+    RecordingStudioMessages.send_message(
+      group_recording: @group,
+      body: secret,
+      actor: @customer,
+      url: "/admin/support/messages?group_id=#{@group.id}"
+    )
+
+    staff_note = last_message_received_for(@staff)
+    assert_equal @admin_root.id, staff_note.root_recording_id
+    assert_nil staff_note.recording_id
+    assert staff_note.body.blank?
+    refute_includes staff_note.body.to_s, secret
+    refute_includes staff_note.title.to_s, secret
+    assert_equal "New message in Root filing", staff_note.title
   end
 
   test "blank body notify copy uses the reference title" do
@@ -121,6 +145,8 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
 
     staff_note = last_message_received_for(@staff)
     assert_equal @admin_root.id, staff_note.root_recording_id
+    assert staff_note.body.blank?
+    refute_includes staff_note.title.to_s, "Resolver points at Admin."
   end
 
   private

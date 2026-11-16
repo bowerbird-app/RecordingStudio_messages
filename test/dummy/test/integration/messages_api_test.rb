@@ -239,18 +239,22 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity, response.body
   end
 
-  test "messages api registration matches html roles and skips generic message create" do
+  test "messages api registration is show only for the group, the mount, and the message" do
     refute RecordingStudio.capability_enabled?(:messages, for: RecordingStudioMessages::MessageGroup)
     refute RecordingStudio.capability_enabled?(:messages, for: RecordingStudioMessages::MessageMount)
 
     group = RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::MessageGroup")
     mount = RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::MessageMount")
+    message = RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
     assert_equal %i[show], group.operations
     assert_equal %i[show], mount.operations
+    assert_equal %i[show], message.operations
     assert_equal false, group.auto_capability_actions
+    assert_equal false, mount.auto_capability_actions
+    assert_equal false, message.auto_capability_actions
     assert_equal [], group.capability_actions
     assert_equal [], mount.capability_actions
-    refute RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
+    assert_equal [], message.capability_actions
 
     refute RecordingStudioApi.capability_action(:messages_send_message)
     refute RecordingStudioApi.capability_action(:messages_list_conversations)
@@ -266,6 +270,30 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
                  RecordingStudioMessages::Api::Target.recordable_fields(@group)
     assert_equal RecordingStudioMessages::Api::Registration.serialize_mount(@mount.recordable),
                  RecordingStudioMessages::Api::Target.recordable_fields(@mount)
+    line = RecordingStudioMessages.message_recordings(@group).last
+    assert_equal RecordingStudioMessages::Api::Registration.serialize_message(line.recordable),
+                 RecordingStudioMessages::Api::Target.recordable_fields(line)
+  end
+
+  test "generic message create and destroy are refused and show still works" do
+    line = RecordingStudioMessages.message_recordings(@group).last
+    shown = call(:get, "/messages/#{line.id}", @editor_token)
+    assert_response :success, response.body
+    assert_equal "Hello from the desk.", shown.fetch("body")
+    assert_equal line.id, shown.fetch("id")
+
+    before = RecordingStudio::Recording.where(recordable_type: RecordingStudioMessages::MESSAGE_TYPE).count
+    created = call(:post, "/messages", @editor_token, parent_id: @group.id, body: "Sneaked in.")
+    assert_response :unprocessable_entity, response.body
+    assert_equal "unsupported_action", created.dig("error", "code")
+    assert_equal before, RecordingStudio::Recording.where(recordable_type: RecordingStudioMessages::MESSAGE_TYPE).count
+    refute_includes RecordingStudioMessages.message_recordings(@group).map { |row| row.recordable.body }, "Sneaked in."
+
+    destroyed = call(:delete, "/messages/#{line.id}", @editor_token)
+    assert_response :unprocessable_entity, response.body
+    assert_equal "unsupported_action", destroyed.dig("error", "code")
+    assert_includes RecordingStudioMessages.message_recordings(@group).map(&:id), line.id
+    assert_equal "Hello from the desk.", line.reload.recordable.body
   end
 
   private
