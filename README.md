@@ -962,24 +962,24 @@ The dummy proves two mounts at once:
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
 The dummy mounts Recording Studio API at `/recording_studio_api`.
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.16.0` and mounts Site Settings (`v0.5.6`) and Terms and Conditions (`v0.20.0`). Publishable is on `v0.18.1` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.16.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.30.0` so public contact can use its code screen. Cache is `v0.6.3`. Recording Studio is on `v7.0.0`. The dummy sets `config.authorize_write` so a present actor may write, including a new root. Accessible is on `v0.44.0`. Attachable is on `v0.28.0` and needs Moveable `v5.0.0`. Recording Studio API is on `v0.26.0`. Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without a recordable type, so the dummy opts those callers out and leaves the Messages endpoints scoped. Notifications is on `v0.18.0`. Metrics is on `v0.9.0`. Logs is on `v0.8.0` because Admin loads it. Trashable is on `v0.17.0` and registers the kept filter. The dummy schema has `purge_at` and `recording_studio_events.root_recording_id`. Kept queries use `Recording.kept` and `RecordingStudio.kept_sql`. Internationalization is on `v0.3.0` and is dummy-only. Flatpack is on `v0.1.376`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 7.0, < 8.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`. Terms registers `Section` and `Clause`. Seeds create roots with `create_root_recording!`.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.18.0` and mounts Site Settings (`v0.6.0`) and Terms and Conditions (`v0.22.0`). Publishable is on `v1.1.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.16.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.32.0` so public contact can use its code screen. Cache is `v0.7.0`. Recording Studio is on `v7.3.0`. The dummy sets `config.authorize_write` so a present actor may write, including a new root. Accessible is on `v0.45.1`. The dummy `admin_root_resolver` returns the Studio Workspace root so Accessible's page authorizer can allow an admin grant there. Attachable is on `v0.31.0` and needs Moveable `v6.0.0`. Recording Studio API is on `v1.2.1`. The dummy registers `RecordingStudioApi::AdminApi` only when `admin_root_recordable_type_names` is present, which is what core 7.3 requires before that class declares. Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without a recordable type, so the dummy opts those callers out and leaves the Messages endpoints scoped. Notifications is on `v0.19.1`. Metrics is on `v0.9.0`. Logs is on `v0.8.0` because Admin loads it. Icons is on `v0.4.0`. Trashable is on `v1.0.1` and registers the kept filter. The dummy schema has `purge_at` and `recording_studio_events.root_recording_id`. Kept queries use `Recording.kept` and `RecordingStudio.kept_sql`. Internationalization is on `v0.3.0` and is dummy-only. Flatpack is on `v0.1.377`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 7.0, < 8.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`. Terms registers `Section` and `Clause`, and Terms documents live under the shared `Library` root. Seeds create roots with `create_root_recording!`. The table is the dummy lock. The root Gemfile stays on the previous tags.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Locked `VERSION` |
 |---|---|---|---|
-| `recording_studio` | `>= 7.0, < 8.0` | `v7.0.0` | `7.0.0` |
-| `recording_studio_accessible` | `>= 0.44.0, < 1.0` | `v0.44.0` | `0.44.0` |
-| `recording_studio_attachable` | `>= 0.28.0, < 1.0` | `v0.28.0` | `0.28.0` |
-| `recording_studio_notifications` | `>= 0.18.0, < 1` | `v0.18.0` | `0.18.0` |
+| `recording_studio` | `>= 7.0, < 8.0` | `v7.3.0` | `7.3.0` |
+| `recording_studio_accessible` | `>= 0.44.0, < 1.0` | `v0.45.1` | `0.45.1` |
+| `recording_studio_attachable` | `>= 0.28.0, < 1.0` | `v0.31.0` | `0.31.0` |
+| `recording_studio_notifications` | `>= 0.18.0, < 1` | `v0.19.1` | `0.19.1` |
 | `recording_studio_metrics` | `>= 0.9.0, < 1.0` | `v0.9.0` | `0.9.0` |
-| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.349` | `v0.1.376` | `0.1.376` |
+| `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.349` | `v0.1.377` | `0.1.377` |
 | `view_component` | `4.19.0` | | `4.19.0` |
-| `recording_studio_user` (dummy host only) | `>= 0.30.0` | `v0.30.0` | `0.30.0` |
-| `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.6.3` | `0.6.3` |
-| `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.16.0` | `2.16.0` |
+| `recording_studio_user` (dummy host only) | `>= 0.30.0` | `v0.32.0` | `0.32.0` |
+| `recording_studio_cache` (host pin for Users / Root Switchable) | `~> 0.5` | `v0.7.0` | `0.7.0` |
+| `recording_studio_admin` (dummy host only) | `~> 2.1` | `v2.18.0` | `2.18.0` |
 | `recording_studio_logs` (Admin loads it) | `>= 0.4.1, < 1.0` | `v0.8.0` | `0.8.0` |
-| `recording_studio_api` (Attachable 0.28 and the dummy) | | `v0.26.0` | `0.26.0` |
+| `recording_studio_api` (Attachable 0.31 and the dummy) | | `v1.2.1` | `1.2.1` |
 
 There is no `recording_studio_flatpack` gem. The UI kit is `flat_pack` from [github.com/bowerbird-app/flatpack](https://github.com/bowerbird-app/flatpack). Use the live kit at [https://flatpack.bowerbird.io/](https://flatpack.bowerbird.io/).
 

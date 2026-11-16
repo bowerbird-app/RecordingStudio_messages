@@ -1612,14 +1612,14 @@ class PublicContactTest < ActionDispatch::IntegrationTest
   end
 
   def accept_live_terms!(user)
-    root = RecordingStudioTermsAndConditions::Gate.first_root_with_live_terms(user)
-    RecordingStudioTermsAndConditions.pending_published_list(user, root).each do |terms|
+    RecordingStudioTermsAndConditions.pending_published_list(user).each do |terms|
       RecordingStudioTermsAndConditions.accept!(user, terms, { "source" => "continue_notice" })
     end
   end
 
   def publish_signup_terms!
-    recording = @root.record(RecordingStudioTermsAndConditions::Terms) do |terms|
+    library = RecordingStudioTermsAndConditions::LibraryRoot.recording(actor: @staff)
+    recording = library.record(RecordingStudioTermsAndConditions::Terms) do |terms|
       terms.title = "Signup Terms"
       terms.body = "Be kind on the way in."
     end

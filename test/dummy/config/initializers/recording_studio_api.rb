@@ -13,9 +13,9 @@ RecordingStudioApi.configure do |config|
   config.api_management_authorization_required = false
 end
 
-# Notifications through 0.19 and Users through 0.31 register :id paths
-# without recordable_type. API 0.26 raises. Messages passes recordable_type.
-# This only opts those other callers out so the dummy can boot.
+# Some addon endpoints still register an :id path without recordable_type.
+# API rejects that. Messages passes recordable_type. This only opts the other
+# callers out so the dummy can boot.
 module RecordingStudioMessagesDummyApiScope
   def register_endpoint(name, **kwargs)
     path = kwargs[:path].to_s
