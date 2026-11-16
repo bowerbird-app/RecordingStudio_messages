@@ -10,7 +10,7 @@ gem "recording_studio_admin", github: "bowerbird-app/RecordingStudio_admin", tag
 gem "recording_studio_attachable", github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.28.0"
 # Required by recording_studio_user and root_switchable (git-only).
 gem "recording_studio_cache", github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"
-gem "recording_studio_api", github: "bowerbird-app/RecordingStudio_api", tag: "v0.24.0"
+gem "recording_studio_api", github: "bowerbird-app/RecordingStudio_api", tag: "v0.26.0"
 gem "recording_studio_icons", github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"
 gem "recording_studio_logs", github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.0"
 gem "recording_studio_moveable", github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"

@@ -53,7 +53,21 @@ module RecordingStudioMessages
           serializer: method(:passthrough),
           input_contract: { reject_unknown: false, fields: spec[:fields] },
           openapi: openapi(spec)
-        }
+        }.merge(scope_kwargs(spec))
+      end
+
+      def scope_kwargs(spec)
+        kwargs = { required_role: spec.fetch(:required_role) }
+        type = recordable_type_for(spec[:path])
+        kwargs[:recordable_type] = type if type
+        kwargs
+      end
+
+      def recordable_type_for(path)
+        return MESSAGE_GROUP_TYPE if path.start_with?("conversations/:id")
+        return MESSAGE_MOUNT_TYPE if path.start_with?("desks/:id")
+
+        nil
       end
 
       def openapi(spec)

@@ -205,6 +205,27 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_response :forbidden, response.body
   end
 
+  test "a wrong type id and a trashed conversation are not found" do
+    call(:get, "/conversations/#{@mount.id}/messages", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/conversations/#{@mount.id}/mark_read", @viewer_token)
+    assert_response :not_found, response.body
+
+    call(:get, "/desks/#{@group.id}/conversations", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/desks/#{@group.id}/create_group", @editor_token, title: "Nope")
+    assert_response :not_found, response.body
+
+    @group.update_columns(trashed_at: Time.current)
+    call(:get, "/conversations/#{@group.id}/messages", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/conversations/#{@group.id}/mark_read", @viewer_token)
+    assert_response :not_found, response.body
+  end
+
   test "a conversation in another workspace is not found" do
     call(:post, "/conversations/#{@other_group.id}/send_message", @editor_token, body: "Nope")
     assert_response :not_found, response.body

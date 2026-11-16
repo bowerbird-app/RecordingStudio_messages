@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-11-16
+
+Registered message endpoints declare a recordable type and a required role so they load on Recording Studio API 0.26. Conversation and desk handlers read the recording API already resolved.
+
+### Changed
+
+- `conversations/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageGroup`. `desks/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageMount`. `unread_count` has no `:id` and stays unscoped.
+- Every catalog endpoint passes its `required_role`. `messages_mark_read` is POST and stays `:view`. List, read, and unread count stay `:view`. Send, create, and rename stay `:edit`.
+- The six `:id` handlers use `context.recording`. Recording Studio API loads that recording and authorizes `required_role` before the handler. `unread_count` still authorizes `:view` on the access recording. List still checks `after_id` in the handler.
+- Development and the dummy pin Recording Studio API tag `v0.26.0`. The gemspec does not depend on `recording_studio_api`. Other addon dependencies use an upper cap, and Attachable already depends on API.
+
+### Upgrade notes
+
+- Bump to **0.31.0**. No Messages migration.
+- Hosts on Recording Studio API older than `0.26.0` must bump. Pin tag `v0.26.0`. API `1.0` needs Recording Studio `>= 7.1`, so a host on core 7.0 stays on `0.26.0`.
+- A `:id` that is the wrong recordable type, outside the token, or trashed is 404 before the handler runs.
+- Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without `recordable_type`. Loading those tags with API `0.26` raises `ConfigurationError` at boot. The dummy opts those callers out until those gems declare a type.
+
 ## [0.30.2] - 2026-11-16
 
 Generic Message create and destroy are refused. Notices filed on another root omit the line. Send `return_to` rejects a protocol-relative path.

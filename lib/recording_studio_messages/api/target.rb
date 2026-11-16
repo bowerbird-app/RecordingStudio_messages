@@ -9,17 +9,6 @@ module RecordingStudioMessages
         context.access_grant.authorize!(recording: recording, role: role)
       end
 
-      def accessible_recording(context, type)
-        id = context.params[:id]
-        found = context.access_grant.accessible_recordings.find_by(id: id) if id.present?
-        raise ::RecordingStudioApi::NotFoundError, "Resource was not found in this API scope" if found.nil?
-        unless found.recordable_type == type
-          raise ::RecordingStudioApi::NotFoundError, "Resource type does not match #{type}"
-        end
-
-        found
-      end
-
       def serialize(recording)
         base_payload(recording).merge(recordable_fields(recording))
       end

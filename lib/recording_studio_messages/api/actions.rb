@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative "errors"
-require_relative "group_catalog"
 require_relative "mount_catalog"
 require_relative "target"
 
@@ -18,9 +17,7 @@ module RecordingStudioMessages
         end
 
         def deliver
-          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, GroupCatalog::SEND_MESSAGE.fetch(:required_role))
-          Target.serialize(RecordingStudioMessages.send_message(**line(group)))
+          Target.serialize(RecordingStudioMessages.send_message(**line(@context.recording)))
         end
 
         def line(group)
@@ -43,8 +40,7 @@ module RecordingStudioMessages
         end
 
         def list
-          mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
-          Target.authorize!(@context, mount, MountCatalog::LIST_CONVERSATIONS.fetch(:required_role))
+          mount = @context.recording
           page = groups(mount)
           page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
           {
@@ -95,9 +91,8 @@ module RecordingStudioMessages
         end
 
         def read
-          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, GroupCatalog::READ_THREAD.fetch(:required_role))
-          { records: RecordingStudioMessages.message_recordings(group).map { |row| Target.serialize(row) } }
+          rows = RecordingStudioMessages.message_recordings(@context.recording)
+          { records: rows.map { |row| Target.serialize(row) } }
         end
       end
 
@@ -111,8 +106,7 @@ module RecordingStudioMessages
         end
 
         def create
-          mount = Target.accessible_recording(@context, MESSAGE_MOUNT_TYPE)
-          Target.authorize!(@context, mount, MountCatalog::CREATE_GROUP.fetch(:required_role))
+          mount = @context.recording
           title = @context.params[:title]
           recipients = @context.params[:recipients]
           raise ::RecordingStudioApi::InvalidActionInputError, "title is required" if title.blank? && recipients.nil?
@@ -140,9 +134,7 @@ module RecordingStudioMessages
         end
 
         def rename
-          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, GroupCatalog::RENAME_GROUP.fetch(:required_role))
-          Target.serialize(RecordingStudioMessages.rename_group(**attrs(group)))
+          Target.serialize(RecordingStudioMessages.rename_group(**attrs(@context.recording)))
         end
 
         def attrs(group)
@@ -164,8 +156,7 @@ module RecordingStudioMessages
         end
 
         def mark
-          group = Target.accessible_recording(@context, MESSAGE_GROUP_TYPE)
-          Target.authorize!(@context, group, GroupCatalog::MARK_READ.fetch(:required_role))
+          group = @context.recording
           RecordingStudioMessages.mark_read(group_recording: group, actor: @context.access_grant.actor)
           Target.serialize(group.reload)
         end
