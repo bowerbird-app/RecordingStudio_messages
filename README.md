@@ -109,9 +109,16 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.32.0
+
+Messages `0.32.0` renames the API paths for a message center. The `:id` is still a `MessageMount`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
+
+1. Install Messages `0.32.0`. There is no Messages migration.
+2. API paths renamed from desks/ to message_centers/; clients must update. There is no alias for the old paths. The path table below uses the new paths.
+
 ### Upgrading to 0.31.0
 
-Messages `0.31.0` registers its API endpoints for Recording Studio API `0.26.0`. Conversation paths name a `MessageGroup`. Desk paths name a `MessageMount`. `mark_read` stays `:view`.
+Messages `0.31.0` registers its API endpoints for Recording Studio API `0.26.0`. Conversation paths name a `MessageGroup`. Message center paths name a `MessageMount`. `mark_read` stays `:view`.
 
 1. Install Messages `0.31.0`. There is no Messages migration. Recording Studio API stays out of the gemspec.
 2. Pin Recording Studio API tag `v0.26.0`. Hosts on an older API must bump. API `1.0` needs Recording Studio `>= 7.1`. Stay on `0.26.0` with core 7.0.
@@ -186,14 +193,14 @@ bin/rails db:migrate
 ```
 
 3. Turn on `:api_access_point` on roots that should hold API clients, and add `RecordingStudioApi::ApiClient` to `access_actor_types`. Recording Studio MCP needs no extra Messages code.
-4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so you need an admin API client. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface. List `limit` is 1 through the HTML inbox size. A blank create title with no recipients is 422 at the API handler.
+4. Access still matches the HTML screens: `:view` to list conversations, read a thread, mark read, and unread count; `:edit` to send, create a group, and rename. `create_group` still runs Accessible grants inside the existing helper. On a `:members` message center `CreateGroupPeople` requires `:admin`, so you need an admin API client. Public contact, ensure_mount, tags, composer, and membership lock stay off this surface. List `limit` is 1 through the HTML inbox size. A blank create title with no recipients is 422 at the API handler.
 
 | Verb | Path | Accessible role |
 |---|---|---|
 | POST | `/recording_studio_api/api/v1/conversations/:id/send_message` | `:edit` on the conversation |
-| GET | `/recording_studio_api/api/v1/desks/:id/conversations` | `:view` on the desk |
+| GET | `/recording_studio_api/api/v1/message_centers/:id/conversations` | `:view` on the message center |
 | GET | `/recording_studio_api/api/v1/conversations/:id/messages` | `:view` on the conversation |
-| POST | `/recording_studio_api/api/v1/desks/:id/create_group` | `:edit` on the desk |
+| POST | `/recording_studio_api/api/v1/message_centers/:id/create_group` | `:edit` on the message center |
 | POST | `/recording_studio_api/api/v1/conversations/:id/rename_group` | `:edit` on the conversation |
 | POST | `/recording_studio_api/api/v1/conversations/:id/mark_read` | `:view` on the conversation |
 | GET | `/recording_studio_api/api/v1/unread_count` | `:view` on the access recording |

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-11-17
+
+API paths renamed from desks/ to message_centers/; clients must update.
+
+### Changed
+
+- `GET message_centers/:id/conversations` and `POST message_centers/:id/create_group` replace `desks/:id/conversations` and `desks/:id/create_group`. There is no alias for the old paths. `recordable_type` stays `RecordingStudioMessages::MessageMount`. List stays `:view`. Create stays `:edit`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
+- List and create descriptions, and the `after_id` error, say message center.
+
+### Upgrade notes
+
+- Bump to **0.32.0**. No Messages migration.
+- API paths renamed from desks/ to message_centers/; clients must update.
+
 ## [0.31.0] - 2026-11-16
 
 Registered message endpoints declare a recordable type and a required role so they load on Recording Studio API 0.26. Conversation and desk handlers read the recording API already resolved.
@@ -178,7 +192,7 @@ Send, list, read, and create on Recording Studio API, plus rename, mark read, an
 - Bump to **0.25.0**. No Messages migration. This gem still has no gemspec dependency on Recording Studio API.
 - Hosts that already have Recording Studio API get these actions when this gem loads. Install and mount API (and MCP, if you use it) as those gems document.
 - Access matches the HTML screens: `:view` to list, read, mark read, and unread count; `:edit` to send, create, and rename. A conversation in another workspace is 404.
-- `create_group` still grants Accessible membership through the existing helper. On a `:members` desk `CreateGroupPeople` requires `:admin`, so the API client must be an admin client.
+- `create_group` still grants Accessible membership through the existing helper. On a `:members` message center `CreateGroupPeople` requires `:admin`, so the API client must be an admin client.
 - Unread count is the grant's Accessible scope, not every workspace that actor can see.
 
 ## [0.24.1] - 2026-11-12

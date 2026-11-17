@@ -65,7 +65,7 @@ module RecordingStudioMessages
 
       def recordable_type_for(path)
         return MESSAGE_GROUP_TYPE if path.start_with?("conversations/:id")
-        return MESSAGE_MOUNT_TYPE if path.start_with?("desks/:id")
+        return MESSAGE_MOUNT_TYPE if path.start_with?("message_centers/:id")
 
         nil
       end

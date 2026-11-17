@@ -43,8 +43,16 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "Quiet crop on the way.", RecordingStudioMessages.message_recordings(@group).last.recordable.body
   end
 
+  test "old desks paths are not registered" do
+    call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "Nope")
+    assert_response :not_found, response.body
+  end
+
   test "list_conversations goes through viewable_group_recordings" do
-    listed = call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
+    listed = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token)
     assert_response :success, response.body
     ids = listed.fetch("records").map { |row| row.fetch("id") }
     assert_includes ids, @group.id
@@ -60,20 +68,20 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
       group
     end
 
-    default_page = call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
+    default_page = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token)
     assert_response :success, response.body
     default_ids = default_page.fetch("records").map { |row| row.fetch("id") }
     assert_equal page_size, default_ids.size
     assert_equal default_ids.last, default_page.fetch("after_id")
 
-    clamped = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: page_size + 25)
+    clamped = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token, limit: page_size + 25)
     assert_response :success, response.body
     clamped_ids = clamped.fetch("records").map { |row| row.fetch("id") }
     assert_equal page_size, clamped_ids.size
     assert_equal default_ids, clamped_ids
     assert_equal default_ids.last, clamped.fetch("after_id")
 
-    page_one = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: 2)
+    page_one = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token, limit: 2)
     assert_response :success, response.body
     first_ids = page_one.fetch("records").map { |row| row.fetch("id") }
     assert_equal 2, first_ids.size
@@ -81,7 +89,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
 
     page_two = call(
       :get,
-      "/desks/#{@mount.id}/conversations",
+      "/message_centers/#{@mount.id}/conversations",
       @editor_token,
       limit: 2,
       after_id: first_ids.last
@@ -95,7 +103,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
 
     remainder = call(
       :get,
-      "/desks/#{@mount.id}/conversations",
+      "/message_centers/#{@mount.id}/conversations",
       @editor_token,
       after_id: default_ids.last
     )
@@ -107,12 +115,12 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   test "list_conversations clamps limit below 1" do
-    zero = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: 0)
+    zero = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token, limit: 0)
     assert_response :success, response.body
     assert_equal 1, zero.fetch("records").size
     assert_nil zero.fetch("after_id")
 
-    negative = call(:get, "/desks/#{@mount.id}/conversations", @editor_token, limit: -1)
+    negative = call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token, limit: -1)
     assert_response :success, response.body
     assert_equal 1, negative.fetch("records").size
     assert_nil negative.fetch("after_id")
@@ -128,7 +136,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   test "create_group goes through RecordingStudioMessages.create_group" do
     created = call(
       :post,
-      "/desks/#{@mount.id}/create_group",
+      "/message_centers/#{@mount.id}/create_group",
       @admin_token,
       title: "New API conversation"
     )
@@ -183,7 +191,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   test "view is forbidden from edit actions and can read" do
-    call(:get, "/desks/#{@mount.id}/conversations", @viewer_token)
+    call(:get, "/message_centers/#{@mount.id}/conversations", @viewer_token)
     assert_response :success, response.body
 
     call(:get, "/conversations/#{@group.id}/messages", @viewer_token)
@@ -198,7 +206,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     call(:post, "/conversations/#{@group.id}/send_message", @viewer_token, body: "Nope")
     assert_response :forbidden, response.body
 
-    call(:post, "/desks/#{@mount.id}/create_group", @viewer_token, title: "Nope")
+    call(:post, "/message_centers/#{@mount.id}/create_group", @viewer_token, title: "Nope")
     assert_response :forbidden, response.body
 
     call(:post, "/conversations/#{@group.id}/rename_group", @viewer_token, title: "Nope")
@@ -212,10 +220,10 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     call(:post, "/conversations/#{@mount.id}/mark_read", @viewer_token)
     assert_response :not_found, response.body
 
-    call(:get, "/desks/#{@group.id}/conversations", @editor_token)
+    call(:get, "/message_centers/#{@group.id}/conversations", @editor_token)
     assert_response :not_found, response.body
 
-    call(:post, "/desks/#{@group.id}/create_group", @editor_token, title: "Nope")
+    call(:post, "/message_centers/#{@group.id}/create_group", @editor_token, title: "Nope")
     assert_response :not_found, response.body
 
     @group.update_columns(trashed_at: Time.current)
@@ -239,10 +247,10 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     call(:post, "/conversations/#{@other_group.id}/mark_read", @editor_token)
     assert_response :not_found, response.body
 
-    call(:get, "/desks/#{@other_mount.id}/conversations", @editor_token)
+    call(:get, "/message_centers/#{@other_mount.id}/conversations", @editor_token)
     assert_response :not_found, response.body
 
-    call(:post, "/desks/#{@other_mount.id}/create_group", @editor_token, title: "Nope")
+    call(:post, "/message_centers/#{@other_mount.id}/create_group", @editor_token, title: "Nope")
     assert_response :not_found, response.body
   end
 
@@ -250,14 +258,15 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     call(:post, "/conversations/#{@group.id}/send_message", @editor_token, body: "")
     assert_response :unprocessable_entity, response.body
 
-    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "")
+    call(:post, "/message_centers/#{@mount.id}/create_group", @editor_token, title: "")
     assert_response :unprocessable_entity, response.body
 
     call(:post, "/conversations/#{@group.id}/rename_group", @editor_token, title: "")
     assert_response :unprocessable_entity, response.body
 
-    call(:get, "/desks/#{@mount.id}/conversations", @editor_token, after_id: @other_group.id)
+    call(:get, "/message_centers/#{@mount.id}/conversations", @editor_token, after_id: @other_group.id)
     assert_response :unprocessable_entity, response.body
+    assert_includes response.body, "after_id is not a conversation on this message center"
   end
 
   test "messages api registration is show only for the group, the mount, and the message" do
@@ -284,7 +293,15 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     create_group = RecordingStudioApi.registered_endpoint(:messages_create_group)
     assert_equal "Message - Send", send_message.openapi.fetch(:title)
     assert_equal "Group - Create", create_group.openapi.fetch(:title)
-    assert RecordingStudioApi.registered_endpoint(:messages_list_conversations)
+    list = RecordingStudioApi.registered_endpoint(:messages_list_conversations)
+    assert_equal "message_centers/:id/conversations", list.path
+    assert_equal "message_centers/:id/create_group", create_group.path
+    assert_equal "RecordingStudioMessages::MessageMount", list.recordable_type
+    assert_equal "RecordingStudioMessages::MessageMount", create_group.recordable_type
+    assert_equal :view, list.required_role
+    assert_equal :edit, create_group.required_role
+    assert_equal "List conversations on this message center.", list.openapi.fetch(:summary)
+    assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
     assert RecordingStudioApi.registered_endpoint(:messages_unread_count)
 
     assert_equal RecordingStudioMessages::Api::Registration.serialize_group(@group.recordable),

@@ -52,6 +52,14 @@ class ApiSourceTest < Minitest::Test
     assert_equal RecordingStudioMessages::Api::Actions::CreateGroup, create_group.handler
     assert_equal "Message - Send", send_message.openapi.fetch(:title)
     assert_equal "Group - Create", create_group.openapi.fetch(:title)
+    assert_equal "message_centers/:id/conversations", list.path
+    assert_equal "message_centers/:id/create_group", create_group.path
+    assert_equal "List conversations on this message center.", list.openapi.fetch(:summary)
+    assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
+    assert_includes list.openapi.fetch(:description), "Needs Accessible view on the message center."
+    assert_includes create_group.openapi.fetch(:description), "On a :members message center"
+    refute_includes list.path, "desk"
+    refute_includes create_group.path, "desk"
     refute send_message.input_contract.as_json.fetch(:reject_unknown)
   end
 

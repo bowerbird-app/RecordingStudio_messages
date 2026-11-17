@@ -8,10 +8,10 @@ module RecordingStudioMessages
         required_role: :view,
         http_verb: :get,
         title: "Group - List",
-        summary: "List conversations on this desk.",
+        summary: "List conversations on this message center.",
         description: "Calls RecordingStudioMessages.viewable_group_recordings. " \
-                     "Needs Accessible view on the desk.",
-        path: "desks/:id/conversations",
+                     "Needs Accessible view on the message center.",
+        path: "message_centers/:id/conversations",
         fields: {
           unread: {
             type: :boolean, required: false,
@@ -33,12 +33,12 @@ module RecordingStudioMessages
         required_role: :edit,
         http_verb: :post,
         title: "Group - Create",
-        summary: "Start a conversation on this desk.",
+        summary: "Start a conversation on this message center.",
         description: "Calls RecordingStudioMessages.create_group. " \
-                     "Needs Accessible edit on the desk. " \
-                     "On a :members desk, CreateGroupPeople requires :admin, " \
+                     "Needs Accessible edit on the message center. " \
+                     "On a :members message center, CreateGroupPeople requires :admin, " \
                      "so the API client must be an admin client.",
-        path: "desks/:id/create_group",
+        path: "message_centers/:id/create_group",
         fields: {
           title: {
             type: :string, required: false, allow_blank: true,

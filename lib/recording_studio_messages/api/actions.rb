@@ -72,7 +72,7 @@ module RecordingStudioMessages
           recording = @context.access_grant.accessible_recordings.find_by(id: raw)
           return recording if conversation_on_desk?(recording, mount)
 
-          raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this desk"
+          raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this message center"
         end
 
         def conversation_on_desk?(recording, mount)
