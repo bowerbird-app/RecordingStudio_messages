@@ -12,14 +12,14 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     @viewer = user("viewer")
     @stranger = user("stranger")
     Current.actor = @owner
-    @workspace = owned_root(Workspace.create!(name: "API Desk #{SecureRandom.hex(4)}"))
-    @other = owned_root(Workspace.create!(name: "Other desk #{SecureRandom.hex(4)}"), actor: @stranger)
+    @workspace = owned_root(Workspace.create!(name: "API Message center #{SecureRandom.hex(4)}"))
+    @other = owned_root(Workspace.create!(name: "Other message center #{SecureRandom.hex(4)}"), actor: @stranger)
     @mount = @workspace.ensure_message_mount("support", actor: @owner)
     @other_mount = @other.ensure_message_mount("support", actor: @stranger)
     @group = RecordingStudioMessages.create_group(@mount, title: "API thread", actor: @owner)
     @other_group = RecordingStudioMessages.create_group(@other_mount, title: "Elsewhere", actor: @stranger)
     RecordingStudioMessages.send_message(
-      group_recording: @group, body: "Hello from the desk.", actor: @owner, notify: false
+      group_recording: @group, body: "Hello from the message center.", actor: @owner, notify: false
     )
     @editor_access = grant!(@workspace, @editor, :edit)
     @viewer_access = grant!(@workspace, @viewer, :view)
@@ -41,14 +41,6 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "Quiet crop on the way.", sent.fetch("body")
     assert_equal @group.id, sent.fetch("parent_id")
     assert_equal "Quiet crop on the way.", RecordingStudioMessages.message_recordings(@group).last.recordable.body
-  end
-
-  test "old desks paths are not registered" do
-    call(:get, "/desks/#{@mount.id}/conversations", @editor_token)
-    assert_response :not_found, response.body
-
-    call(:post, "/desks/#{@mount.id}/create_group", @editor_token, title: "Nope")
-    assert_response :not_found, response.body
   end
 
   test "list_conversations goes through viewable_group_recordings" do
@@ -130,7 +122,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     thread = call(:get, "/conversations/#{@group.id}/messages", @editor_token)
     assert_response :success, response.body
     bodies = thread.fetch("records").map { |row| row["body"] }
-    assert_includes bodies, "Hello from the desk."
+    assert_includes bodies, "Hello from the message center."
   end
 
   test "create_group goes through RecordingStudioMessages.create_group" do
@@ -317,7 +309,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     line = RecordingStudioMessages.message_recordings(@group).last
     shown = call(:get, "/messages/#{line.id}", @editor_token)
     assert_response :success, response.body
-    assert_equal "Hello from the desk.", shown.fetch("body")
+    assert_equal "Hello from the message center.", shown.fetch("body")
     assert_equal line.id, shown.fetch("id")
 
     before = RecordingStudio::Recording.where(recordable_type: RecordingStudioMessages::MESSAGE_TYPE).count
@@ -331,7 +323,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity, response.body
     assert_equal "unsupported_action", destroyed.dig("error", "code")
     assert_includes RecordingStudioMessages.message_recordings(@group).map(&:id), line.id
-    assert_equal "Hello from the desk.", line.reload.recordable.body
+    assert_equal "Hello from the message center.", line.reload.recordable.body
   end
 
   private

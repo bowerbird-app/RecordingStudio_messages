@@ -226,8 +226,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     panel_helper = File.read(
       File.expand_path("../app/helpers/recording_studio_messages/panel_helper.rb", __dir__)
     )
-    desk = File.read(
-      File.expand_path("../app/views/recording_studio_messages/message_groups/_desk.html.erb", __dir__)
+    message_center = File.read(
+      File.expand_path("../app/views/recording_studio_messages/message_groups/_message_center.html.erb", __dir__)
     )
     list_toolbar = File.read(
       File.expand_path("../app/views/recording_studio_messages/message_groups/_list_toolbar.html.erb", __dir__)
@@ -296,7 +296,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes helper, "funnel"
     refute_includes helper, "unread_count:"
     assert_includes helper, "messages_inbox_row_complete?"
-    assert_includes helper, "turbo_frame: messages_desk_panel_id"
+    assert_includes helper, "turbo_frame: messages_message_center_panel_id"
     assert_includes helper, "turbo_stream: true"
     assert_includes helper, "def messages_unread_badge_id"
     assert_includes helper, "def messages_inbox_unread_dot_id"
@@ -319,7 +319,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     my_messages_stream = File.read(
       File.expand_path("../app/views/recording_studio_messages/my_messages/show.turbo_stream.erb", __dir__)
     )
-    assert_includes my_messages_stream, "turbo_stream.update messages_desk_panel_id"
+    assert_includes my_messages_stream, "turbo_stream.update messages_message_center_panel_id"
     assert_includes my_messages_stream, "turbo_stream.update messages_inbox_unread_dot_id"
     assert_includes my_messages_stream, "turbo_stream.update messages_unread_badge_id"
     rename_stream = File.read(
@@ -336,20 +336,20 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes query, "unread:"
     assert_includes query, "apply_unread"
     refute_includes query, "ELSE -1"
-    assert_includes panel_helper, "def messages_desk_panel_id"
-    assert_includes panel_helper, '"messages-desk-panel"'
+    assert_includes panel_helper, "def messages_message_center_panel_id"
+    assert_includes panel_helper, '"messages-message-center-panel"'
     assert_includes controller, "turbo_frame_request?"
     assert_includes show, "turbo_frame_request?"
     assert_includes show, "panel_frame"
-    assert_includes desk, "FlatPack::Chat::Layout::Component.new("
-    assert_includes desk, "variant: :split"
-    assert_includes desk, "layout.sidebar"
-    assert_includes desk, "layout.panel"
-    assert_includes desk, "messages_inbox_rows"
-    assert_includes desk, "turbo_frame_tag inbox_row[:title_frame_id]"
+    assert_includes message_center, "FlatPack::Chat::Layout::Component.new("
+    assert_includes message_center, "variant: :split"
+    assert_includes message_center, "layout.sidebar"
+    assert_includes message_center, "layout.panel"
+    assert_includes message_center, "messages_inbox_rows"
+    assert_includes message_center, "turbo_frame_tag inbox_row[:title_frame_id]"
     assert_includes list_toolbar, "unread_badge"
-    assert_includes desk, "panel_frame"
-    assert_includes panel_frame, "messages_desk_panel_id"
+    assert_includes message_center, "panel_frame"
+    assert_includes panel_frame, "messages_message_center_panel_id"
     assert_includes panel, "membership_locked_for_group?"
     assert_includes panel, "messages_panel_header_title(group_recording, actor: current_actor, inbox: inbox)"
     assert_includes panel, "messages_panel_right_header(group_recording, actor: current_actor, mount:"
@@ -370,7 +370,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes panel, "if membership_open"
     assert_includes panel, "recording_studio_accessible_avatars"
     refute_includes panel, "show_access:"
-    refute_includes desk, "show_access"
+    refute_includes message_center, "show_access"
     refute_includes panel_frame, "show_access"
     refute_includes show, "show_access"
     index = File.read(
@@ -382,31 +382,31 @@ class RecordingStudioMessagesTest < Minitest::Test
     refute_includes index, "recording_studio_page_nav"
     refute_includes index, "FlatPack::PageTitle::Component"
     refute_includes panel, "back_href"
-    assert_includes desk, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
-    assert_includes desk, "FlatPack::Chat::InboxRow::Component"
-    assert_includes desk, "unread_filter"
-    assert_includes desk, "messages_list_toolbar(mount: mount_recording, actor: current_actor)"
-    assert_includes desk, "messages_list_header_title(mount: mount_recording, actor: current_actor)"
-    refute_includes desk, "sidebar_title"
-    refute_includes desk, "messages_inbox_title(mount_recording)"
-    refute_includes desk, 'inbox == :my_messages ? messages_t("inbox.my_title")'
-    assert_includes desk, "list_toolbar"
-    assert_includes desk, "title: list_title"
+    assert_includes message_center, "FlatPack::List::Component.new(spacing: :dense, selectable: true)"
+    assert_includes message_center, "FlatPack::Chat::InboxRow::Component"
+    assert_includes message_center, "unread_filter"
+    assert_includes message_center, "messages_list_toolbar(mount: mount_recording, actor: current_actor)"
+    assert_includes message_center, "messages_list_header_title(mount: mount_recording, actor: current_actor)"
+    refute_includes message_center, "sidebar_title"
+    refute_includes message_center, "messages_inbox_title(mount_recording)"
+    refute_includes message_center, 'inbox == :my_messages ? messages_t("inbox.my_title")'
+    assert_includes message_center, "list_toolbar"
+    assert_includes message_center, "title: list_title"
     assert_includes list_toolbar, "messages_unread_filter_button"
     assert_includes list_toolbar, "unread_filter"
     assert_includes list_toolbar, "list_toolbar.present?"
-    assert_includes desk, "FlatPack::Chat::Header::Component"
-    refute_includes desk, "inbox.filter_all"
-    refute_includes desk, "filter_unread"
-    assert_includes desk, '<div class="w-full min-w-0 <%= desk_height_class %>">'
-    assert_includes desk, "h-[calc(100dvh-15.5rem)]"
-    assert_includes desk, "local_assigns[:desk_height_class]"
-    refute_includes desk, "min-h-[70vh]"
-    refute_match(/class="[^"]*md:grid-cols-\[280px/, desk)
-    refute_includes desk, "display: none"
-    refute_includes desk, "<style>"
-    refute_includes desk, "FlatPack::PageTitle::Component"
-    refute_includes desk, ">Conversations<"
+    assert_includes message_center, "FlatPack::Chat::Header::Component"
+    refute_includes message_center, "inbox.filter_all"
+    refute_includes message_center, "filter_unread"
+    assert_includes message_center, '<div class="w-full min-w-0 <%= message_center_height_class %>">'
+    assert_includes message_center, "h-[calc(100dvh-15.5rem)]"
+    assert_includes message_center, "local_assigns[:message_center_height_class]"
+    refute_includes message_center, "min-h-[70vh]"
+    refute_match(/class="[^"]*md:grid-cols-\[280px/, message_center)
+    refute_includes message_center, "display: none"
+    refute_includes message_center, "<style>"
+    refute_includes message_center, "FlatPack::PageTitle::Component"
+    refute_includes message_center, ">Conversations<"
     refute_includes helper, '"Conversation"'
     refute_includes controller, "Pundit"
     refute_includes controller, "CanCan"
@@ -536,7 +536,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     readme_source = File.read(readme_path)
 
     assert_includes readme_source, "This Rails app exists to prove Recording Studio Messages"
-    assert_includes readme_source, "/staff/desk"
+    assert_includes readme_source, "/staff/message_center"
     assert_includes readme_source, "/inbox"
     assert_includes readme_source, "/recording_studio_messages/my_messages"
     assert_includes readme_source, "https://flatpack.bowerbird.io/"

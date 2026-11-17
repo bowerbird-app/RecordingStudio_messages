@@ -2,8 +2,8 @@ en:
   dummy:
     home:
       title: Dummy host
-      subtitle: Two message desks on one gem. This host is not the product.
-      staff_desk: Staff desk
+      subtitle: Two message centers on one gem. This host is not the product.
+      staff_message_center: Staff message center
       inbox: Inbox
       my_messages: My messages
       admin: Admin

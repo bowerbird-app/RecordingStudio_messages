@@ -84,7 +84,7 @@ class MembershipLockTest < ActionDispatch::IntegrationTest
 
     group = RecordingStudioMessages.create_group(
       mount,
-      title: "Locked desk #{SecureRandom.hex(3)}",
+      title: "Locked message center #{SecureRandom.hex(3)}",
       actor: @staff
     )
 

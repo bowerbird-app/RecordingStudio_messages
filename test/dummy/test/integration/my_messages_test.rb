@@ -12,7 +12,7 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     @customer = User.find_by!(email: "casey@example.com")
   end
 
-  test "my messages lists direct grants across mounts with the desk name on each row" do
+  test "my messages lists direct grants across mounts with the message center name on each row" do
     sign_in @customer
     get recording_studio_messages.my_messages_path
 
@@ -32,7 +32,7 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
                   recording_studio_messages.my_message_path(DummyCatalog.inbox_group_recording)
     refute_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.my_message_path(DummyCatalog.support_group_recording),
-                  "messages-desk-panel"
+                  "messages-message-center-panel"
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
   end
 
@@ -57,15 +57,15 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     group = DummyCatalog.support_group_recording
 
     get recording_studio_messages.my_message_path(group),
-        headers: { "Turbo-Frame" => "messages-desk-panel" }
+        headers: { "Turbo-Frame" => "messages-message-center-panel" }
 
     assert_response :success
-    assert_select "turbo-frame#messages-desk-panel"
+    assert_select "turbo-frame#messages-message-center-panel"
     assert_includes response.body, "The homepage hero feels a bit loud"
     refute_includes response.body, "flat-pack--chat-layout"
   end
 
-  test "staff sees the inherited inbox on the mount desk and not in my messages" do
+  test "staff sees the inherited inbox on the mount message center and not in my messages" do
     sign_in @staff
     get inbox_path
 
@@ -80,9 +80,9 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Studio help"
   end
 
-  test "staff desk list is unchanged and still uses mount routes" do
+  test "staff message center list is unchanged and still uses mount routes" do
     sign_in @staff
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     assert_includes response.body, "Studio help"
@@ -90,7 +90,7 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Site inbox"
     assert_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.message_group_path(DummyCatalog.support_group_recording),
-                  "messages-desk-panel"
+                  "messages-message-center-panel"
   end
 
   test "unranked grants stay off my messages and the index still renders" do
@@ -215,13 +215,13 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     targets = css_select("turbo-stream").map { |node| node["target"] }
     assert_equal(
       [
-        "messages-desk-panel",
+        "messages-message-center-panel",
         "messages-unread-dot-#{opened.id}",
         "messages-unread-badge"
       ].sort,
       targets.sort
     )
-    assert_includes stream_html("messages-desk-panel"), "Open from unread"
+    assert_includes stream_html("messages-message-center-panel"), "Open from unread"
     refute_includes stream_html("messages-unread-dot-#{opened.id}"), "avatar-status-busy-color"
     assert_match(/>#{Regexp.escape((before - 1).to_s)}</, stream_html("messages-unread-badge"))
     refute_includes response.body, "flat-pack--chat-layout"

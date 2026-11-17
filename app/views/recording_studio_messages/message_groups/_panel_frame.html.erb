@@ -1,4 +1,4 @@
-<%= turbo_frame_tag messages_desk_panel_id, class: "block h-full min-h-0" do %>
+<%= turbo_frame_tag messages_message_center_panel_id, class: "block h-full min-h-0" do %>
   <% if local_assigns[:group_recording] %>
     <%= render "recording_studio_messages/message_groups/panel",
                group_recording: local_assigns[:group_recording],

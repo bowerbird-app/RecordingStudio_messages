@@ -30,7 +30,7 @@ class ListGroupsTest < ActiveSupport::TestCase
 
     @alpha = RecordingStudioMessages.create_group(@mount, title: "Alpha", actor: @owner)
     RecordingStudioMessages.create_group(@mount, title: "No grant", actor: @owner)
-    elsewhere = RecordingStudioMessages.create_group(@other_mount, title: "Other desk", actor: @owner)
+    elsewhere = RecordingStudioMessages.create_group(@other_mount, title: "Other message center", actor: @owner)
     grant!(@alpha, @viewer)
     grant!(elsewhere, @viewer)
   end

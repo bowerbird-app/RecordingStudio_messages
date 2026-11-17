@@ -42,7 +42,7 @@ module DummyCatalog
 
     def group_recording_under(mount, title)
       find_group_recording_under(mount, title) ||
-        raise(ActiveRecord::RecordNotFound, "No #{title.inspect} conversation under this desk")
+        raise(ActiveRecord::RecordNotFound, "No #{title.inspect} conversation under this message center")
     end
 
     def support_group_recording

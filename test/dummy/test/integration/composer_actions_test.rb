@@ -34,7 +34,7 @@ class ComposerActionsTest < ActionDispatch::IntegrationTest
     Current.actor = @previous_actor
   end
 
-  test "support desk plus menu includes the dummy attach-page item and a lazy modal shell" do
+  test "support message center plus menu includes the dummy attach-page item and a lazy modal shell" do
     sign_in @staff
 
     get recording_studio_messages.message_group_path(@group)

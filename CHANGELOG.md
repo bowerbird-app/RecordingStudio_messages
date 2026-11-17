@@ -9,25 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.32.0] - 2026-11-17
 
-API paths renamed from desks/ to message_centers/; clients must update.
+The public name is message center. API paths, the split partial, the panel frame, and the dummy staff route use that name.
 
 ### Changed
 
-- `GET message_centers/:id/conversations` and `POST message_centers/:id/create_group` replace `desks/:id/conversations` and `desks/:id/create_group`. There is no alias for the old paths. `recordable_type` stays `RecordingStudioMessages::MessageMount`. List stays `:view`. Create stays `:edit`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
+- List is `GET message_centers/:id/conversations`. Create is `POST message_centers/:id/create_group`. There is no alias. `recordable_type` stays `RecordingStudioMessages::MessageMount`. List stays `:view`. Create stays `:edit`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
 - List and create descriptions, and the `after_id` error, say message center.
+- The split partial is `message_groups/message_center`. The height local is `message_center_height_class`. The turbo frame id is `messages-message-center-panel`.
+- The dummy staff route is `/staff/message_center`.
 
 ### Upgrade notes
 
 - Bump to **0.32.0**. No Messages migration.
 - API paths renamed from desks/ to message_centers/; clients must update.
+- Render `message_groups/message_center` and pass `message_center_height_class`. The panel frame helper is `messages_message_center_panel_id`.
+- Point staff links at `/staff/message_center`.
 
 ## [0.31.0] - 2026-11-16
 
-Registered message endpoints declare a recordable type and a required role so they load on Recording Studio API 0.26. Conversation and desk handlers read the recording API already resolved.
+Registered message endpoints declare a recordable type and a required role so they load on Recording Studio API 0.26. Conversation and message center handlers read the recording API already resolved.
 
 ### Changed
 
-- `conversations/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageGroup`. `desks/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageMount`. `unread_count` has no `:id` and stays unscoped.
+- `conversations/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageGroup`. `message_centers/:id/*` registers `recordable_type` `RecordingStudioMessages::MessageMount`. `unread_count` has no `:id` and stays unscoped.
 - Every catalog endpoint passes its `required_role`. `messages_mark_read` is POST and stays `:view`. List, read, and unread count stay `:view`. Send, create, and rename stay `:edit`.
 - The six `:id` handlers use `context.recording`. Recording Studio API loads that recording and authorizes `required_role` before the handler. `unread_count` still authorizes `:view` on the access recording. List still checks `after_id` in the handler.
 - Development and the dummy pin Recording Studio API tag `v0.26.0`. The gemspec does not depend on `recording_studio_api`. Other addon dependencies use an upper cap, and Attachable already depends on API.
@@ -151,7 +155,7 @@ Host write policies can tell a gem Message or MessageGroup write from any other 
 
 - Bump to **0.26.0**. No Messages migration.
 - Pin Accessible `v0.33.0` (`>= 0.33.0, < 1.0`). `actors_with_access` is not in 0.32.
-- Hosts on `:inherited` mounts will notify people who only inherit from the mount or root. They still receive no direct grant, and `/my_messages` still lists direct grants only. `:members` desks are unchanged. Notification settings still decide delivery.
+- Hosts on `:inherited` mounts will notify people who only inherit from the mount or root. They still receive no direct grant, and `/my_messages` still lists direct grants only. `:members` message centers are unchanged. Notification settings still decide delivery.
 
 ## [0.25.1] - 2026-11-13
 
@@ -257,7 +261,7 @@ Hosts can let people start a conversation from a Messages mount and pick who it 
 
 ## [0.22.0] - 2026-11-11
 
-Per-mount access mode on `Messages.to`. Shared desks stay membership grants. Desks under an owner root inherit Accessible from the tree. Existing grants are untouched. No migration.
+Per-mount access mode on `Messages.to`. Shared message centers stay membership grants. Message centers under an owner root inherit Accessible from the tree. Existing grants are untouched. No migration.
 
 ### Added
 
@@ -274,7 +278,7 @@ Per-mount access mode on `Messages.to`. Shared desks stay membership grants. Des
 
 ## [0.21.0] - 2026-11-10
 
-Composer + menu items and typed recording cards are host/gem registries. Message bodies auto-link `http` and `https` after HTML escape. Conversation desks, unread, seen faces, and the v0.17–v0.19 slots stay as they are.
+Composer + menu items and typed recording cards are host/gem registries. Message bodies auto-link `http` and `https` after HTML escape. Conversation message centers, unread, seen faces, and the v0.17–v0.19 slots stay as they are.
 
 ### Added
 
@@ -304,7 +308,7 @@ The conversation list header no longer shows the mount parent name (or "My messa
 ### Upgrade notes
 
 - Bump to **0.20.1**. No Messages migration on top of 0.20.0.
-- Mount desks and `/my_messages` drop the list-header name. Override `messages_list_header_title(mount:, actor:)` to put one back. Leave it undefined to keep the header as controls only.
+- Mount message centers and `/my_messages` drop the list-header name. Override `messages_list_header_title(mount:, actor:)` to put one back. Leave it undefined to keep the header as controls only.
 
 ## [0.20.0] - 2026-11-10
 
@@ -335,17 +339,17 @@ Unread filtering works on a mount inbox, and the list header is a host toolbar s
 
 - `viewable_group_recordings` / `ListGroups` take optional `unread: false`. Pass `true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. The filter runs after Accessible `recordings_for` and optional `tags:`. It uses the same `recording_studio_message_reads` cursors as `my_group_recordings(unread: true)` (`unread_ids_among`). Tags never grant access. Optional `after:` and `limit:` still page that filtered list.
 - `MessageGroupsController` index and show read `params[:unread]` the same way `/my_messages` does. The Turbo panel stay as they are. Pagination and the unread toggle keep `unread` and drop `after_id`.
-- Hosts can override `messages_list_toolbar(mount:, actor:)`. The default returns nil. The list header renders the built-in unread toggle first, then that host markup beside it, on the mount desk and on `/my_messages` (`mount:` is nil there). The hook grants no access.
+- Hosts can override `messages_list_toolbar(mount:, actor:)`. The default returns nil. The list header renders the built-in unread toggle first, then that host markup beside it, on the mount message center and on `/my_messages` (`mount:` is nil there). The hook grants no access.
 
 ### Upgrade notes
 
 - Bump to **0.19.0**. No Messages migration on top of 0.18.0.
-- Existing mount desks show the unread toggle in the list header. Leave `messages_list_toolbar` undefined if that slot should stay empty beside the toggle.
+- Existing mount message centers show the unread toggle in the list header. Leave `messages_list_toolbar` undefined if that slot should stay empty beside the toggle.
 - Pass `unread: true` to `viewable_group_recordings` when a host list should match the mount toggle.
 
 ## [0.18.0] - 2026-11-10
 
-People with edit access can rename an open conversation in place. The list row title follows without remounting the desk.
+People with edit access can rename an open conversation in place. The list row title follows without remounting the message center.
 
 ### Added
 
@@ -379,13 +383,13 @@ Hosts can put their own controls in the open conversation header. Messages still
 
 ### Added
 
-- Hosts can override `messages_panel_right_header(group_recording, actor:, mount:)`, `messages_panel_right_header_mobile(group_recording, actor:, mount:)`, and `messages_panel_after(group_recording, actor:, mount:)`. Each default returns nil. The panel fills Flatpack `Chat::Panel` `right_header` and `right_header_mobile` only when that hook returns content, and renders `messages_panel_after` once after the panel inside the desk turbo frame. A blank return leaves the panel markup unchanged. `mount` is the conversation's parent `MessageMount` recording. The hooks grant no access. The host must run its own Accessible check.
+- Hosts can override `messages_panel_right_header(group_recording, actor:, mount:)`, `messages_panel_right_header_mobile(group_recording, actor:, mount:)`, and `messages_panel_after(group_recording, actor:, mount:)`. Each default returns nil. The panel fills Flatpack `Chat::Panel` `right_header` and `right_header_mobile` only when that hook returns content, and renders `messages_panel_after` once after the panel inside the message center turbo frame. A blank return leaves the panel markup unchanged. `mount` is the conversation's parent `MessageMount` recording. The hooks grant no access. The host must run its own Accessible check.
 - Filled right-header slots wrap host markup in `flex items-center gap-2 whitespace-nowrap p-4`. That is the inset Flatpack documents around `Chat::Panel` actions and the same `p-4` as `Chat::Header`. Flatpack 0.1.341's right-header parts have no padding of their own, so the wrap lives in Messages.
 
 ### Upgrade notes
 
 - Bump to **0.17.0**. No Messages migration on top of 0.16.0.
-- Existing desks stay the same until a host defines one of those helpers.
+- Existing message centers stay the same until a host defines one of those helpers.
 - Return html-safe markup. Branch on `mount.recordable.key` when the host has more than one mount.
 
 ## [0.16.0] - 2026-11-10
@@ -448,12 +452,12 @@ The public contact popup can carry generic conversation tags without exposing re
 
 ## [0.13.0] - 2026-11-09
 
-An actor can open one inbox of conversations they were added to, across every message mount. The mount desk stays as it is.
+An actor can open one inbox of conversations they were added to, across every message mount. The mount message center stays as it is.
 
 ### Added
 
 - `my_group_recordings(actor:, after: nil, limit: nil)`. Returns a relation of kept `MessageGroup` recordings that have a kept, effective direct Accessible grant for that actor. Inherited access on a root or mount does not add a row. The relation orders by `last_message_at` (newest first), then recording id. Pass `limit:` and `after:` (a recording from the previous page) for keyset pages.
-- `GET /my_messages` and `GET /my_messages/:id`. The split desk reuses `Chat::InboxRow`. Each row shows the mount parent name. Opening a conversation keeps this inbox in the sidebar. Back returns here. Conversation `#show` on a mount is unchanged.
+- `GET /my_messages` and `GET /my_messages/:id`. The split message center reuses `Chat::InboxRow`. Each row shows the mount parent name. Opening a conversation keeps this inbox in the sidebar. Back returns here. Conversation `#show` on a mount is unchanged.
 - `recording_studio_message_groups.last_message_at` (nullable datetime, indexed). `send_message` writes it. The install migration backfills it from each conversation's newest kept message.
 
 ### Fixed
@@ -467,7 +471,7 @@ An actor can open one inbox of conversations they were added to, across every me
 
 - Bump to **0.13.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
 - Mount the engine as you already do. Then link to `my_messages_path` (or `recording_studio_messages.my_messages_path` from the host).
-- Keep `viewable_group_recordings` and `ListGroups` for a single mount desk. Do not point those callers at `my_group_recordings`.
+- Keep `viewable_group_recordings` and `ListGroups` for a single mount message center. Do not point those callers at `my_group_recordings`.
 - Unread stays a placeholder (`unread_count: 0`).
 
 ## [0.12.0] - 2026-11-09
@@ -487,7 +491,7 @@ A conversation can take its tags in the same commit that creates it. Hosts can c
 - Bump to **0.12.0**. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
 - Keep the 0.11.1 development pins. Recording Studio `v6.3.0`, Flatpack `v0.1.341`, Accessible `v0.24.1`, Notifications `v0.13.1`, Metrics `v0.6.1`, Users `v0.26.3`, Root Switchable `v0.10.0`. Keep the 0.11.2 lockfile floors for Rails `8.1.4.1` and the CVE gems.
 - Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known. Use `tagged_group_recordings` for a count that has no actor. Keep `viewable_group_recordings` for an actor who can view the mount.
-- Add `tags: nil` or `**` to `public_contact_recipient_resolver` when the desk depends on those recordings. Leave a two-keyword lambda as it is.
+- Add `tags: nil` or `**` to `public_contact_recipient_resolver` when the message center depends on those recordings. Leave a two-keyword lambda as it is.
 - Leave the intent `tags` column alone. `complete_public_contact` reads it. If a tagged recording or the contact mount is missing or trashed at complete, start a new message. The visitor is not confirmed and no conversation is written.
 - A failed owner grant now removes the new conversation. In `0.10.0`, `record!` could commit the conversation and a later grant failure could leave it in place.
 
@@ -607,9 +611,9 @@ Dummy Flatpack 0.1.329 and Users 0.26.3. Drop the Card `style:` shim.
 
 ### Changed
 
-- Conversation lists, the staff desk, the inbox, and the dummy home use Recording Studio 6.1's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. `false` renders no layout. A string is a layout name. A callable is invoked as `call(controller:)` and must return a String, `nil`, or `false`.
+- Conversation lists, the staff message center, the inbox, and the dummy home use Recording Studio 6.1's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`. `nil` uses `RecordingStudio.configuration.layout`, then `recording_studio/default_layout`. `false` renders no layout. A string is a layout name. A callable is invoked as `call(controller:)` and must return a String, `nil`, or `false`.
 - Page titles are `content_for :title` and `content_for :subtitle`. The default layout renders one `FlatPack::PageTitle`. Back and close use `flat_pack_page_nav(round: true, style: :default, ...)`.
-- The desk wrapper defaults to `h-[calc(100dvh-15.5rem)]` so the title stays below the sticky top nav and the page does not scroll. The old `8.5rem` offset was the shorter nav from before Recording Studio 6. Hosts that pass `desk_height_class` keep their own value.
+- The message center wrapper defaults to `h-[calc(100dvh-15.5rem)]` so the title stays below the sticky top nav and the page does not scroll. The old `8.5rem` offset was the shorter nav from before Recording Studio 6. Hosts that pass `message_center_height_class` keep their own value.
 - Public contact asks Users `Services::IssueOtp` for a code and `resend_otp!` for another. Both return a result. A throttled result tells the visitor to wait. A suppressed result says email codes are required. `RecordingStudioUser.issue_otp!` is gone in Users 0.24.
 - Gemspec floors are `recording_studio >= 6.1.0` and `flat_pack >= 0.1.315`. Development and the dummy pin Recording Studio `v6.1.0`, Flatpack `v0.1.315`, and `view_component` `4.19.0`.
 
@@ -861,7 +865,7 @@ end
 ## [0.3.1] - 2026-09-25
 
 Hosts can lock membership on a Messages mount key so conversations under that
-desk cannot invite or manage Accessible grants from the chat UI or Accessible
+message center cannot invite or manage Accessible grants from the chat UI or Accessible
 manage-access screens.
 
 ### Added
@@ -908,14 +912,14 @@ Messages follows the current Recording Studio dependency family.
   nested around them.
 - Dummy Propshaft rewrites Flatpack's logical CSS `@import` paths to digested
   URLs so `variables`, `rich_text`, and `content_editor` load without 404s.
-- Chat desks fill the viewport under PageNav (`h-[calc(100dvh-8.5rem)]` on the
-  desk wrapper) so the composer sits on the bottom edge. The wrapper is also
+- Chat message centers fill the viewport under PageNav (`h-[calc(100dvh-8.5rem)]` on the
+  message center wrapper) so the composer sits on the bottom edge. The wrapper is also
   `w-full min-w-0` so Flatpack's fluid split can shrink. Chat::Layout's stacked
   Back to conversations stays visible; do not hide it and do not fork the split
   CSS.
 - Dummy profile screens use core `recording_studio/default_layout`. Root
   Switchable uses its own blank shell so PageNav is not stacked. Home Staff
-  desk and Inbox buttons use Flatpack `href` so they are real links.
+  message center and Inbox buttons use Flatpack `href` so they are real links.
 - Dummy Tailwind scans system gem paths so mounted engine utilities such as
   `pt-16` are in the build.
 - Updated Core to `4.2.1`, Accessible to `0.9.1`, Attachable to `0.5.1`,
@@ -929,11 +933,11 @@ Messages follows the current Recording Studio dependency family.
   `sm` (`clamp(12rem, 30%, 16rem)` plus `minmax(0, 1fr)`). Do not restore a
   `280px` grid in Messages CSS. Pass `split_breakpoint: :md` only if a host
   must keep the old stacking point.
-- The desk wrapper is `w-full min-w-0` plus the existing height class. Keep
+- The message center wrapper is `w-full min-w-0` plus the existing height class. Keep
   `min-w-0` on any flex or grid parent so the card can shrink.
 - Do not hide Chat::Layout's stacked Back to conversations. Below the split
   breakpoint (`sm` by default), that control returns to the conversation list.
-  Core PageNav Back leaves the desk.
+  Core PageNav Back leaves the message center.
 - Pin Users with `tag: "v0.8.2"`. Auth screens use the gem auth layout; do not
   wrap them in a second full-viewport host shell.
 - Run `bin/rails generate recording_studio_accessible:migrations`, then
@@ -970,15 +974,15 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - `ensure_message_mount`, `create_group`, `send_message`, and `granted_actors`
 - `:message_received` notification type. Send calls `RecordingStudioNotifications.notify_each` for other granted actors
 - Flatpack `Chat::Panel` screens (header, messages, composer). Header faces use `recording_studio_accessible_avatars`
-- Dummy staff desk and inbox that prove two mounts at once, with seeded people, an agent, lines, and one attachment
+- Dummy staff message center and inbox that prove two mounts at once, with seeded people, an agent, lines, and one attachment
 - `message_groups#index` is Flatpack `Chat::Layout` `:split`. Accessible `:view` scopes the sidebar. Sidebar rows are `Chat::InboxRow` only. The panel slot is `Chat::Panel`. Hollow empty-grant conversations stay off the sidebar
 - `viewable_group_recordings(actor:, mount_recording:)` scopes that list. Dummy support mount seeds two real conversations so the list is not a single jump to a panel
 - Send replaces the Chat::Panel thread and composer over Turbo so the new line lands in place. There is no Action Cable in this version
-- InboxRow clicks target the `messages-desk-panel` turbo frame. Layout Stimulus `openPanel` / `showPanel` shows the conversation under `md` without a full show visit
+- InboxRow clicks target the `messages-message-center-panel` turbo frame. Layout Stimulus `openPanel` / `showPanel` shows the conversation under `md` without a full show visit
 
 ### Changed
 - README is the product guide for mounts, enablement, and the dummy proof
-- Core PageNav is the one back on the desk. Chat::Header has no `back_href`. Chat::Layout's injected mobile Back is hidden so the two do not stack
+- Core PageNav is the one back on the message center. Chat::Header has no `back_href`. Chat::Layout's injected mobile Back is hidden so the two do not stack
 - Dummy puts `data-theme="rounded"` on the `html` element. Core default layout only sets it on `body`, which is not enough for Flatpack named themes
 - Flatpack pin moves to [PR #159](https://github.com/bowerbird-app/flatpack/pull/159) (`~> 0.1.135`, HEAD `daceb04b76578b2d7adfa42a65e1f66f42d24f23`) so rounded rebinds primary-wired tokens (charcoal Send and mine bubbles). No Messages CSS fork
 
@@ -987,8 +991,8 @@ Conversations land. One gem, keyed mounts, Accessible membership, Attachable fil
 - Point host and dummy Gemfiles at Flatpack PR `#159` HEAD (`0.1.135`, ref `daceb04b76578b2d7adfa42a65e1f66f42d24f23`). Do not use a merge commit or `tag: "v0.1.135"` — that tag does not exist. Do not stay on `v0.1.133` if you want charcoal rounded CTAs
 - Put `data-theme="rounded"` on `html`. Body-only theme is not enough. The dummy helper is the host workaround while core leaves `<html>` bare
 - Send now answers Turbo by replacing `conversation-<id>-messages` and the composer. Do not add Action Cable. HTML posts still redirect with a flash
-- Open a mount on `message_groups#index` (`?mount_id=`). Do not jump straight to show when a desk has conversations. Index uses Accessible `:view` on each `MessageGroup`
-- InboxRow must set `turbo_frame` to `messages-desk-panel`. A row click must not full-visit show and remount the split desk
+- Open a mount on `message_groups#index` (`?mount_id=`). Do not jump straight to show when a message center has conversations. Index uses Accessible `:view` on each `MessageGroup`
+- InboxRow must set `turbo_frame` to `messages-message-center-panel`. A row click must not full-visit show and remount the split message center
 - Include `RecordingStudio::Capabilities::Messages.to` on each host type that should hold a mount
 - Register `MessageMount`, `MessageGroup`, `Message`, and `RecordingStudioAttachable::Attachment` in `recording_studio.rb`
 - Run `recording_studio_messages:migrations` plus Accessible, Attachable, and Notifications migrations

@@ -45,7 +45,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
       group_recording: @group,
       body: "Default filing stays on the ticket.",
       actor: @customer,
-      url: "/staff/desk"
+      url: "/staff/message_center"
     )
 
     staff_note = last_message_received_for(@staff)

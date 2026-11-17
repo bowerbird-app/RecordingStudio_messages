@@ -205,7 +205,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
 
   test "dummy header badge renders on the support mount and stays off the inbox mount" do
     get recording_studio_messages.message_group_path(@group),
-        headers: { "Turbo-Frame" => "messages-desk-panel" }
+        headers: { "Turbo-Frame" => "messages-message-center-panel" }
 
     assert_response :success
     assert_select '[data-flat-pack-chat-panel-part="right-header"] > .flex.items-center.gap-2.whitespace-nowrap.p-4 #dummy-thread-status',
@@ -214,7 +214,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
                   text: "Open"
 
     get recording_studio_messages.message_group_path(DummyCatalog.inbox_group_recording),
-        headers: { "Turbo-Frame" => "messages-desk-panel" }
+        headers: { "Turbo-Frame" => "messages-message-center-panel" }
 
     assert_response :success
     assert_includes response.body, "Site inbox"
@@ -240,7 +240,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal Mime[:turbo_stream], response.media_type
-    panel_html = stream_html("messages-desk-panel")
+    panel_html = stream_html("messages-message-center-panel")
     assert_includes panel_html, "hook-right"
     assert_includes panel_html, "hook-mobile"
     assert_includes panel_html, "hook-after"
@@ -271,7 +271,7 @@ class PanelHeaderHooksTest < ActionDispatch::IntegrationTest
 
   def get_panel
     get recording_studio_messages.message_group_path(@group),
-        headers: { "Turbo-Frame" => "messages-desk-panel" }
+        headers: { "Turbo-Frame" => "messages-message-center-panel" }
     assert_response :success
   end
 

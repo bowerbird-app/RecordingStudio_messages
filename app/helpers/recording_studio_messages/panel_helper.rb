@@ -4,8 +4,8 @@ module RecordingStudioMessages
   module PanelHelper
     include CopyHelper
 
-    def messages_desk_panel_id
-      "messages-desk-panel"
+    def messages_message_center_panel_id
+      "messages-message-center-panel"
     end
 
     def messages_panel_form_url(group_recording)

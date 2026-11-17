@@ -1,6 +1,6 @@
 # Recording Studio Messages
 
-One gem for every conversation desk. A host enables `:messages` on a recording, then hangs one keyed mount per desk — staff help, a site inbox, or both at once.
+One gem for every conversation message center. A host enables `:messages` on a recording, then hangs one keyed mount per message center — staff help, a site inbox, or both at once.
 
 People and agents stay actors. Membership is an Accessible grant on the conversation, not a child record.
 
@@ -15,7 +15,7 @@ Any recording that enables :messages
             └── Attachments
 ```
 
-Two desks are two mounts of this gem, not two gems.
+Two message centers are two mounts of this gem, not two gems.
 
 | Type | Role | Access |
 |---|---|---|
@@ -65,7 +65,7 @@ bin/rails db:migrate
 
 Other gems can add a + menu item and a card under a line. This gem does not name those gems. Register in a host or gem initializer.
 
-`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the desk mount. A missing `if:` keeps the item. The + menu renders every item that returns true.
+`register_composer_action` adds an item next to **Upload files or images**. The `if:` proc receives the conversation, the current actor, and the message center mount. A missing `if:` keeps the item. The + menu renders every item that returns true.
 
 Messages owns the modal. It renders one Flatpack modal per item (id, title from `title:` or `label`, close control, `size:` default `:sm`). Pass exactly one of `partial:` or `src:`. `partial:` is a light body. `src:` is a URL (or a proc of `(group, actor, mount)` that returns one). Search and pickers should use `src:` with their own endpoint and their own Accessible checks. The shell loads that URL in a Turbo frame with `loading: lazy` when the modal opens. The body receives `group_recording`, `actor`, `mount`, and `action`. Do not render `FlatPack::Modal` or match a `modal_id` in the gem.
 
@@ -107,14 +107,15 @@ RecordingStudioMessages.send_message(
 
 Pin `recording_studio_messages/controllers` in the host importmap so `recording-studio-messages--composer` loads. The dummy pin sits next to the Admin pin. Message bodies auto-link `http` and `https` only. The helper escapes first, then wraps. `javascript:` and `data:` stay text.
 
-The dummy staff desk proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
+The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
 ### Upgrading to 0.32.0
 
-Messages `0.32.0` renames the API paths for a message center. The `:id` is still a `MessageMount`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
+Messages `0.32.0` calls this surface a message center. The `:id` on list and create is still a `MessageMount`. Endpoint names stay `messages_list_conversations` and `messages_create_group`.
 
 1. Install Messages `0.32.0`. There is no Messages migration.
-2. API paths renamed from desks/ to message_centers/; clients must update. There is no alias for the old paths. The path table below uses the new paths.
+2. Call `GET /recording_studio_api/api/v1/message_centers/:id/conversations` and `POST /recording_studio_api/api/v1/message_centers/:id/create_group`. There is no alias for the previous paths. The path table below uses the new paths.
+3. Render `message_groups/message_center`. Pass `message_center_height_class` for the wrapper height. The panel frame id is `messages-message-center-panel`.
 
 ### Upgrading to 0.31.0
 
@@ -155,7 +156,7 @@ Messages `0.30.0` requires Recording Studio 7.
 Messages `0.29.0` turns a rejected Message or MessageGroup write into `RecordingStudioMessages::NotAuthorized`.
 
 1. Install Messages `0.29.0`. There is no Messages migration.
-2. When `config.authorize_write` returns false for those types, the service write raises `NotAuthorized` instead of `RecordingStudio::AuthorizationError`. Desk, rename, public contact, and API callers keep the denial they already show.
+2. When `config.authorize_write` returns false for those types, the service write raises `NotAuthorized` instead of `RecordingStudio::AuthorizationError`. Message center, rename, public contact, and API callers keep the denial they already show.
 
 ### Upgrading to 0.28.0
 
@@ -228,7 +229,7 @@ Messages `0.24.0` sends public contact codes through Recording Studio Users `0.2
 
 ### Upgrading to 0.23.0
 
-Messages `0.23.0` adds an optional New message flow on a mount. Existing desks stay unchanged until you declare `contacts:`.
+Messages `0.23.0` adds an optional New message flow on a mount. Existing message centers stay unchanged until you declare `contacts:`.
 
 1. Install Messages `0.23.0`. There is no Messages migration.
 2. On each type that should offer New message, pass `contacts:` to `Messages.to`. The callable receives `actor:`, `mount:`, and `query:` and returns actors. A blank query is the allowlist create re-checks.
@@ -240,13 +241,13 @@ Messages `0.23.0` adds an optional New message flow on a mount. Existing desks s
 Messages `0.22.0` adds `access:` on `Messages.to`. Existing mounts stay `:members`. Conversations you already granted stay granted. There is no migration.
 
 1. Install Messages `0.22.0`.
-2. On a desk under an owner root, add `access: :inherited` to that type's `Messages.to`. Leave a shared membership desk on the default.
+2. On a message center under an owner root, add `access: :inherited` to that type's `Messages.to`. Leave a shared membership message center on the default.
 3. Keep calling `create_group(mount, title:, actor:, tags:)`. Pass `admin:` only on `:members` when someone other than the creator should own the conversation. `:inherited` ignores `admin:` and writes no staff grant.
 4. Public contact on `:inherited` no longer needs an opener. The resolver may return no one. It only drives `:message_received` notices. The sender still gets a direct `:edit` grant, so they see the thread in `/my_messages`. Team members who only inherit access do not.
 
 ### Upgrading to 0.21.0
 
-Messages `0.21.0` adds composer actions, typed recording references, and safe URL auto-linking. Conversation desks, unread cursors, seen faces, and the v0.17–v0.19 host slots stay as they are.
+Messages `0.21.0` adds composer actions, typed recording references, and safe URL auto-linking. Conversation message centers, unread cursors, seen faces, and the v0.17–v0.19 host slots stay as they are.
 
 1. Install Messages `0.21.0`.
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
@@ -261,7 +262,7 @@ The migration creates `recording_studio_message_references` (`message_recording_
 Messages `0.20.1` leaves the conversation list header without a mount name. The unread toggle, host toolbar slot, and open conversation title stay as they are.
 
 1. Install Messages `0.20.1`. No new migration on top of 0.20.0.
-2. Mount desks and `/my_messages` no longer put a name in that list header. Page titles are unchanged.
+2. Mount message centers and `/my_messages` no longer put a name in that list header. Page titles are unchanged.
 3. Define `messages_list_header_title(mount:, actor:)` when the host wants a name there. `mount` is nil on `/my_messages`. Leave it undefined to keep the header as controls only.
 
 ```ruby
@@ -293,7 +294,7 @@ end
 Messages `0.19.0` filters a mount inbox to unread conversations and opens the list header as a host toolbar slot. The v0.17 panel header hooks, the v0.18 rename, unread cursors, and seen faces stay as they are.
 
 1. Install Messages `0.19.0`. No new migration on top of 0.18.0.
-2. Mount desks and `/my_messages` both show the round unread toggle above the conversation list. `/my_messages` still shows the unread badge next to it.
+2. Mount message centers and `/my_messages` both show the round unread toggle above the conversation list. `/my_messages` still shows the unread badge next to it.
 3. Define `messages_list_toolbar(mount:, actor:)` when the host needs a control beside that toggle. Check Accessible in the host. Messages does not. `mount` is nil on `/my_messages`.
 
 ```ruby
@@ -332,7 +333,7 @@ RecordingStudioMessages.rename_group(
 
 ### Upgrading to 0.17.1
 
-Messages `0.17.1` pins Flatpack `v0.1.346` so rounded chat bubbles use `--chat-message-radius`, `--chat-message-padding-x`, and `--chat-message-padding-y`. Default theme bubbles stay as they were. Conversation desks, unread cursors, and seen faces stay as they are.
+Messages `0.17.1` pins Flatpack `v0.1.346` so rounded chat bubbles use `--chat-message-radius`, `--chat-message-padding-x`, and `--chat-message-padding-y`. Default theme bubbles stay as they were. Conversation message centers, unread cursors, and seen faces stay as they are.
 
 1. Install Messages `0.17.1`. No new migration on top of 0.17.0.
 2. Pin Flatpack git tag `v0.1.346`. Gemspec floor stays `flat_pack >= 0.1.331`.
@@ -340,7 +341,7 @@ Messages `0.17.1` pins Flatpack `v0.1.346` so rounded chat bubbles use `--chat-m
 
 ### Upgrading to 0.17.0
 
-Messages `0.17.0` adds three overridable panel helpers. Conversation desks, unread cursors, and seen faces stay as they are.
+Messages `0.17.0` adds three overridable panel helpers. Conversation message centers, unread cursors, and seen faces stay as they are.
 
 1. Install Messages `0.17.0`. No new migration on top of 0.16.0.
 2. Leave the helpers undefined if the open conversation header should stay as it is.
@@ -410,7 +411,7 @@ Omit `tags:` and the popup matches 0.12.0.
 
 ### Upgrading to 0.13.0
 
-Messages `0.13.0` adds a cross-mount inbox of conversations the current actor was added to. Accessible still decides who can open a conversation. The mount desk, `ListGroups`, and `viewable_group_recordings` stay as they are. Keep the 0.11.1 development pins and the 0.11.2 lockfile floors. The Accessible floor stays `~> 0.24`.
+Messages `0.13.0` adds a cross-mount inbox of conversations the current actor was added to. Accessible still decides who can open a conversation. The mount message center, `ListGroups`, and `viewable_group_recordings` stay as they are. Keep the 0.11.1 development pins and the 0.11.2 lockfile floors. The Accessible floor stays `~> 0.24`.
 
 1. Install Messages `0.13.0`.
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
@@ -419,7 +420,7 @@ Messages `0.13.0` adds a cross-mount inbox of conversations the current actor wa
 
 The new migration adds `last_message_at` on `recording_studio_message_groups` and backfills it from each conversation's newest kept message. `send_message` keeps the column current.
 
-Inherited view on a workspace or mount still opens the mount desk. It does not put a conversation in this inbox. Only a kept, effective direct grant on the conversation does. Tags are not involved. Unread is a private cursor as of 0.15.0.
+Inherited view on a workspace or mount still opens the mount message center. It does not put a conversation in this inbox. Only a kept, effective direct grant on the conversation does. Tags are not involved. Unread is a private cursor as of 0.15.0.
 
 ```ruby
 RecordingStudioMessages.my_group_recordings(actor: current_actor).limit(50)
@@ -433,7 +434,7 @@ Messages `0.12.0` tags a conversation in the same commit that creates it, lists 
 2. Run `bin/rails generate recording_studio_messages:migrations` and `bin/rails db:migrate`.
 3. Pass `tags:` to `create_group` and `begin_public_contact` when the recordings are already known.
 4. Send counts that have no actor to `tagged_group_recordings`.
-5. Add `tags:` or `**` to the public-contact resolver when the desk depends on those recordings. A lambda that only takes `mount_recording:` and `actor:` keeps working.
+5. Add `tags:` or `**` to the public-contact resolver when the message center depends on those recordings. A lambda that only takes `mount_recording:` and `actor:` keeps working.
 
 The new migration adds `tags` `jsonb` on `recording_studio_messages_public_contact_intents`, not null, default `{}`. Leave that column alone. `complete_public_contact` reads it. If a tagged recording or the contact mount is missing or trashed at complete, start a new message.
 
@@ -444,7 +445,7 @@ A failed owner grant now removes the new conversation. In `0.10.0`, `record!` co
 ```ruby
 group = RecordingStudioMessages.create_group(
   mount,
-  title: "Center desk",
+  title: "Center message center",
   actor: editor,
   tags: { "press_center" => press_center, "press_kit" => press_kit }
 )
@@ -457,7 +458,7 @@ RecordingStudioMessages.tagged_group_recordings(
 
 ### Upgrading to 0.11.1
 
-Messages `0.11.1` checks Accessible `:view` on the mount parent before the engine desk renders, and refreshes development pins. Gemspec floors stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`.
+Messages `0.11.1` checks Accessible `:view` on the mount parent before the engine message center renders, and refreshes development pins. Gemspec floors stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`.
 
 1. Install Messages `0.11.1`.
 2. Pin Recording Studio `v6.3.0` and Flatpack `v0.1.341`. Gemfile constraints stay `recording_studio >= 6.1.0` and `flat_pack >= 0.1.331`. Accessible stays `v0.24.1`. Notifications stays `v0.13.1`, Metrics `v0.6.1`, Logs `v0.7.0`, Trashable `v0.11.3`, Cache `v0.5.1` (`~> 0.5`). Users stays `v0.26.3` (0.27.0 renders sign-in in Default Layout). Root Switchable stays `v0.10.0` (0.11.4 drops `layouts/recording_studio_root_switchable/blank`). Admin stays `v2.6.2`. Terms and Conditions has no tag that allows Recording Studio 6.x, so the dummy still loads `test/support/widen_recording_studio_requirement.rb`.
@@ -531,7 +532,7 @@ class Mailbox < ApplicationRecord
 end
 ```
 
-Lock membership on a mount key when people must not invite others from the desk
+Lock membership on a mount key when people must not invite others from the message center
 (for example a Support ticket conversation). Default is unlocked.
 
 ```ruby
@@ -605,7 +606,7 @@ Other recordable types still follow the rest of the host policy. Drop the
 A false result raises `RecordingStudio::AuthorizationError`. `trusted_write`
 turns that into `RecordingStudioMessages::NotAuthorized` on that same span.
 Create says "You can't start a message here." Send says "You cannot send to
-this conversation." Rename says "You cannot open this conversation." Desk send
+this conversation." Rename says "You cannot open this conversation." Message center send
 and create, rename, public contact, and the API keep their existing denial
 response.
 
@@ -613,12 +614,12 @@ response.
 
 `Messages.to` takes `access:` and optional `contacts:`. Callers of `create_group` and public contact do not pick a mode. They read those options from the mount's parent type.
 
-Pass `contacts:` when people on that desk should start a conversation and pick who it goes to. Messages calls `contacts.call(actor:, mount:, query:)`. Return the actors that person may message. A blank `query` is the full allowlist. A search string filters it. Without `contacts:`, the New message button does not render and `create_group(..., recipients:)` is rejected.
+Pass `contacts:` when people on that message center should start a conversation and pick who it goes to. Messages calls `contacts.call(actor:, mount:, query:)`. Return the actors that person may message. A blank `query` is the full allowlist. A search string filters it. Without `contacts:`, the New message button does not render and `create_group(..., recipients:)` is rejected.
 
 | Mode | When | `create_group` | Public contact |
 |---|---|---|---|
-| `:members` (default) | A shared desk whose people are the conversation members | Grants `:admin` to `admin:` when passed, otherwise to the creating actor | Needs an opener. The first resolver recipient who is already an admin on the mount path opens the conversation. Other resolver recipients and the sender get `:edit`. An empty list, or a list with no admin, raises "Nobody can receive this message." |
-| `:inherited` | A desk under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody. `recipients:` grants `:edit` to the creator and each recipient | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
+| `:members` (default) | A shared message center whose people are the conversation members | Grants `:admin` to `admin:` when passed, otherwise to the creating actor | Needs an opener. The first resolver recipient who is already an admin on the mount path opens the conversation. Other resolver recipients and the sender get `:edit`. An empty list, or a list with no admin, raises "Nobody can receive this message." |
+| `:inherited` | A message center under an owner root (a workspace or similar) | Writes the conversation under the mount and grants nobody. `recipients:` grants `:edit` to the creator and each recipient | No opener. The sender gets a direct `:edit` grant on that conversation only. The resolver is notification-only and may return nothing. That error never appears. |
 
 Team members on an `:inherited` mount see and reply through Accessible inheritance (`:view` reads, `:edit` or stronger creates and replies). `send_message` notifies everyone with effective access of at least `:view`, including people granted only on the mount or root. The sender is left out. Their notification settings decide delivery. Those people still get no direct grant, so a quiet thread does not appear in `/my_messages`. `recipients:` is the exception for grants. It grants `:edit` to the creator and each recipient. An explicit `recipients:` list passed to the notifier is who gets `:message_received` instead. Explicit **+ Access** grants still do. Tags never grant access. Send and view still go through Accessible. Accessible does not learn about Messages.
 
@@ -660,7 +661,7 @@ RecordingStudioMessages.send_message(
   body: "The quieter crop is in.",
   actor: current_actor,
   files: uploaded_files,
-  url: staff_desk_path
+  url: staff_message_center_path
 )
 
 RecordingStudioAccessible.authorized?(actor: current_actor, recording: group, role: :view)
@@ -681,7 +682,7 @@ RecordingStudioMessages.unread?(group_recording: group, actor: current_actor)
 RecordingStudioMessages.seen_by(group_recording: group, viewer: current_actor)
 RecordingStudioMessages.create_group(
   mount,
-  title: "Center desk",
+  title: "Center message center",
   actor: current_actor,
   tags: { "press_center" => press_center, "press_kit" => press_kit }
 )
@@ -695,7 +696,7 @@ RecordingStudioMessages.tagged_group_recordings(
 
 Pass `recipients:` and `body:` to start a conversation with people. The actor needs Accessible `:edit` on the mount. Every recipient must appear in that mount's `contacts:` allowlist. Each recipient gets a direct `:edit` grant. On `:members` the creator stays admin. On `:inherited` the creator gets a direct `:edit` grant only, so the conversation appears in `/my_messages` for the creator and the recipients. The team above an `:inherited` mount still sees it through inheritance. Title may be blank. Messages names the conversation from the creator then the recipients in pick order when you omit it, and stores that string so it stays inline-editable. List rows, the panel header, and the page heading truncate with an ellipsis and keep the full name in a title tooltip. Body is required. Tags still never grant access.
 
-`viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff desk, and the inbox all use this list.
+`viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff message center, and the inbox all use this list.
 
 `my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
 
@@ -705,7 +706,7 @@ Pass `recipients:` and `body:` to start a conversation with people. The actor ne
 
 `create_group` accepts the same hash. Omit `tags:`, or pass `nil` or `{}`, and the conversation is created with no tag rows. The conversation, the owner grant, and the tag rows commit together. If the owner grant fails, the conversation and the tag rows are gone. A second successful `create_group` with the same tags creates a second conversation. `tag` and `untag` still change tags after the conversation exists.
 
-`tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the desk. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
+`tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the message center. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
 
 Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies with `:message_received`. On a `:members` mount that is every other direct grant. On an `:inherited` mount that is everyone with effective access of at least `:view`, including access inherited from the mount or root. The sender is left out. Inherited people still get no grant. An explicit `recipients:` list passed to the notifier replaces that set. The URL should open that same panel.
 
@@ -811,7 +812,7 @@ There is no file field on this form.
 ```ruby
 RecordingStudioMessages.configure do |config|
   config.public_contact_recipient_resolver = lambda { |mount_recording:, actor:, tags: {}|
-    desk_for(mount_recording, tags)
+    message_center_for(mount_recording, tags)
   }
 end
 ```
@@ -879,7 +880,7 @@ Header faces come from `recording_studio_accessible_avatars`. That helper shows 
 
 ## Overridable helpers
 
-A host helper with the same name replaces the engine helper. Support does this for `messages_inbox_href(group_recording)` so staff desk links stay on the messages mount.
+A host helper with the same name replaces the engine helper. Support does this for `messages_inbox_href(group_recording)` so staff message center links stay on the messages mount.
 
 The open conversation panel calls three hooks. Each takes the open conversation, the current actor, and the conversation's parent mount recording. All three return `nil` until a host overrides them. Return html-safe markup. These hooks add no strings of their own. They grant no access. The host must check Accessible before it renders anything that should stay private.
 
@@ -887,17 +888,17 @@ The open conversation panel calls three hooks. Each takes the open conversation,
 |---|---|
 | `messages_panel_right_header(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header`. Alone, the part is `flex` at every width. When the mobile hook also returns content, this part is `hidden sm:flex` (shown at 640px and up). |
 | `messages_panel_right_header_mobile(group_recording, actor:, mount:)` | Flatpack `Chat::Panel` `right_header_mobile`. Shown below `sm` (`flex sm:hidden`). |
-| `messages_panel_after(group_recording, actor:, mount:)` | Once, after the panel, inside the `messages-desk-panel` turbo frame. Use a fixed modal. |
-| `messages_list_toolbar(mount:, actor:)` | Beside the unread toggle in the conversation list header, after the toggle. `mount` is the desk's `MessageMount` recording, or nil on `/my_messages`. Desktop and stacked (mobile) list headers both render this slot. |
-| `messages_list_header_title(mount:, actor:)` | `Chat::Header` `title` on the conversation list. Default is nil, so the header is controls only. Return a string to put a name back. `mount` is the desk's `MessageMount` recording, or nil on `/my_messages`. |
+| `messages_panel_after(group_recording, actor:, mount:)` | Once, after the panel, inside the `messages-message-center-panel` turbo frame. Use a fixed modal. |
+| `messages_list_toolbar(mount:, actor:)` | Beside the unread toggle in the conversation list header, after the toggle. `mount` is the message center's `MessageMount` recording, or nil on `/my_messages`. Desktop and stacked (mobile) list headers both render this slot. |
+| `messages_list_header_title(mount:, actor:)` | `Chat::Header` `title` on the conversation list. Default is nil, so the header is controls only. Return a string to put a name back. `mount` is the message center's `MessageMount` recording, or nil on `/my_messages`. |
 
 A nil or blank panel-hook return omits that piece, and the panel markup stays as it is without the hook. The list toolbar hook is the same. A blank toolbar return leaves only the unread toggle. A blank list title leaves `Chat::Header` with no name. The panel passes a right-header slot only when that hook returns content (`panel.right_header` and `panel.right_header_mobile`). Each filled slot wraps the host markup in `flex items-center gap-2 whitespace-nowrap p-4`, matching Flatpack's documented `Chat::Panel` actions and `Chat::Header`'s `p-4`. Flatpack 0.1.341's right-header parts have no padding of their own. On Flatpack 0.1.341, `right_header` is `hidden sm:flex` only when `right_header_mobile` is also supplied. A lone `right_header` stays `flex` at every width. When both return content, both slots are in the DOM and CSS hides one, so their ids, Stimulus targets, and `aria-controls` targets must differ. Pass only the mobile hook and the compact actions show below `sm`.
 
-The same partial renders on the staff desk, `/my_messages`, and the `/my_messages/:id` Turbo stream that replaces the panel. A host header updates whenever that panel updates. Sending a line still replaces only the message list and composer.
+The same partial renders on the staff message center, `/my_messages`, and the `/my_messages/:id` Turbo stream that replaces the panel. A host header updates whenever that panel updates. Sending a line still replaces only the message list and composer.
 
 `messages_panel_after` is a sibling after the panel, still inside the `h-full` turbo frame. That frame sits in `Chat::Layout`'s `overflow-hidden` panel column, so in-flow markup is clipped. Flatpack's modal backdrop is `fixed inset-0`, so a modal is not clipped and does not add height in the frame.
 
-Branch on the mount when the host has more than one desk:
+Branch on the mount when the host has more than one message center:
 
 ```ruby
 def messages_panel_right_header(group_recording, actor:, mount:)
@@ -921,9 +922,9 @@ Compare `mount` itself when the host has several recordings that share a key, su
 
 ## Screens
 
-The desk opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. A named `mount_id` must pass Accessible `:view` on the mount parent or the request 404s before the title reads that parent name. The list `Chat::Header` has no mount name unless the host overrides `messages_list_header_title`. `viewable_group_recordings` fills the sidebar with the kept conversations on that mount that the actor can view. `GET /my_messages` is the same desk without a mount. `my_group_recordings` fills that sidebar from kept direct grants across every mount. Each row names the mount parent. Opening a conversation keeps `/my_messages` in the sidebar and in the back link. Accessible `recordings_for` supplies those rows (`minimum_role: :view`), and the helper sorts them by latest message time, then title. A request with no mount shows an empty sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-desk-panel` turbo frame. Clicking a row keeps the split desk mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.347` supplies a fluid split from `sm`, rounded theme tokens for charcoal Send buttons, outgoing bubbles on the neutral surface, `InlineEdit` for the conversation name when the actor has Accessible `:edit`, and bubble times that stay in the DOM until hover, tap, or focus. Messages inserts `Chat::DateDivider` for a new day and for a gap longer than `time_break_after` (15 minutes by default). The last group's `status` slot is `Chat::SentAt` until `read_receipts` shows seen faces. A rename updates `messages-inbox-title-<id>` on that list row and leaves the v0.17 right-header hooks and padding alone. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
+The message center opens on `message_groups#index` as Flatpack `Chat::Layout` `:split`. A named `mount_id` must pass Accessible `:view` on the mount parent or the request 404s before the title reads that parent name. The list `Chat::Header` has no mount name unless the host overrides `messages_list_header_title`. `viewable_group_recordings` fills the sidebar with the kept conversations on that mount that the actor can view. `GET /my_messages` is the same message center without a mount. `my_group_recordings` fills that sidebar from kept direct grants across every mount. Each row names the mount parent. Opening a conversation keeps `/my_messages` in the sidebar and in the back link. Accessible `recordings_for` supplies those rows (`minimum_role: :view`), and the helper sorts them by latest message time, then title. A request with no mount shows an empty sidebar. There is no Participant list, Pundit, CanCan, or host `admin?` check. Sidebar rows are `Chat::InboxRow` only (name + latest line). The panel slot is the existing `Chat::Panel` in a `messages-message-center-panel` turbo frame. Clicking a row keeps the split message center mounted: InboxRow sets `turbo_frame`, and Layout Stimulus `openPanel` / `showPanel` shows the panel under the split breakpoint (`sm` by default). Do not full-visit show from a row. Hollow empty-grant groups stay off the sidebar. Product pages use Recording Studio's default layout. `RecordingStudioMessages.configuration.layout` defaults to `nil`, which follows `RecordingStudio.configuration.layout` and then `recording_studio/default_layout`. Set a string layout name, `false` for no layout, or a keyword callable `->(controller:) { ... }` that returns a String, `nil`, or `false`. The layout sets `data-theme="rounded"` on `<html>`. Do not fork Chat::Panel CSS. Do not fork Chat::Layout split CSS. Flatpack `>= 0.1.347` supplies a fluid split from `sm`, rounded theme tokens for charcoal Send buttons, outgoing bubbles on the neutral surface, `InlineEdit` for the conversation name when the actor has Accessible `:edit`, and bubble times that stay in the DOM until hover, tap, or focus. Messages inserts `Chat::DateDivider` for a new day and for a gap longer than `time_break_after` (15 minutes by default). The last group's `status` slot is `Chat::SentAt` until `read_receipts` shows seen faces. A rename updates `messages-inbox-title-<id>` on that list row and leaves the v0.17 right-header hooks and padding alone. Page titles go in `content_for :title` (and `:subtitle`). Back and close use `flat_pack_page_nav`. Extra actions use `register_page_nav` or `content_for :page_nav_right`. Chat::Header has no back. On stacked widths, Chat::Layout's Back to conversations returns to the list; do not hide it. Do not put Sign out or Root Switchable in the page slot.
 
-The desk fills the viewport under the host's page nav and page title. `Chat::Layout` is `h-full`, so height lives on the wrapper (`h-[calc(100dvh-15.5rem)]`, matching Recording Studio 6.1's top nav, page title, and layout padding). The same wrapper is `w-full min-w-0` so the split can shrink inside core `main`. Messages scroll inside the panel and the composer stays on the bottom edge instead of sitting under the browser chrome. A host with different chrome passes `desk_height_class` to the partial. Do not set the height on `Chat::Layout` itself; its own `h-full` wins.
+The message center fills the viewport under the host's page nav and page title. `Chat::Layout` is `h-full`, so height lives on the wrapper (`h-[calc(100dvh-15.5rem)]`, matching Recording Studio 6.1's top nav, page title, and layout padding). The same wrapper is `w-full min-w-0` so the split can shrink inside core `main`. Messages scroll inside the panel and the composer stays on the bottom edge instead of sitting under the browser chrome. A host with different chrome passes `message_center_height_class` to the partial. Do not set the height on `Chat::Layout` itself; its own `h-full` wins.
 
 Composer uploads go through Attachable. Send replaces the thread in place over Turbo (the message list and composer). There is no Action Cable in this version. Look at the live kit: [Chat::Layout](https://flatpack.bowerbird.io/demo/chat/layout), [Chat::InboxRow](https://flatpack.bowerbird.io/demo/chat/inbox_row), [Chat::Panel](https://flatpack.bowerbird.io/demo/chat/panel), and [Chat demo](https://flatpack.bowerbird.io/demo/chat/demo).
 
@@ -965,13 +966,13 @@ The dummy switches English and French with Recording Studio Internationalization
 
 The dummy proves two mounts at once:
 
-- `support` on Studio Workspace → Staff desk (`/staff/desk`) lands on the conversation list
+- `support` on Studio Workspace → Staff message center (`/staff/message_center`) lands on the conversation list
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
 The dummy mounts Recording Studio API at `/recording_studio_api`.
 Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.18.0` and mounts Site Settings (`v0.6.0`) and Terms and Conditions (`v0.22.0`). Publishable is on `v1.1.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.16.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.32.0` so public contact can use its code screen. Cache is `v0.7.0`. Recording Studio is on `v7.3.0`. The dummy sets `config.authorize_write` so a present actor may write, including a new root. Accessible is on `v0.45.1`. The dummy `admin_root_resolver` returns the Studio Workspace root so Accessible's page authorizer can allow an admin grant there. Attachable is on `v0.31.0` and needs Moveable `v6.0.0`. Recording Studio API is on `v1.2.1`. The dummy registers `RecordingStudioApi::AdminApi` only when `admin_root_recordable_type_names` is present, which is what core 7.3 requires before that class declares. Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without a recordable type, so the dummy opts those callers out and leaves the Messages endpoints scoped. Notifications is on `v0.19.1`. Metrics is on `v0.9.0`. Logs is on `v0.8.0` because Admin loads it. Icons is on `v0.4.0`. Trashable is on `v1.0.1` and registers the kept filter. The dummy schema has `purge_at` and `recording_studio_events.root_recording_id`. Kept queries use `Recording.kept` and `RecordingStudio.kept_sql`. Internationalization is on `v0.3.0` and is dummy-only. Flatpack is on `v0.1.377`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 7.0, < 8.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`. Terms registers `Section` and `Clause`, and Terms documents live under the shared `Library` root. Seeds create roots with `create_root_recording!`. The table is the dummy lock. The root Gemfile stays on the previous tags.
 
-Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each desk, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
+Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each message center, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
 | Gem | Constraint | Tag | Locked `VERSION` |
 |---|---|---|---|

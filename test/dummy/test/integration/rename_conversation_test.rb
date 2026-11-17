@@ -158,7 +158,7 @@ class RenameConversationTest < ActionDispatch::IntegrationTest
     patch recording_studio_messages.rename_message_group_path(
       @group,
       mount_id: DummyCatalog.inbox_mount_recording.id
-    ), params: { message_group: { title: "Wrong desk" } }
+    ), params: { message_group: { title: "Wrong message center" } }
 
     assert_response :not_found
     @group.reload

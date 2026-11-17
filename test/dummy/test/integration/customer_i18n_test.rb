@@ -33,7 +33,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
   end
 
   test "conversation views stay English until the host locale changes" do
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     assert_includes response.body, "Write a message"
@@ -59,7 +59,7 @@ class CustomerI18nTest < ActionDispatch::IntegrationTest
 
   test "dummy French locale renders conversation views" do
     switch_to_french
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     assert_includes response.body, "Écrire un message"

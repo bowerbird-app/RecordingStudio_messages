@@ -39,12 +39,12 @@ class WriteDeniedTest < ActionDispatch::IntegrationTest
 
     create_error = assert_raises(RecordingStudioMessages::NotAuthorized) do
       reject_message_writes do
-        RecordingStudioMessages.create_group(@mount, title: "Blocked desk", actor: @staff)
+        RecordingStudioMessages.create_group(@mount, title: "Blocked message center", actor: @staff)
       end
     end
     assert_equal RecordingStudioMessages::Copy.t("errors.cannot_start"), create_error.message
     assert_nil RecordingStudioMessages.trusted_write_context
-    refute RecordingStudioMessages::MessageGroup.exists?(title: "Blocked desk")
+    refute RecordingStudioMessages::MessageGroup.exists?(title: "Blocked message center")
 
     send_error = assert_raises(RecordingStudioMessages::NotAuthorized) do
       reject_message_writes do

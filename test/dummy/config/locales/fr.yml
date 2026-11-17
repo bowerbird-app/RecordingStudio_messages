@@ -115,8 +115,8 @@ fr:
   dummy:
     home:
       title: Hôte dummy
-      subtitle: Deux bureaux de messages, un seul gem. Cet hôte n’est pas le produit.
-      staff_desk: Bureau équipe
+      subtitle: Deux centres de messages, un seul gem. Cet hôte n’est pas le produit.
+      staff_message_center: Centre de messages
       inbox: Boîte de réception
       my_messages: Mes messages
       admin: Admin

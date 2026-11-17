@@ -58,8 +58,6 @@ class ApiSourceTest < Minitest::Test
     assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
     assert_includes list.openapi.fetch(:description), "Needs Accessible view on the message center."
     assert_includes create_group.openapi.fetch(:description), "On a :members message center"
-    refute_includes list.path, "desk"
-    refute_includes create_group.path, "desk"
     refute send_message.input_contract.as_json.fetch(:reject_unknown)
   end
 
@@ -119,7 +117,7 @@ class ApiSourceTest < Minitest::Test
   end
 
   def test_target_recordable_fields_call_registration_serializers
-    group = Struct.new(:title).new("Desk thread")
+    group = Struct.new(:title).new("Message center thread")
     mount = Struct.new(:key).new("support")
     group_recording = Struct.new(:recordable, :recordable_type).new(
       group, RecordingStudioMessages::MESSAGE_GROUP_TYPE
@@ -128,7 +126,7 @@ class ApiSourceTest < Minitest::Test
       mount, RecordingStudioMessages::MESSAGE_MOUNT_TYPE
     )
 
-    assert_equal({ title: "Desk thread" }, RecordingStudioMessages::Api::Registration.serialize_group(group))
+    assert_equal({ title: "Message center thread" }, RecordingStudioMessages::Api::Registration.serialize_group(group))
     assert_equal(
       RecordingStudioMessages::Api::Registration.serialize_group(group),
       RecordingStudioMessages::Api::Target.recordable_fields(group_recording)
@@ -139,11 +137,14 @@ class ApiSourceTest < Minitest::Test
       RecordingStudioMessages::Api::Target.recordable_fields(mount_recording)
     )
 
-    message = Struct.new(:body).new("Hello from the desk.")
+    message = Struct.new(:body).new("Hello from the message center.")
     message_recording = Struct.new(:recordable, :recordable_type).new(
       message, RecordingStudioMessages::MESSAGE_TYPE
     )
-    assert_equal({ body: "Hello from the desk." }, RecordingStudioMessages::Api::Registration.serialize_message(message))
+    assert_equal(
+      { body: "Hello from the message center." },
+      RecordingStudioMessages::Api::Registration.serialize_message(message)
+    )
     assert_equal(
       RecordingStudioMessages::Api::Registration.serialize_message(message),
       RecordingStudioMessages::Api::Target.recordable_fields(message_recording)

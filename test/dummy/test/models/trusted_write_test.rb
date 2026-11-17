@@ -43,12 +43,12 @@ class TrustedWriteTest < ActiveSupport::TestCase
     captures = []
 
     group = with_write_policy(captures) do
-      RecordingStudioMessages.create_group(@mount, title: "Desk notes", actor: @owner)
+      RecordingStudioMessages.create_group(@mount, title: "Message center notes", actor: @owner)
     end
 
     marked = message_writes(captures)
     assert_equal [["RecordingStudioMessages::MessageGroup", "created", :create_group, @mount]], marked
-    assert_equal "Desk notes", group.recordable.title
+    assert_equal "Message center notes", group.recordable.title
     assert_nil RecordingStudioMessages.trusted_write_context
   end
 
