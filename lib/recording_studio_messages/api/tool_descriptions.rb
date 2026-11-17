@@ -100,7 +100,7 @@ module RecordingStudioMessages
       TEXT
 
       READ_THREAD = text(<<~TEXT)
-        Read the messages in one conversation.
+        Read the thread of messages in one conversation.
         Use messages_list_conversations to get the conversation id.
         Pass that id as id.
         There are no other inputs.

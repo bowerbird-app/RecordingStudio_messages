@@ -283,8 +283,10 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     refute RecordingStudioApi.capability_action(:messages_create_group)
     send_message = RecordingStudioApi.registered_endpoint(:messages_send_message)
     create_group = RecordingStudioApi.registered_endpoint(:messages_create_group)
-    assert_equal "Message - Send", send_message.openapi.fetch(:title)
-    assert_equal "Group - Create", create_group.openapi.fetch(:title)
+    assert_equal ["Message Center"], send_message.openapi_tags
+    assert_equal ["Message Center"], create_group.openapi_tags
+    assert_equal "Send message", send_message.openapi.fetch(:title)
+    assert_equal "Start conversation", create_group.openapi.fetch(:title)
     list = RecordingStudioApi.registered_endpoint(:messages_list_conversations)
     assert_equal "message_centers/:id/conversations", list.path
     assert_equal "message_centers/:id/create_group", create_group.path
@@ -292,8 +294,9 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "RecordingStudioMessages::MessageMount", create_group.recordable_type
     assert_equal :view, list.required_role
     assert_equal :edit, create_group.required_role
-    assert_equal "List conversations on this message center.", list.openapi.fetch(:summary)
-    assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
+    assert_equal ["Message Center"], list.openapi_tags
+    assert_equal "List conversations", list.openapi.fetch(:summary)
+    assert_equal "Start conversation", create_group.openapi.fetch(:summary)
     assert RecordingStudioApi.registered_endpoint(:messages_unread_count)
 
     assert_equal RecordingStudioMessages::Api::Registration.serialize_group(@group.recordable),
