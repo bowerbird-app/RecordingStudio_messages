@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.2] - 2026-11-17
+
+The seven message tools share a Message Center group. Each title is a short action.
+
+### Changed
+
+- `messages_create_group`, `messages_list_conversations`, `messages_mark_read`, `messages_read_thread`, `messages_rename_group`, `messages_send_message`, and `messages_unread_count` use the OpenAPI tag `Message Center`.
+- Titles are Start conversation, List conversations, Mark conversation read, Read messages, Rename conversation, Send message, and Count unread conversations.
+- The read-thread description keeps the word thread.
+
+### Upgrade notes
+
+None. Bump to **0.32.2**. No Messages migration. Tool names, inputs, routes, and access checks are unchanged.
+
 ## [0.32.1] - 2026-11-17
 
 The seven message tools say what they do, where each id comes from, and which fields come back.

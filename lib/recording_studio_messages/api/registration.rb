@@ -7,6 +7,8 @@ require_relative "mount_catalog"
 module RecordingStudioMessages
   module Api
     module Registration
+      DOCS_GROUP = "Message Center"
+
       module_function
 
       def register!(api)
@@ -74,7 +76,8 @@ module RecordingStudioMessages
         document = {
           title: spec[:title],
           summary: spec[:summary],
-          description: spec[:description]
+          description: spec[:description],
+          tags: [DOCS_GROUP]
         }
         parameters = path_parameters(spec)
         document[:parameters] = parameters if parameters

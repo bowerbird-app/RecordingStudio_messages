@@ -50,12 +50,12 @@ class ApiSourceTest < Minitest::Test
     assert_equal RecordingStudioMessages::Api::Actions::SendMessage, send_message.handler
     assert_equal RecordingStudioMessages::Api::Actions::ListConversations, list.handler
     assert_equal RecordingStudioMessages::Api::Actions::CreateGroup, create_group.handler
-    assert_equal "Message - Send", send_message.openapi.fetch(:title)
-    assert_equal "Group - Create", create_group.openapi.fetch(:title)
+    assert_equal "Send message", send_message.openapi.fetch(:title)
+    assert_equal "Start conversation", create_group.openapi.fetch(:title)
     assert_equal "message_centers/:id/conversations", list.path
     assert_equal "message_centers/:id/create_group", create_group.path
-    assert_equal "List conversations on this message center.", list.openapi.fetch(:summary)
-    assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
+    assert_equal "List conversations", list.openapi.fetch(:summary)
+    assert_equal "Start conversation", create_group.openapi.fetch(:summary)
     assert_includes list.openapi.fetch(:description), "Needs view access to the message center."
     assert_includes create_group.openapi.fetch(:description), "On a members message center"
     refute send_message.input_contract.as_json.fetch(:reject_unknown)
@@ -144,10 +144,37 @@ class ApiSourceTest < Minitest::Test
     assert_includes endpoint_description(:messages_list_conversations), "after_id"
     assert_includes endpoint_description(:messages_create_group), "admin"
     assert_includes endpoint_description(:messages_send_message), "recording_id"
+    assert_includes endpoint_description(:messages_read_thread), "thread"
     assert_includes endpoint_description(:messages_read_thread), "records"
     assert_includes endpoint_description(:messages_rename_group), "120"
     assert_includes endpoint_description(:messages_mark_read), "read cursor"
     assert_includes endpoint_description(:messages_unread_count), "unread_count"
+  end
+
+  def test_message_center_tools_share_a_group_and_short_titles
+    titles = {
+      messages_create_group: "Start conversation",
+      messages_list_conversations: "List conversations",
+      messages_mark_read: "Mark conversation read",
+      messages_read_thread: "Read messages",
+      messages_rename_group: "Rename conversation",
+      messages_send_message: "Send message",
+      messages_unread_count: "Count unread conversations"
+    }
+
+    names = RecordingStudioMessages::Api::MountCatalog::ENDPOINTS.keys +
+            RecordingStudioMessages::Api::GroupCatalog::ACTIONS.keys
+
+    assert_equal titles.keys.sort, names.sort
+
+    titles.each do |name, title|
+      endpoint = RecordingStudioApi.registered_endpoint(name)
+
+      assert_equal ["Message Center"], endpoint.openapi_tags, name.to_s
+      assert_equal title, endpoint.openapi.fetch(:title), name.to_s
+      assert_equal title, endpoint.openapi.fetch(:summary), name.to_s
+      assert_equal endpoint.name, name.to_s
+    end
   end
 
   def test_endpoints_declare_recordable_type_and_required_role
