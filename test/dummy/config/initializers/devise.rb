@@ -144,7 +144,7 @@ Devise.setup do |config|
   # Default is 0.days, meaning the user cannot access the website without
   # confirming their account.
   # Users 0.32 enables confirmable even when one-time codes are off. Devise 5
-  # otherwise blocks sign-in until the address is confirmed. Desk tests sign in
+  # otherwise blocks sign-in until the address is confirmed. Message center tests sign in
   # accounts they just created, so the dummy keeps that access open.
   config.allow_unconfirmed_access_for = nil
 

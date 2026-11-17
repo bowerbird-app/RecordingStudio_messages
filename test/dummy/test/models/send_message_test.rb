@@ -43,7 +43,7 @@ class SendMessageTest < ActiveSupport::TestCase
         content_type: "text/plain",
         name: "Note"
       }],
-      url: "/staff/desk"
+      url: "/staff/message_center"
     )
 
     assert_equal "Here is the quieter crop.", message_recording.recordable.body
@@ -54,7 +54,7 @@ class SendMessageTest < ActiveSupport::TestCase
     assert_equal 1, notifications.count
     assert_equal @customer, notifications.first.recipient
     assert_equal @staff, notifications.first.actor
-    assert_equal "/staff/desk", notifications.first.url
+    assert_equal "/staff/message_center", notifications.first.url
   end
 
   test "send_message refuses actors without an accessible grant" do

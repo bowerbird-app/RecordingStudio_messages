@@ -70,12 +70,12 @@ module RecordingStudioMessages
           return if raw.blank?
 
           recording = @context.access_grant.accessible_recordings.find_by(id: raw)
-          return recording if conversation_on_desk?(recording, mount)
+          return recording if conversation_on_message_center?(recording, mount)
 
-          raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this desk"
+          raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this message center"
         end
 
-        def conversation_on_desk?(recording, mount)
+        def conversation_on_message_center?(recording, mount)
           recording&.recordable_type == MESSAGE_GROUP_TYPE &&
             recording.parent_recording_id == mount.id
         end

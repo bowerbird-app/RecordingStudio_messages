@@ -14,7 +14,7 @@ module DummyMessagesListHelper
       text: "New",
       style: :secondary,
       size: :sm,
-      href: main_app.staff_desk_path,
+      href: main_app.staff_message_center_path,
       id: "dummy-list-toolbar"
     )
   end

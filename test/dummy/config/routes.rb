@@ -21,7 +21,7 @@ Rails.application.routes.draw do
   recording_studio_admin_for :admin, at: "/admin", root_section: :site_settings
 
   namespace :staff do
-    resource :desk, only: :show
+    resource :message_center, only: :show
   end
   namespace :dummy do
     get "page_picker", to: "page_picker#show", as: :page_picker

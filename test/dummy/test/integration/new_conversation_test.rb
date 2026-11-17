@@ -183,7 +183,7 @@ class NewConversationTest < ActionDispatch::IntegrationTest
     ], flash[:alert]
   end
 
-  test "inherited desk also offers new message" do
+  test "inherited message center also offers new message" do
     sign_in @staff
     get inbox_path
 

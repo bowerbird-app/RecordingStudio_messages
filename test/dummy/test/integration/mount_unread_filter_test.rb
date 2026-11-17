@@ -18,7 +18,7 @@ class MountUnreadFilterTest < ActionDispatch::IntegrationTest
     unread = seeded_unread_conversation("Still unread")
     read = seeded_unread_conversation("Already opened")
     RecordingStudioMessages.mark_read(group_recording: read, actor: @staff)
-    elsewhere = seeded_unread_conversation("Other desk", mount: DummyCatalog.inbox_mount_recording)
+    elsewhere = seeded_unread_conversation("Other message center", mount: DummyCatalog.inbox_mount_recording)
 
     sign_in @staff
     get recording_studio_messages.message_groups_path(mount_id: @mount.id, unread: 1)
@@ -26,11 +26,11 @@ class MountUnreadFilterTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Still unread"
     refute_includes response.body, "Already opened"
-    refute_includes response.body, "Other desk"
+    refute_includes response.body, "Other message center"
     refute_includes response.body, elsewhere.recordable.title
     assert_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.message_group_path(unread),
-                  "messages-desk-panel"
+                  "messages-message-center-panel"
     assert_select "a[aria-label=?][title=?][aria-current=page]",
                   "Show all",
                   "Show all"
@@ -65,7 +65,7 @@ class MountUnreadFilterTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Open unread"
     assert_select "a[aria-label=?]", "Show all"
     refute_select "a[aria-label=?][href*='unread=1']", "Show all"
-    assert_select "turbo-frame#messages-desk-panel"
+    assert_select "turbo-frame#messages-message-center-panel"
   end
 
   test "after_id paging while filtered stays on unread conversations for that mount" do

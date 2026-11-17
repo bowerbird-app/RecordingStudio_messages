@@ -23,7 +23,7 @@ class DefaultLayoutAssetsTest < ActionDispatch::IntegrationTest
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_select "h1", text: "Dummy host"
-    assert_select "a[href=?]", staff_desk_path, text: "Staff desk"
+    assert_select "a[href=?]", staff_message_center_path, text: "Staff message center"
     assert_select "a[href=?]", inbox_path, text: "Inbox"
     assert_includes response.body, "flat-pack-page-nav"
     assert_includes response.body, "flat_pack/application"

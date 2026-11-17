@@ -11,24 +11,24 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
     @staff = User.find_by!(email: "admin@admin.com")
   end
 
-  test "staff can send a follow-up from the desk panel" do
+  test "staff can send a follow-up from the message center panel" do
     sign_in @staff
     group = DummyCatalog.support_group_recording
 
     assert_difference -> { RecordingStudioMessages.message_recordings(group).count }, +1 do
       post recording_studio_messages.message_group_messages_path(group), params: {
         message: { body: "Trying a quieter type scale next." },
-        return_to: "/staff/desk?group_id=#{group.id}"
+        return_to: "/staff/message_center?group_id=#{group.id}"
       }
     end
 
-    assert_redirected_to "/staff/desk?group_id=#{group.id}"
+    assert_redirected_to "/staff/message_center?group_id=#{group.id}"
     follow_redirect!
     assert_includes response.body, "Trying a quieter type scale next."
     assert_includes response.body, "Sent."
   end
 
-  test "staff send replaces the desk thread over turbo without a full visit" do
+  test "staff send replaces the message center thread over turbo without a full visit" do
     sign_in @staff
     group = DummyCatalog.support_group_recording
     body = "The charcoal bubble should land in place."
@@ -37,7 +37,7 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
       post recording_studio_messages.message_group_messages_path(group),
            params: {
              message: { body: body },
-             return_to: staff_desk_path
+             return_to: staff_message_center_path
            },
            as: :turbo_stream
     end
@@ -57,7 +57,7 @@ class SendFromPanelTest < ActionDispatch::IntegrationTest
 
     [ "/\\evil.example", "//evil.example" ].each do |return_to|
       post recording_studio_messages.message_group_messages_path(group), params: {
-        message: { body: "Stay on the desk." },
+        message: { body: "Stay on the message center." },
         return_to: return_to
       }
 

@@ -130,13 +130,13 @@ class MessageGroupTagsTest < ActiveSupport::TestCase
   test "create_group with tags writes rows and tagged_group_recordings finds them" do
     group = RecordingStudioMessages.create_group(
       @mount,
-      title: "Center desk",
+      title: "Center message center",
       actor: @owner,
       tags: { "press_center" => @press_center, "press_kit" => @press_kit }
     )
     again = RecordingStudioMessages.create_group(
       @mount,
-      title: "Second desk",
+      title: "Second message center",
       actor: @owner,
       tags: { "press_center" => @press_center, "press_kit" => @press_kit }
     )

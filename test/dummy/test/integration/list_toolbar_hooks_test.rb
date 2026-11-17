@@ -125,14 +125,14 @@ class ListToolbarHooksTest < ActionDispatch::IntegrationTest
     MessagesListToolbarOverrides.with_overrides(
       title: lambda { |mount:, actor:|
         seen << [mount, actor]
-        "Desk name"
+        "Message center name"
       }
     ) do
       get recording_studio_messages.message_groups_path(mount_id: @mount.id)
     end
 
     assert_equal [[@mount, @staff]], seen
-    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: "Desk name"
-    refute_select "[data-flat-pack--chat-layout-target='panel'] h2", text: "Desk name"
+    assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: "Message center name"
+    refute_select "[data-flat-pack--chat-layout-target='panel'] h2", text: "Message center name"
   end
 end

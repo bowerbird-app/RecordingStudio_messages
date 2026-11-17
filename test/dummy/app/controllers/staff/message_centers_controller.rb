@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Staff
-  class DesksController < ApplicationController
+  class MessageCentersController < ApplicationController
     def show
       @mount_recording = DummyCatalog.support_mount_recording
       @unread_filter = ActiveModel::Type::Boolean.new.cast(params[:unread])

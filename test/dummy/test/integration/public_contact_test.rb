@@ -391,11 +391,11 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name=body]"
   end
 
-  test "desk routes still require sign in" do
+  test "message center routes still require sign in" do
     get recording_studio_messages.message_groups_path
     assert_redirected_to new_user_session_path
 
-    group = RecordingStudioMessages.create_group(@mount, title: "Existing desk", actor: @staff)
+    group = RecordingStudioMessages.create_group(@mount, title: "Existing message center", actor: @staff)
     post recording_studio_messages.message_group_messages_path(group), params: { message: { body: "nope" } }
     assert_redirected_to new_user_session_path
 
@@ -1003,7 +1003,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
       mount_recording: @mount,
       name: nil,
       email: nil,
-      body: "From the desk",
+      body: "From the message center",
       current_actor: @staff,
       request: contact_request,
       session: {},
@@ -1137,7 +1137,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     sign_in @staff
     assert_difference -> { RecordingStudioMessages::MessageGroupTag.count }, 1 do
-      post contact_path, params: { body: "From the signed-in desk.", tag_token: token }
+      post contact_path, params: { body: "From the signed-in message center.", tag_token: token }
     end
 
     assert_redirected_to recording_studio_messages.public_contact_sent_path

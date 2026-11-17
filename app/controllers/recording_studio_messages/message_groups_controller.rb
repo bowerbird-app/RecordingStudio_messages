@@ -48,14 +48,16 @@ module RecordingStudioMessages
       return if params[:mount_id].blank?
 
       recording = RecordingStudio::Recording.find(params[:mount_id])
-      raise ActiveRecord::RecordNotFound, "Desk not found" unless recording.recordable_type == MESSAGE_MOUNT_TYPE
+      unless recording.recordable_type == MESSAGE_MOUNT_TYPE
+        raise ActiveRecord::RecordNotFound, "Message center not found"
+      end
 
       authorize_mount_parent!(recording)
       recording
     end
 
     def find_mount_recording!
-      find_mount_recording || raise(ActiveRecord::RecordNotFound, "Desk not found")
+      find_mount_recording || raise(ActiveRecord::RecordNotFound, "Message center not found")
     end
 
     def authorize_start!

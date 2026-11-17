@@ -12,16 +12,16 @@ class GroupListTest < ActionDispatch::IntegrationTest
     @customer = User.find_by!(email: "casey@example.com")
   end
 
-  test "staff desk lists conversations the actor can view through Accessible" do
+  test "staff message center lists conversations the actor can view through Accessible" do
     sign_in @staff
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "body[data-recording-studio-default-layout='true']", count: 1
     assert_select "[data-controller='flat-pack--chat-layout']"
     assert_select "[data-controller='flat-pack--list-selectable']"
-    assert_includes response.body, "Staff desk"
+    assert_includes response.body, "Staff message center"
     assert_select "[data-flat-pack--chat-layout-target='sidebar'] h2", text: ""
     refute_select "[data-flat-pack--chat-layout-target='sidebar'] h2",
                   text: DummyCatalog.studio_workspace.name
@@ -33,11 +33,11 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat-pack--chat-panel"
     assert_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.message_group_path(DummyCatalog.support_group_recording),
-                  "messages-desk-panel"
+                  "messages-message-center-panel"
     assert_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.message_group_path(DummyCatalog.launch_group_recording),
-                  "messages-desk-panel"
-    assert_select "turbo-frame#messages-desk-panel"
+                  "messages-message-center-panel"
+    assert_select "turbo-frame#messages-message-center-panel"
     assert_includes response.body, "flat-pack-page-nav"
     assert_includes response.body, "h-[calc(100dvh-15.5rem)]"
     assert_includes response.body, "w-full min-w-0"
@@ -57,7 +57,7 @@ class GroupListTest < ActionDispatch::IntegrationTest
 
   test "staff can open a listed conversation into Chat::Panel" do
     sign_in @staff
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     get recording_studio_messages.message_group_path(DummyCatalog.support_group_recording)
@@ -77,15 +77,15 @@ class GroupListTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "rounded-lg border-[var(--chat-input-border-color)]"
   end
 
-  test "inbox row click loads the panel through the desk turbo frame" do
+  test "inbox row click loads the panel through the message center turbo frame" do
     sign_in @staff
     group = DummyCatalog.support_group_recording
 
     get recording_studio_messages.message_group_path(group),
-        headers: { "Turbo-Frame" => "messages-desk-panel" }
+        headers: { "Turbo-Frame" => "messages-message-center-panel" }
 
     assert_response :success
-    assert_select "turbo-frame#messages-desk-panel"
+    assert_select "turbo-frame#messages-message-center-panel"
     assert_includes response.body, "flat-pack--chat-panel"
     assert_includes response.body, "The homepage hero feels a bit loud"
     assert_includes response.body, "Studio help"
@@ -121,8 +121,8 @@ class GroupListTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat-pack--chat-panel"
     assert_select "a[href=?][data-turbo-frame=?]",
                   recording_studio_messages.message_group_path(DummyCatalog.inbox_group_recording),
-                  "messages-desk-panel"
-    assert_select "turbo-frame#messages-desk-panel"
+                  "messages-message-center-panel"
+    assert_select "turbo-frame#messages-message-center-panel"
     assert_includes response.body, "flat-pack-page-nav"
     assert_includes response.body, "h-[calc(100dvh-15.5rem)]"
     assert_includes response.body, "w-full min-w-0"
@@ -133,7 +133,7 @@ class GroupListTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "Studio help"
   end
 
-  test "stranger without a grant does not see conversations on the staff desk" do
+  test "stranger without a grant does not see conversations on the staff message center" do
     stranger = User.create!(
       email: "list-stranger-#{SecureRandom.hex(4)}@example.com",
       password: "Password123!",
@@ -143,12 +143,12 @@ class GroupListTest < ActionDispatch::IntegrationTest
     )
 
     sign_in stranger
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_redirected_to root_path
   end
 
-  test "granted actor sees the engine desk for a named mount" do
+  test "granted actor sees the engine message center for a named mount" do
     sign_in @staff
     mount = DummyCatalog.support_mount_recording
 

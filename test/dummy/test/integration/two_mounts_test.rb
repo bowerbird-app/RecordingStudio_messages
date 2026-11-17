@@ -31,9 +31,9 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
                     "RecordingStudioMessages::MessageMount"
   end
 
-  test "staff desk and inbox land on the conversation list for each mount" do
+  test "staff message center and inbox land on the conversation list for each mount" do
     sign_in @staff
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_response :success
     assert_select "html[data-theme='rounded']", count: 1
@@ -59,7 +59,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "flat-pack--chat-panel"
   end
 
-  test "catalog keeps the seeded desks when another conversation reuses the title" do
+  test "catalog keeps the seeded message centers when another conversation reuses the title" do
     leftover_workspace = Workspace.create!(name: "Leftover #{SecureRandom.hex(4)}")
     leftover_root = RecordingStudio.create_root_recording!(leftover_workspace, actor: @staff)
     RecordingStudioAccessible.bootstrap_owner_access!(recording: leftover_root, actor: @staff)
@@ -87,7 +87,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "+ Access"
   end
 
-  test "people without a grant cannot open the staff desk" do
+  test "people without a grant cannot open the staff message center" do
     stranger = User.create!(
       email: "stranger-#{SecureRandom.hex(4)}@example.com",
       password: "Password123!",
@@ -97,7 +97,7 @@ class TwoMountsTest < ActionDispatch::IntegrationTest
     )
 
     sign_in stranger
-    get staff_desk_path
+    get staff_message_center_path
 
     assert_redirected_to root_path
   end
