@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-11-17
+
+The seven message tools say what they do, where each id comes from, and which fields come back.
+
+### Changed
+
+- `messages_list_conversations`, `messages_create_group`, `messages_unread_count`, `messages_send_message`, `messages_read_thread`, `messages_rename_group`, and `messages_mark_read` descriptions name the message center, the conversation id, each input, and the returned fields.
+- The path parameter `id` is documented, so it no longer falls back to "Path parameter id."
+
+### Upgrade notes
+
+None. Bump to **0.32.1**. No Messages migration. Tool names, inputs, routes, and access checks are unchanged.
+
 ## [0.32.0] - 2026-11-17
 
 The public name is message center. API paths, the split partial, the panel frame, and the dummy staff route use that name.

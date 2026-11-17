@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "tool_descriptions"
+
 module RecordingStudioMessages
   module Api
     module GroupCatalog
@@ -9,18 +11,18 @@ module RecordingStudioMessages
         http_verb: :post,
         title: "Message - Send",
         summary: "Send a message in this conversation.",
-        description: "Calls RecordingStudioMessages.send_message. " \
-                     "Needs Accessible edit on the conversation. " \
-                     "Do not create a Message record through the generic API.",
+        description: ToolDescriptions::SEND_MESSAGE,
+        id_description: ToolDescriptions::CONVERSATION_ID,
         path: "conversations/:id/send_message",
         fields: {
           body: {
             type: :string, required: false, allow_blank: true,
-            description: "Message text. Required unless a reference is present."
+            description: "Message text. Required unless references is present."
           },
           references: {
             type: :array, required: false,
-            description: "Recordings to attach to the line."
+            description: "Recordings to attach. Each item is a recording id, or an object with recording_id. " \
+                         "The actor must be able to view it, under the message center's parent recordable."
           }
         }
       }.freeze
@@ -31,8 +33,8 @@ module RecordingStudioMessages
         http_verb: :get,
         title: "Message - Read thread",
         summary: "Read the messages in this conversation.",
-        description: "Calls RecordingStudioMessages.message_recordings. " \
-                     "Needs Accessible view on the conversation.",
+        description: ToolDescriptions::READ_THREAD,
+        id_description: ToolDescriptions::CONVERSATION_ID,
         path: "conversations/:id/messages",
         fields: {}
       }.freeze
@@ -43,13 +45,13 @@ module RecordingStudioMessages
         http_verb: :post,
         title: "Group - Rename",
         summary: "Rename this conversation.",
-        description: "Calls RecordingStudioMessages.rename_group. " \
-                     "Needs Accessible edit on the conversation.",
+        description: ToolDescriptions::RENAME_GROUP,
+        id_description: ToolDescriptions::CONVERSATION_ID,
         path: "conversations/:id/rename_group",
         fields: {
           title: {
             type: :string, required: true, allow_blank: false,
-            description: "New conversation name."
+            description: "New conversation name. Required, at most 120 characters."
           }
         }
       }.freeze
@@ -60,8 +62,8 @@ module RecordingStudioMessages
         http_verb: :post,
         title: "Group - Mark read",
         summary: "Mark this conversation as read.",
-        description: "Calls RecordingStudioMessages.mark_read. " \
-                     "Needs Accessible view on the conversation.",
+        description: ToolDescriptions::MARK_READ,
+        id_description: ToolDescriptions::CONVERSATION_ID,
         path: "conversations/:id/mark_read",
         fields: {}
       }.freeze

@@ -56,9 +56,98 @@ class ApiSourceTest < Minitest::Test
     assert_equal "message_centers/:id/create_group", create_group.path
     assert_equal "List conversations on this message center.", list.openapi.fetch(:summary)
     assert_equal "Start a conversation on this message center.", create_group.openapi.fetch(:summary)
-    assert_includes list.openapi.fetch(:description), "Needs Accessible view on the message center."
-    assert_includes create_group.openapi.fetch(:description), "On a :members message center"
+    assert_includes list.openapi.fetch(:description), "Needs view access to the message center."
+    assert_includes create_group.openapi.fetch(:description), "On a members message center"
     refute send_message.input_contract.as_json.fetch(:reject_unknown)
+  end
+
+  def test_tool_descriptions_name_ids_and_keep_the_same_params
+    tools = {
+      messages_list_conversations: {
+        path: "message_centers/:id/conversations", verb: :get, role: :view,
+        fields: {
+          unread: { type: :boolean, required: false },
+          after_id: { type: :string, required: false, allow_blank: true },
+          limit: { type: :integer, required: false }
+        }
+      },
+      messages_create_group: {
+        path: "message_centers/:id/create_group", verb: :post, role: :edit,
+        fields: {
+          title: { type: :string, required: false, allow_blank: true },
+          body: { type: :string, required: false, allow_blank: true },
+          recipients: { type: :array, required: false }
+        }
+      },
+      messages_unread_count: {
+        path: "unread_count", verb: :get, role: :view, fields: {}
+      },
+      messages_send_message: {
+        path: "conversations/:id/send_message", verb: :post, role: :edit,
+        fields: {
+          body: { type: :string, required: false, allow_blank: true },
+          references: { type: :array, required: false }
+        }
+      },
+      messages_read_thread: {
+        path: "conversations/:id/messages", verb: :get, role: :view, fields: {}
+      },
+      messages_rename_group: {
+        path: "conversations/:id/rename_group", verb: :post, role: :edit,
+        fields: {
+          title: { type: :string, required: true, allow_blank: false }
+        }
+      },
+      messages_mark_read: {
+        path: "conversations/:id/mark_read", verb: :post, role: :view, fields: {}
+      }
+    }
+    catalog_names = RecordingStudioMessages::Api::MountCatalog::ENDPOINTS.keys +
+                    RecordingStudioMessages::Api::GroupCatalog::ACTIONS.keys
+
+    assert_equal tools.keys.sort, catalog_names.sort
+
+    tools.each do |name, expected|
+      endpoint = RecordingStudioApi.registered_endpoint(name)
+      description = endpoint.openapi.fetch(:description).to_s
+      fields = endpoint.input_contract.as_json.fetch(:fields)
+
+      assert description.present?, name.to_s
+      assert_includes description, "Returns", name.to_s
+      refute_includes description, "Calls RecordingStudioMessages", name.to_s
+      refute_includes description, "Path parameter", name.to_s
+      assert_equal expected[:path], endpoint.path, name.to_s
+      assert_equal expected[:verb], endpoint.http_verb, name.to_s
+      assert_equal expected[:role], endpoint.required_role, name.to_s
+      assert_equal false, endpoint.input_contract.as_json.fetch(:reject_unknown), name.to_s
+      assert_equal expected[:fields].keys, fields.keys, name.to_s
+
+      expected[:fields].each do |field, rules|
+        text = fields.fetch(field).fetch(:description).to_s
+
+        assert_equal rules, fields.fetch(field).except(:description), "#{name} #{field}"
+        refute_equal "Path parameter id.", text, "#{name} #{field}"
+        assert text.present?, "#{name} #{field}"
+      end
+
+      endpoint.openapi_path_parameters.each do |param|
+        text = param.fetch(:description).to_s
+
+        refute_equal "Path parameter id.", text, name.to_s
+        refute_equal "Path parameter #{param[:name]}.", text, name.to_s
+        assert_match(/\AThe (message center|conversation) id\b/, text, name.to_s)
+      end
+    end
+
+    assert_empty RecordingStudioApi.registered_endpoint(:messages_unread_count).openapi_path_parameters
+    assert_includes endpoint_description(:messages_list_conversations), "message center"
+    assert_includes endpoint_description(:messages_list_conversations), "after_id"
+    assert_includes endpoint_description(:messages_create_group), "admin"
+    assert_includes endpoint_description(:messages_send_message), "recording_id"
+    assert_includes endpoint_description(:messages_read_thread), "records"
+    assert_includes endpoint_description(:messages_rename_group), "120"
+    assert_includes endpoint_description(:messages_mark_read), "read cursor"
+    assert_includes endpoint_description(:messages_unread_count), "unread_count"
   end
 
   def test_endpoints_declare_recordable_type_and_required_role
@@ -87,6 +176,10 @@ class ApiSourceTest < Minitest::Test
     assert_equal :view, unread.required_role
     refute unread.scopes_recording?
     refute unread.owns_scoping?
+  end
+
+  def endpoint_description(name)
+    RecordingStudioApi.registered_endpoint(name).openapi.fetch(:description)
   end
 
   def test_wrap_maps_facade_input_errors_and_leaves_other_argument_errors
