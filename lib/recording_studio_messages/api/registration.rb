@@ -71,11 +71,24 @@ module RecordingStudioMessages
       end
 
       def openapi(spec)
-        {
+        document = {
           title: spec[:title],
           summary: spec[:summary],
           description: spec[:description]
         }
+        parameters = path_parameters(spec)
+        document[:parameters] = parameters if parameters
+        document
+      end
+
+      def path_parameters(spec)
+        description = spec[:id_description]
+        return if description.blank?
+
+        [{
+          name: "id", in: "path", required: true,
+          schema: { type: "string" }, description: description
+        }]
       end
 
       def passthrough(result)

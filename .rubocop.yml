@@ -19,6 +19,7 @@ Layout/LineLength:
 Metrics/ModuleLength:
   Exclude:
     - 'lib/recording_studio_messages.rb'
+    - 'lib/recording_studio_messages/api/tool_descriptions.rb'
     - 'app/helpers/recording_studio_messages/inbox_helper.rb'
     - 'app/helpers/recording_studio_messages/panel_helper.rb'
 
