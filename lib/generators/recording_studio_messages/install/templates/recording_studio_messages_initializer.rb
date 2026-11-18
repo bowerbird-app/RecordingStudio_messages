@@ -5,3 +5,11 @@ RecordingStudioMessages.configure do |config|
   # include RecordingStudio::Capabilities::Messages.to
   # config.time_break_after = 15.minutes
 end
+
+# Messages does not register API endpoints. Place each surface on the API that should expose it.
+# RecordingStudioMessages::Api.place(
+#   api: :public,
+#   at: :support,
+#   mount: -> { support_mount_recording },
+#   preset: :support
+# )

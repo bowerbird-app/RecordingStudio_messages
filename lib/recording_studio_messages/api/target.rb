@@ -26,9 +26,9 @@ module RecordingStudioMessages
       def recordable_fields(recording)
         recordable = recording.recordable
         type = recording.recordable_type
-        return Registration.serialize_mount(recordable) if type == MESSAGE_MOUNT_TYPE
-        return Registration.serialize_group(recordable) if type == MESSAGE_GROUP_TYPE
-        return Registration.serialize_message(recordable) if type == MESSAGE_TYPE
+        return { key: recordable.key } if type == MESSAGE_MOUNT_TYPE
+        return { title: recordable.title } if type == MESSAGE_GROUP_TYPE
+        return { body: recordable.body } if type == MESSAGE_TYPE
 
         {}
       end

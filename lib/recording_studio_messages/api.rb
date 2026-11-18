@@ -1,20 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "api/access"
-require_relative "api/registration"
+require_relative "api/placement"
 
 module RecordingStudioMessages
   module Api
     module_function
 
-    def register!
-      return unless defined?(::RecordingStudioApi)
-      return if @registered
-
-      ::RecordingStudioApi.configuration.each_api do |api|
-        Registration.register!(api.name)
-      end
-      @registered = true
+    def place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, tags: nil)
+      Placement.place(api:, at:, mount:, preset:, actions:, names:, descriptions:, tags:)
     end
   end
 end

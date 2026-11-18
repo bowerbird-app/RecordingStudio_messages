@@ -4,209 +4,165 @@ require "test_helper"
 require "recording_studio_api"
 
 class ApiSourceTest < Minitest::Test
-  def setup
-    RecordingStudioMessages::Api.register!
+  def test_place_is_idempotent_and_the_engine_does_not_register
+    at = unique_at
+    place_support(at)
+    place_support(at)
+
+    endpoint = RecordingStudioApi.registered_endpoint(:"#{at}_open_request")
+    assert_equal "Open request", endpoint.openapi.fetch(:title)
+    assert_equal ["Support"], endpoint.openapi_tags
+
+    engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
+    refute_includes engine, "Api.register!"
+    refute RecordingStudioApi.registered_endpoint(:messages_send_message)
+    assert_nil RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
   end
 
-  def test_register_is_idempotent_across_reload
-    RecordingStudioMessages::Api.register!
+  def test_support_preset_chooses_actions_names_descriptions_and_paths
+    at = unique_at
+    place_support(at)
 
-    mount = RecordingStudioApi.recordable_registration_for(
-      RecordingStudioMessages::MESSAGE_MOUNT_TYPE
+    reply = RecordingStudioApi.registered_endpoint(:"#{at}_reply")
+    listed = RecordingStudioApi.registered_endpoint(:"#{at}_list_requests")
+    counted = RecordingStudioApi.registered_endpoint(:"#{at}_unread_count")
+
+    assert_equal "POST", reply.http_verb.to_s.upcase
+    assert_equal "#{at}/conversations/:id/send_message", reply.path
+    assert_equal "RecordingStudioMessages::MessageGroup", reply.recordable_type
+    assert_equal :edit, reply.required_role
+    assert_equal "Reply", reply.openapi.fetch(:summary)
+    assert_includes reply.openapi.fetch(:description), "Reply"
+    assert_equal %w[body references], reply.input_contract.as_json.fetch(:fields).keys.map(&:to_s)
+    refute reply.input_contract.as_json.fetch(:reject_unknown)
+    assert reply.scopes_recording?
+    refute reply.owns_scoping?
+
+    assert_equal "#{at}/conversations", listed.path
+    assert_equal :get, listed.http_verb
+    assert_nil listed.recordable_type
+    refute listed.scopes_recording?
+    assert_equal "#{at}/unread_count", counted.path
+    assert_nil counted.recordable_type
+    assert_nil RecordingStudioApi.registered_endpoint(:"#{at}_rename_conversation")
+  end
+
+  def test_press_center_preset_scopes_the_parent_and_takes_a_conversation_id
+    at = unique_at
+    RecordingStudioMessages::Api.place(
+      api: :public,
+      at:,
+      mount: { recordable_type: "Mailbox", key: :inbox },
+      preset: :press_center
     )
-    group = RecordingStudioApi.recordable_registration_for(
-      RecordingStudioMessages::MESSAGE_GROUP_TYPE
+
+    listed = RecordingStudioApi.registered_endpoint(:"#{at}_list_conversations")
+    started = RecordingStudioApi.registered_endpoint(:"#{at}_start_conversation")
+    read = RecordingStudioApi.registered_endpoint(:"#{at}_read_messages")
+    renamed = RecordingStudioApi.registered_endpoint(:"#{at}_rename_conversation")
+
+    assert_equal "#{at}/:id/conversations", listed.path
+    assert_equal "Mailbox", listed.recordable_type
+    assert_equal :view, listed.required_role
+    assert_equal ["Press center"], listed.openapi_tags
+    assert_equal "List conversations", listed.openapi.fetch(:title)
+    assert_equal :post, started.http_verb
+    assert_equal "#{at}/:id/conversations", started.path
+    assert_equal "#{at}/:id/messages", read.path
+    assert_equal ["conversation_id"], read.input_contract.as_json.fetch(:fields).keys.map(&:to_s)
+    assert_equal "#{at}/:id/rename_group", renamed.path
+    assert_includes renamed.input_contract.as_json.fetch(:fields).keys.map(&:to_s), "conversation_id"
+    assert_includes renamed.input_contract.as_json.fetch(:fields).keys.map(&:to_s), "title"
+  end
+
+  def test_host_can_filter_actions_and_override_names_descriptions_and_tags
+    at = unique_at
+    RecordingStudioMessages::Api.place(
+      api: :public,
+      at:,
+      mount: -> {},
+      preset: :support,
+      actions: %i[list_conversations unread_count],
+      names: { list_conversations: :"#{at}_requests" },
+      descriptions: { unread_count: "How many requests are still unread." },
+      tags: ["Help"]
     )
 
-    message = RecordingStudioApi.recordable_registration_for(
-      RecordingStudioMessages::MESSAGE_TYPE
-    )
+    listed = RecordingStudioApi.registered_endpoint(:"#{at}_requests")
+    counted = RecordingStudioApi.registered_endpoint(:"#{at}_unread_count")
 
-    assert mount
-    assert group
-    assert message
-    assert_equal %i[show], message.operations
-    assert_equal [], mount.capability_actions
-    assert_equal [], group.capability_actions
-    assert_equal [], message.capability_actions
-    assert_equal false, mount.auto_capability_actions
-    assert_equal false, group.auto_capability_actions
-    assert_equal false, message.auto_capability_actions
-    assert RecordingStudioApi.registered_endpoint(:messages_send_message)
-    assert RecordingStudioApi.registered_endpoint(:messages_list_conversations)
-    refute RecordingStudioApi.capability_action(:messages_send_message)
-    refute RecordingStudioApi.capability_action(:messages_list_conversations)
+    assert_equal ["Help"], listed.openapi_tags
+    assert_equal "List my requests", listed.openapi.fetch(:title)
+    assert_equal "How many requests are still unread.", counted.openapi.fetch(:description)
+    assert_nil RecordingStudioApi.registered_endpoint(:"#{at}_reply")
+    assert_nil RecordingStudioApi.registered_endpoint(:"#{at}_list_requests")
   end
 
-  def test_engine_to_prepare_registers_the_api
-    assert RecordingStudioApi.registered_endpoint(:messages_unread_count)
-  end
-
-  def test_handlers_call_public_messages_methods
-    send_message = RecordingStudioApi.registered_endpoint(:messages_send_message)
-    list = RecordingStudioApi.registered_endpoint(:messages_list_conversations)
-    create_group = RecordingStudioApi.registered_endpoint(:messages_create_group)
-
-    assert_equal RecordingStudioMessages::Api::Actions::SendMessage, send_message.handler
-    assert_equal RecordingStudioMessages::Api::Actions::ListConversations, list.handler
-    assert_equal RecordingStudioMessages::Api::Actions::CreateGroup, create_group.handler
-    assert_equal "Send message", send_message.openapi.fetch(:title)
-    assert_equal "Start conversation", create_group.openapi.fetch(:title)
-    assert_equal "message_centers/:id/conversations", list.path
-    assert_equal "message_centers/:id/create_group", create_group.path
-    assert_equal "List conversations", list.openapi.fetch(:summary)
-    assert_equal "Start conversation", create_group.openapi.fetch(:summary)
-    assert_includes list.openapi.fetch(:description), "Needs view access to the message center."
-    assert_includes create_group.openapi.fetch(:description), "On a members message center"
-    refute send_message.input_contract.as_json.fetch(:reject_unknown)
-  end
-
-  def test_tool_descriptions_name_ids_and_keep_the_same_params
-    tools = {
-      messages_list_conversations: {
-        path: "message_centers/:id/conversations", verb: :get, role: :view,
-        fields: {
-          unread: { type: :boolean, required: false },
-          after_id: { type: :string, required: false, allow_blank: true },
-          limit: { type: :integer, required: false }
-        }
-      },
-      messages_create_group: {
-        path: "message_centers/:id/create_group", verb: :post, role: :edit,
-        fields: {
-          title: { type: :string, required: false, allow_blank: true },
-          body: { type: :string, required: false, allow_blank: true },
-          recipients: { type: :array, required: false }
-        }
-      },
-      messages_unread_count: {
-        path: "unread_count", verb: :get, role: :view, fields: {}
-      },
-      messages_send_message: {
-        path: "conversations/:id/send_message", verb: :post, role: :edit,
-        fields: {
-          body: { type: :string, required: false, allow_blank: true },
-          references: { type: :array, required: false }
-        }
-      },
-      messages_read_thread: {
-        path: "conversations/:id/messages", verb: :get, role: :view, fields: {}
-      },
-      messages_rename_group: {
-        path: "conversations/:id/rename_group", verb: :post, role: :edit,
-        fields: {
-          title: { type: :string, required: true, allow_blank: false }
-        }
-      },
-      messages_mark_read: {
-        path: "conversations/:id/mark_read", verb: :post, role: :view, fields: {}
-      }
-    }
-    catalog_names = RecordingStudioMessages::Api::MountCatalog::ENDPOINTS.keys +
-                    RecordingStudioMessages::Api::GroupCatalog::ACTIONS.keys
-
-    assert_equal tools.keys.sort, catalog_names.sort
-
-    tools.each do |name, expected|
-      endpoint = RecordingStudioApi.registered_endpoint(name)
-      description = endpoint.openapi.fetch(:description).to_s
-      fields = endpoint.input_contract.as_json.fetch(:fields)
-
-      assert description.present?, name.to_s
-      assert_includes description, "Returns", name.to_s
-      refute_includes description, "Calls RecordingStudioMessages", name.to_s
-      refute_includes description, "Path parameter", name.to_s
-      assert_equal expected[:path], endpoint.path, name.to_s
-      assert_equal expected[:verb], endpoint.http_verb, name.to_s
-      assert_equal expected[:role], endpoint.required_role, name.to_s
-      assert_equal false, endpoint.input_contract.as_json.fetch(:reject_unknown), name.to_s
-      assert_equal expected[:fields].keys, fields.keys, name.to_s
-
-      expected[:fields].each do |field, rules|
-        text = fields.fetch(field).fetch(:description).to_s
-
-        assert_equal rules, fields.fetch(field).except(:description), "#{name} #{field}"
-        refute_equal "Path parameter id.", text, "#{name} #{field}"
-        assert text.present?, "#{name} #{field}"
+  def test_at_cannot_be_a_recordable_resource_name
+    at = unique_at
+    RecordingStudioApi.stub(:recordable_type_for_resource, "Mailbox") do
+      error = assert_raises(RecordingStudioApi::ConfigurationError) do
+        RecordingStudioMessages::Api.place(api: :public, at:, mount: :support, actions: %i[list_conversations])
       end
-
-      endpoint.openapi_path_parameters.each do |param|
-        text = param.fetch(:description).to_s
-
-        refute_equal "Path parameter id.", text, name.to_s
-        refute_equal "Path parameter #{param[:name]}.", text, name.to_s
-        assert_match(/\AThe (message center|conversation) id\b/, text, name.to_s)
-      end
+      assert_includes error.message, "API resource for Mailbox"
     end
-
-    assert_empty RecordingStudioApi.registered_endpoint(:messages_unread_count).openapi_path_parameters
-    assert_includes endpoint_description(:messages_list_conversations), "message center"
-    assert_includes endpoint_description(:messages_list_conversations), "after_id"
-    assert_includes endpoint_description(:messages_create_group), "admin"
-    assert_includes endpoint_description(:messages_send_message), "recording_id"
-    assert_includes endpoint_description(:messages_read_thread), "thread"
-    assert_includes endpoint_description(:messages_read_thread), "records"
-    assert_includes endpoint_description(:messages_rename_group), "120"
-    assert_includes endpoint_description(:messages_mark_read), "read cursor"
-    assert_includes endpoint_description(:messages_unread_count), "unread_count"
+    assert_nil RecordingStudioApi.registered_endpoint(:"#{at}_list_conversations")
   end
 
-  def test_message_center_tools_share_a_group_and_short_titles
-    titles = {
-      messages_create_group: "Start conversation",
-      messages_list_conversations: "List conversations",
-      messages_mark_read: "Mark conversation read",
-      messages_read_thread: "Read messages",
-      messages_rename_group: "Rename conversation",
-      messages_send_message: "Send message",
-      messages_unread_count: "Count unread conversations"
-    }
-
-    names = RecordingStudioMessages::Api::MountCatalog::ENDPOINTS.keys +
-            RecordingStudioMessages::Api::GroupCatalog::ACTIONS.keys
-
-    assert_equal titles.keys.sort, names.sort
-
-    titles.each do |name, title|
-      endpoint = RecordingStudioApi.registered_endpoint(name)
-
-      assert_equal ["Message Center"], endpoint.openapi_tags, name.to_s
-      assert_equal title, endpoint.openapi.fetch(:title), name.to_s
-      assert_equal title, endpoint.openapi.fetch(:summary), name.to_s
-      assert_equal endpoint.name, name.to_s
+  def test_unknown_actions_reserved_names_and_collisions_raise
+    at = unique_at
+    error = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(api: :public, at:, mount: :support, actions: %i[explode])
     end
+    assert_includes error.message, "Unknown messages API actions: explode"
+    assert_nil RecordingStudioApi.registered_endpoint(:"#{at}_explode")
+
+    reserved = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(
+        api: :public, at: "#{at}r", mount: :support,
+        actions: %i[list_conversations], names: { list_conversations: :list }
+      )
+    end
+    assert_includes reserved.message, "reserved"
+
+    RecordingStudioMessages::Api.place(
+      api: :public, at: "#{at}a", mount: :support, actions: %i[list_conversations],
+      names: { list_conversations: :"#{at}_shared" }
+    )
+    collision = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(
+        api: :public, at: "#{at}b", mount: :support, actions: %i[unread_count],
+        names: { unread_count: :"#{at}_shared" }
+      )
+    end
+    assert_includes collision.message, "already registered"
+
+    RecordingStudioMessages::Api.place(api: :public, at: "#{at}c", mount: :support, preset: :support)
+    path_collision = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(
+        api: :public, at: "#{at}c", mount: :support, actions: %i[list_conversations],
+        names: { list_conversations: :"#{at}_other_list" }
+      )
+    end
+    assert_includes path_collision.message, "already registered"
+
+    preset = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(api: :public, at: "#{at}d", mount: :support, preset: :nope)
+    end
+    assert_includes preset.message, "Unknown messages API preset"
   end
 
-  def test_endpoints_declare_recordable_type_and_required_role
-    group = RecordingStudioMessages::MESSAGE_GROUP_TYPE
-    mount = RecordingStudioMessages::MESSAGE_MOUNT_TYPE
-    scoped = {
-      messages_send_message: [group, :edit],
-      messages_read_thread: [group, :view],
-      messages_rename_group: [group, :edit],
-      messages_mark_read: [group, :view],
-      messages_list_conversations: [mount, :view],
-      messages_create_group: [mount, :edit]
-    }
+  def test_target_recordable_fields
+    group = Struct.new(:title).new("Message center thread")
+    mount = Struct.new(:key).new("support")
+    message = Struct.new(:body).new("Hello from the message center.")
+    group_recording = Struct.new(:recordable, :recordable_type).new(group, RecordingStudioMessages::MESSAGE_GROUP_TYPE)
+    mount_recording = Struct.new(:recordable, :recordable_type).new(mount, RecordingStudioMessages::MESSAGE_MOUNT_TYPE)
+    message_recording = Struct.new(:recordable, :recordable_type).new(message, RecordingStudioMessages::MESSAGE_TYPE)
 
-    scoped.each do |name, (type, role)|
-      endpoint = RecordingStudioApi.registered_endpoint(name)
-
-      assert_equal type, endpoint.recordable_type, name.to_s
-      assert_equal role, endpoint.required_role, name.to_s
-      assert endpoint.scopes_recording?, name.to_s
-      refute endpoint.owns_scoping?, name.to_s
-    end
-
-    unread = RecordingStudioApi.registered_endpoint(:messages_unread_count)
-    assert_nil unread.recordable_type
-    assert_equal :view, unread.required_role
-    refute unread.scopes_recording?
-    refute unread.owns_scoping?
-  end
-
-  def endpoint_description(name)
-    RecordingStudioApi.registered_endpoint(name).openapi.fetch(:description)
+    assert_equal({ title: "Message center thread" }, RecordingStudioMessages::Api::Target.recordable_fields(group_recording))
+    assert_equal({ key: "support" }, RecordingStudioMessages::Api::Target.recordable_fields(mount_recording))
+    assert_equal({ body: "Hello from the message center." }, RecordingStudioMessages::Api::Target.recordable_fields(message_recording))
   end
 
   def test_wrap_maps_facade_input_errors_and_leaves_other_argument_errors
@@ -224,50 +180,18 @@ class ApiSourceTest < Minitest::Test
     end
     assert_equal "write something", domain.message
 
-    missing_mount = assert_raises(ArgumentError) do
-      RecordingStudioMessages::Api::Errors.wrap do
-        RecordingStudioMessages.create_group(nil, actor: :missing)
-      end
-    end
-    assert_equal "mount recording is required", missing_mount.message
-
     assert_raises(ArgumentError) do
       RecordingStudioMessages::Api::Errors.wrap { Integer("nope") }
     end
   end
 
-  def test_target_recordable_fields_call_registration_serializers
-    group = Struct.new(:title).new("Message center thread")
-    mount = Struct.new(:key).new("support")
-    group_recording = Struct.new(:recordable, :recordable_type).new(
-      group, RecordingStudioMessages::MESSAGE_GROUP_TYPE
-    )
-    mount_recording = Struct.new(:recordable, :recordable_type).new(
-      mount, RecordingStudioMessages::MESSAGE_MOUNT_TYPE
-    )
+  private
 
-    assert_equal({ title: "Message center thread" }, RecordingStudioMessages::Api::Registration.serialize_group(group))
-    assert_equal(
-      RecordingStudioMessages::Api::Registration.serialize_group(group),
-      RecordingStudioMessages::Api::Target.recordable_fields(group_recording)
-    )
-    assert_equal({ key: "support" }, RecordingStudioMessages::Api::Registration.serialize_mount(mount))
-    assert_equal(
-      RecordingStudioMessages::Api::Registration.serialize_mount(mount),
-      RecordingStudioMessages::Api::Target.recordable_fields(mount_recording)
-    )
+  def place_support(at)
+    RecordingStudioMessages::Api.place(api: :public, at:, mount: -> {}, preset: :support)
+  end
 
-    message = Struct.new(:body).new("Hello from the message center.")
-    message_recording = Struct.new(:recordable, :recordable_type).new(
-      message, RecordingStudioMessages::MESSAGE_TYPE
-    )
-    assert_equal(
-      { body: "Hello from the message center." },
-      RecordingStudioMessages::Api::Registration.serialize_message(message)
-    )
-    assert_equal(
-      RecordingStudioMessages::Api::Registration.serialize_message(message),
-      RecordingStudioMessages::Api::Target.recordable_fields(message_recording)
-    )
+  def unique_at
+    "t#{SecureRandom.hex(4)}"
   end
 end
