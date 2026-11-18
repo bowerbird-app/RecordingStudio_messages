@@ -70,6 +70,27 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     refute_includes press_ids, @group.id
   end
 
+  test "list read and send return created_at as UTC ISO 8601" do
+    listed = call(:get, "/support/conversations", @editor_token)
+    assert_response :success, response.body
+    conversation = listed.fetch("records").find { |row| row.fetch("id") == @group.id }
+    assert_utc_iso8601 conversation.fetch("created_at"), @group.created_at
+
+    thread = call(:get, "/support/conversations/#{@group.id}/messages", @editor_token)
+    assert_response :success, response.body
+    message = RecordingStudioMessages.message_recordings(@group).last
+    row = thread.fetch("records").find { |record| record.fetch("id") == message.id }
+    assert_utc_iso8601 row.fetch("created_at"), message.created_at
+
+    sent = call(
+      :post, "/support/conversations/#{@group.id}/send_message", @editor_token, body: "Timestamp check."
+    )
+    assert_response :success, response.body
+    sent_message = RecordingStudioMessages.message_recordings(@group).last
+    assert_equal "Timestamp check.", sent.fetch("body")
+    assert_utc_iso8601 sent.fetch("created_at"), sent_message.created_at
+  end
+
   test "support list pages after_id without overlap" do
     page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
     extra = Array.new(page_size) do |index|
@@ -309,6 +330,11 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     raise issued.error unless issued.success?
 
     [issued.value.fetch(:access_token), provision.value.fetch(:api_client)]
+  end
+
+  def assert_utc_iso8601(stamp, time)
+    assert_match(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\z/, stamp)
+    assert_equal time.utc.change(usec: 0), Time.iso8601(stamp)
   end
 
   def call(method, path, token, params = {})
