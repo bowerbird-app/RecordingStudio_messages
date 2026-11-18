@@ -19,7 +19,7 @@ module RecordingStudioMessages
           type: recording.recordable_type.to_s.demodulize,
           root_id: recording.root_recording_id,
           parent_id: recording.parent_recording_id,
-          created_at: recording.created_at
+          created_at: recording.created_at&.utc&.iso8601
         }
       end
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.2] - 2026-11-18
+
+Message API `created_at` is a UTC ISO 8601 string.
+
+### Fixed
+
+- `RecordingStudioMessages::Api::Target.base_payload` sends `created_at` as UTC ISO 8601, for example `2026-11-18T05:27:09Z`. List, read, send, create, rename, and mark read use that payload.
+
+### Upgrade notes
+
+No migration. Bump to **0.33.2**. Clients that parsed `YYYY-MM-DD HH:MM:SS UTC` should parse ISO 8601. The string has no fractional seconds, matching `RecordingStudioApi::Serializers::RecordingSerializer`.
+
 ## [0.33.1] - 2026-11-18
 
 Press center tools share the Message Center group again. Mark read and unread count name the conversation.
