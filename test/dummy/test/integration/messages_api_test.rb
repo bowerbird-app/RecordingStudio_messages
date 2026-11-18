@@ -251,7 +251,11 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal ["Support"], reply.openapi_tags
     assert_equal "Reply", reply.openapi.fetch(:title)
     assert_equal "support/conversations/:id/send_message", reply.path
-    assert_equal ["Press center"], listed.openapi_tags
+    marked = RecordingStudioApi.registered_endpoint(:press_centers_mark_read)
+    counted = RecordingStudioApi.registered_endpoint(:press_centers_unread_count)
+    assert_equal ["Message Center"], listed.openapi_tags
+    assert_equal "Mark conversation read", marked.openapi.fetch(:title)
+    assert_equal "Count unread conversations", counted.openapi.fetch(:title)
     assert_equal "press_centers/:id/conversations", listed.path
     assert_equal "Mailbox", listed.recordable_type
     assert_nil RecordingStudioApi.registered_endpoint(:support_rename_conversation)

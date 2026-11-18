@@ -78,11 +78,18 @@ class ApiSourceTest < Minitest::Test
     read = RecordingStudioApi.registered_endpoint(:"#{at}_read_messages")
     renamed = RecordingStudioApi.registered_endpoint(:"#{at}_rename_conversation")
 
+    marked = RecordingStudioApi.registered_endpoint(:"#{at}_mark_read")
+    counted = RecordingStudioApi.registered_endpoint(:"#{at}_unread_count")
+
     assert_equal "#{at}/:id/conversations", listed.path
     assert_equal "Mailbox", listed.recordable_type
     assert_equal :view, listed.required_role
-    assert_equal ["Press center"], listed.openapi_tags
+    assert_equal ["Message Center"], listed.openapi_tags
     assert_equal "List conversations", listed.openapi.fetch(:title)
+    assert_equal ["Message Center"], marked.openapi_tags
+    assert_equal "Mark conversation read", marked.openapi.fetch(:title)
+    assert_equal ["Message Center"], counted.openapi_tags
+    assert_equal "Count unread conversations", counted.openapi.fetch(:title)
     assert_equal :post, started.http_verb
     assert_equal "#{at}/:id/conversations", started.path
     assert_equal "#{at}/:id/messages", read.path
@@ -90,6 +97,42 @@ class ApiSourceTest < Minitest::Test
     assert_equal "#{at}/:id/rename_group", renamed.path
     assert_includes renamed.input_contract.as_json.fetch(:fields).keys.map(&:to_s), "conversation_id"
     assert_includes renamed.input_contract.as_json.fetch(:fields).keys.map(&:to_s), "title"
+  end
+
+  def test_default_placement_uses_the_message_center_group_and_action_titles
+    at = unique_at
+    RecordingStudioMessages::Api.place(
+      api: :public,
+      at:,
+      mount: -> {},
+      actions: %i[mark_read unread_count]
+    )
+
+    marked = RecordingStudioApi.registered_endpoint(:"#{at}_mark_read")
+    counted = RecordingStudioApi.registered_endpoint(:"#{at}_unread_count")
+
+    assert_equal ["Message Center"], marked.openapi_tags
+    assert_equal "Mark conversation read", marked.openapi.fetch(:title)
+    assert_equal ["Message Center"], counted.openapi_tags
+    assert_equal "Count unread conversations", counted.openapi.fetch(:title)
+  end
+
+  def test_explicit_tags_replace_the_press_center_group
+    at = unique_at
+    RecordingStudioMessages::Api.place(
+      api: :public,
+      at:,
+      mount: { recordable_type: "Mailbox", key: :inbox },
+      preset: :press_center,
+      tags: ["Desk"]
+    )
+
+    listed = RecordingStudioApi.registered_endpoint(:"#{at}_list_conversations")
+    marked = RecordingStudioApi.registered_endpoint(:"#{at}_mark_read")
+
+    assert_equal ["Desk"], listed.openapi_tags
+    assert_equal ["Desk"], marked.openapi_tags
+    assert_equal "Mark conversation read", marked.openapi.fetch(:title)
   end
 
   def test_host_can_filter_actions_and_override_names_descriptions_and_tags

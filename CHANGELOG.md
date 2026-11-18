@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-11-18
+
+Press center tools share the Message Center group again. Mark read and unread count name the conversation.
+
+### Fixed
+
+- The `:press_center` preset uses the OpenAPI tag `Message Center`. `mark_read` is titled Mark conversation read. `unread_count` is titled Count unread conversations.
+- A placement with no preset and no `tags:` uses `Message Center`.
+
+### Upgrade notes
+
+None. Bump to **0.33.1**. No Messages migration. Tool names, inputs, routes, and access checks are unchanged.
+
 ## [0.33.0] - 2026-11-18
 
 The message API is opt-in. A host places each surface, and Messages keeps the handlers.
