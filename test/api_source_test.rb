@@ -16,7 +16,24 @@ class ApiSourceTest < Minitest::Test
     engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
     refute_includes engine, "Api.register!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
-    assert_nil RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
+  end
+
+  def test_place_registers_message_types_as_show_only
+    at = unique_at
+    place_support(at)
+    place_support(at)
+
+    [
+      RecordingStudioMessages::MESSAGE_TYPE,
+      RecordingStudioMessages::MESSAGE_GROUP_TYPE,
+      RecordingStudioMessages::MESSAGE_MOUNT_TYPE
+    ].each do |type|
+      registration = RecordingStudioApi.recordable_registration_for(type)
+      assert_equal %i[show], registration.operations
+      %i[create update destroy].each do |operation|
+        refute registration.supports_operation?(operation), "#{type} #{operation}"
+      end
+    end
   end
 
   def test_support_preset_chooses_actions_names_descriptions_and_paths

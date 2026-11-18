@@ -20,7 +20,7 @@ The message API is opt-in. A host places each surface, and Messages keeps the ha
 - Unread count is for that message center. It uses the same list as `viewable_group_recordings` (`recordings_for`), so access inherited on that center is counted.
 - Unknown actions, reserved MCP tree names (`list`, `show`, `create`, `update`, `delete`, `capability_action`, `describe`), and name or verb-and-path collisions raise `RecordingStudioApi::ConfigurationError` at boot.
 - `at` cannot be a recordable resource name. The API will not dispatch a placed endpoint whose first segment is a resource.
-- `Message`, `MessageGroup`, and `MessageMount` are no longer registered as show-only types. The API gem's default resource operations then apply to those recordables.
+- The first `place` on an API registers `Message`, `MessageGroup`, and `MessageMount` there as show-only. Create, update, and destroy stay off. A later `place` on that API leaves the registration as it is.
 
 ### Upgrade notes
 

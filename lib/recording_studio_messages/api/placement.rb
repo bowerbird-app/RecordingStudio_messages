@@ -4,6 +4,7 @@ require_relative "actions"
 require_relative "catalog"
 require_relative "mount_binding"
 require_relative "presets"
+require_relative "types"
 
 module RecordingStudioMessages
   module Api
@@ -29,6 +30,7 @@ module RecordingStudioMessages
       end
 
       def register!
+        Types.register!(api)
         pending = endpoints.reject { |endpoint| identical?(endpoint) }
         pending.each { |endpoint| assert_available!(endpoint) }
         write_all(pending)

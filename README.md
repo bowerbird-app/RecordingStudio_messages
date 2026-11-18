@@ -114,7 +114,7 @@ The dummy staff message center proves the + item, a lazy picker with **Find a pa
 Messages `0.33.0` does not register API endpoints. The host places each surface, and Messages keeps the handlers, the access checks, and the response shape.
 
 1. Install Messages `0.33.0`. There is no Messages migration.
-2. Remove clients of the old paths. `conversations/:id/...`, `message_centers/:id/...`, `unread_count`, and the `messages_*` names are gone. Messages no longer registers `Message`, `MessageGroup`, or `MessageMount` as show-only types, so the API gem's default resource operations apply to those recordables. Register the type yourself if you still want show only.
+2. Remove clients of the old paths. `conversations/:id/...`, `message_centers/:id/...`, `unread_count`, and the `messages_*` names are gone. The first `place` on an API registers `Message`, `MessageGroup`, and `MessageMount` as show-only, so create, update, and destroy stay off.
 3. Place a surface for each message center you want on an API. `at` is the path segment. `mount` is a proc or a message-center key when there is one mount, or a parent recordable type and key when the path takes that parent's `:id`.
 
 ```ruby

@@ -229,8 +229,22 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   test "placed endpoints replace the blanket registration" do
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
     refute RecordingStudioApi.registered_endpoint(:messages_unread_count)
-    assert_nil RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::Message")
-    assert_nil RecordingStudioApi.recordable_registration_for("RecordingStudioMessages::MessageGroup")
+    message = RecordingStudioMessages.message_recordings(@group).last
+    [message, @group, @mount].each do |recording|
+      registration = RecordingStudioApi.recordable_registration_for(recording.recordable_type)
+      assert_equal %i[show], registration.operations
+      %i[create update destroy].each do |operation|
+        refute registration.supports_operation?(operation)
+      end
+    end
+
+    refused = call(:post, "/messages", @editor_token, parent_id: @group.id, body: "Sneaked in.")
+    assert_response :unprocessable_entity, response.body
+    assert_equal "unsupported_action", refused.dig("error", "code")
+    call(:patch, "/messages/#{message.id}", @editor_token, body: "Rewritten")
+    assert_response :unprocessable_entity, response.body
+    call(:delete, "/messages/#{message.id}", @editor_token)
+    assert_response :unprocessable_entity, response.body
 
     reply = RecordingStudioApi.registered_endpoint(:support_reply)
     listed = RecordingStudioApi.registered_endpoint(:press_centers_list_conversations)
