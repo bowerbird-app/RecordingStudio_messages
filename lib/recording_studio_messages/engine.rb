@@ -110,7 +110,6 @@ module RecordingStudioMessages
 
       config.to_prepare do
         RecordingStudioMessages::MembershipLock.install_authorizer_wrap!
-        Api.register!
       end
     end
 

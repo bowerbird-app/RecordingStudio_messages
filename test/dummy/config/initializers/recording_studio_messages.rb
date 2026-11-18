@@ -10,6 +10,19 @@ RecordingStudioMessages.configure do |config|
 end
 
 Rails.application.config.to_prepare do
+  RecordingStudioMessages::Api.place(
+    api: :public,
+    at: :support,
+    mount: -> { DummyCatalog.support_mount_recording },
+    preset: :support
+  )
+  RecordingStudioMessages::Api.place(
+    api: :public,
+    at: :press_centers,
+    mount: { recordable_type: "Mailbox", key: :inbox },
+    preset: :press_center
+  )
+
   RecordingStudioMessages.register_composer_action(
     :attach_page,
     label: "Attach a page",

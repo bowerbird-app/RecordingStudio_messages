@@ -1,23 +1,34 @@
 # frozen_string_literal: true
 
 require_relative "errors"
-require_relative "mount_catalog"
-require_relative "target"
+require_relative "scope"
 
 module RecordingStudioMessages
   module Api
+    class BoundAction
+      def initialize(handler_name, placement)
+        @handler = Actions.const_get(handler_name)
+        @placement = placement
+      end
+
+      def call(context)
+        Errors.wrap { @handler.call(context, @placement) }
+      end
+    end
+
     module Actions
       class SendMessage
-        def self.call(context)
-          Errors.wrap { new(context).deliver }
+        def self.call(context, placement)
+          new(context).deliver(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def deliver
-          Target.serialize(RecordingStudioMessages.send_message(**line(@context.recording)))
+        def deliver(placement)
+          group = Scope.conversation!(@context, placement, :edit)
+          Target.serialize(RecordingStudioMessages.send_message(**line(group)))
         end
 
         def line(group)
@@ -31,18 +42,17 @@ module RecordingStudioMessages
       end
 
       class ListConversations
-        def self.call(context)
-          Errors.wrap { new(context).list }
+        def self.call(context, placement)
+          new(context).list(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def list
-          mount = @context.recording
+        def list(placement)
+          mount = Scope.mount!(@context, placement, :view)
           page = groups(mount)
-          page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
           {
             records: page.map { |group| Target.serialize(group) },
             after_id: (page.last.id if page.length >= page_size)
@@ -50,7 +60,6 @@ module RecordingStudioMessages
         end
 
         def groups(mount)
-          page_size = RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
           requested = @context.params[:limit]
           RecordingStudioMessages.viewable_group_recordings(
             actor: @context.access_grant.actor,
@@ -59,6 +68,10 @@ module RecordingStudioMessages
             after: after_recording(mount),
             limit: requested.nil? || requested == "" ? page_size : requested.to_i.clamp(1, page_size)
           )
+        end
+
+        def page_size
+          RecordingStudioMessages::MessageGroupsController::PAGE_SIZE
         end
 
         def unread?
@@ -70,48 +83,51 @@ module RecordingStudioMessages
           return if raw.blank?
 
           recording = @context.access_grant.accessible_recordings.find_by(id: raw)
-          return recording if conversation_on_message_center?(recording, mount)
+          return recording if on_mount?(recording, mount)
 
           raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this message center"
         end
 
-        def conversation_on_message_center?(recording, mount)
-          recording&.recordable_type == MESSAGE_GROUP_TYPE &&
-            recording.parent_recording_id == mount.id
+        def on_mount?(recording, mount)
+          recording&.recordable_type == MESSAGE_GROUP_TYPE && recording.parent_recording_id == mount.id
         end
       end
 
       class ReadThread
-        def self.call(context)
-          Errors.wrap { new(context).read }
+        def self.call(context, placement)
+          new(context).read(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def read
-          rows = RecordingStudioMessages.message_recordings(@context.recording)
+        def read(placement)
+          group = Scope.conversation!(@context, placement, :view)
+          rows = RecordingStudioMessages.message_recordings(group)
           { records: rows.map { |row| Target.serialize(row) } }
         end
       end
 
       class CreateGroup
-        def self.call(context)
-          Errors.wrap { new(context).create }
+        def self.call(context, placement)
+          new(context).create(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def create
-          mount = @context.recording
-          title = @context.params[:title]
-          recipients = @context.params[:recipients]
-          raise ::RecordingStudioApi::InvalidActionInputError, "title is required" if title.blank? && recipients.nil?
-
+        def create(placement)
+          mount = Scope.mount!(@context, placement, :edit)
+          require_title!
           Target.serialize(RecordingStudioMessages.create_group(mount, **attrs))
+        end
+
+        def require_title!
+          return if @context.params[:title].present? || !@context.params[:recipients].nil?
+
+          raise ::RecordingStudioApi::InvalidActionInputError, "title is required"
         end
 
         def attrs
@@ -125,16 +141,17 @@ module RecordingStudioMessages
       end
 
       class RenameGroup
-        def self.call(context)
-          Errors.wrap { new(context).rename }
+        def self.call(context, placement)
+          new(context).rename(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def rename
-          Target.serialize(RecordingStudioMessages.rename_group(**attrs(@context.recording)))
+        def rename(placement)
+          group = Scope.conversation!(@context, placement, :edit)
+          Target.serialize(RecordingStudioMessages.rename_group(**attrs(group)))
         end
 
         def attrs(group)
@@ -147,37 +164,38 @@ module RecordingStudioMessages
       end
 
       class MarkRead
-        def self.call(context)
-          Errors.wrap { new(context).mark }
+        def self.call(context, placement)
+          new(context).mark(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def mark
-          group = @context.recording
+        def mark(placement)
+          group = Scope.conversation!(@context, placement, :view)
           RecordingStudioMessages.mark_read(group_recording: group, actor: @context.access_grant.actor)
           Target.serialize(group.reload)
         end
       end
 
       class UnreadCount
-        def self.call(context)
-          Errors.wrap { new(context).count }
+        def self.call(context, placement)
+          new(context).count(placement)
         end
 
         def initialize(context)
           @context = context
         end
 
-        def count
-          recording = @context.access_grant.access_recording || @context.root_recording
-          Target.authorize!(@context, recording, MountCatalog::UNREAD_COUNT.fetch(:required_role))
-          actor = @context.access_grant.actor
-          unread = RecordingStudioMessages.my_group_recordings(actor: actor, unread: true)
-          scoped = unread.merge(@context.access_grant.accessible_recordings)
-          { unread_count: scoped.except(:includes).unscope(:order).count }
+        def count(placement)
+          mount = Scope.mount!(@context, placement, :view)
+          groups = RecordingStudioMessages.viewable_group_recordings(
+            actor: @context.access_grant.actor,
+            mount_recording: mount,
+            unread: true
+          )
+          { unread_count: groups.size }
         end
       end
     end

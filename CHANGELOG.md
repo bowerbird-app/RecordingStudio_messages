@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-11-18
+
+The message API is opt-in. A host places each surface, and Messages keeps the handlers.
+
+### Changed
+
+- The engine no longer calls `RecordingStudioMessages::Api.register!`. A configured API gets no message endpoints until the host places them.
+- `RecordingStudioMessages::Api.place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, tags: nil)` registers one surface. `at` is the path segment. `mount` is a proc or message-center key for one mount, or `{ recordable_type:, key: }` when the path `:id` is the parent and the handler loads that parent's message center.
+- Presets `:support` and `:press_center` choose the actions, default names, descriptions, and tags. The host can pass a smaller `actions` list and override names, descriptions, and tags.
+- A conversation id is accepted only when that conversation sits on the placement's message center. Another center is not found.
+- Unread count is for that message center. It uses the same list as `viewable_group_recordings` (`recordings_for`), so access inherited on that center is counted.
+- Unknown actions, reserved MCP tree names (`list`, `show`, `create`, `update`, `delete`, `capability_action`, `describe`), and name or verb-and-path collisions raise `RecordingStudioApi::ConfigurationError` at boot.
+- `at` cannot be a recordable resource name. The API will not dispatch a placed endpoint whose first segment is a resource.
+- The first `place` on an API registers `Message`, `MessageGroup`, and `MessageMount` there as show-only. Create, update, and destroy stay off. A later `place` on that API leaves the registration as it is.
+
+### Upgrade notes
+
+- Bump to **0.33.0**. No Messages migration.
+- Delete clients of `conversations/:id/...`, `message_centers/:id/...`, `unread_count`, and the `messages_*` tool names. Those routes are gone.
+- `at` is one path segment, and it cannot be a recordable resource name such as `mailboxes` or `messages`. The parent id still rides on `:id`, and `recordable_type` says which recording that id is.
+- Place each surface. A support singleton and a press center look like this:
+
+```ruby
+RecordingStudioMessages::Api.place(
+  api: :public,
+  at: :support,
+  mount: -> { support_mount_recording },
+  preset: :support
+)
+
+RecordingStudioMessages::Api.place(
+  api: :public,
+  at: :press_centers,
+  mount: { recordable_type: "PressCenter", key: :inbox },
+  preset: :press_center
+)
+```
+
+- On a parent placement the conversation id is the `conversation_id` input. The path `:id` is the parent. A singleton placement puts the conversation id in the path.
+- Unread count is no longer the direct-grant total. It counts the placement's message center, including inherited access when the conversation list does.
+
 ## [0.32.2] - 2026-11-17
 
 The seven message tools share a Message Center group. Each title is a short action.
