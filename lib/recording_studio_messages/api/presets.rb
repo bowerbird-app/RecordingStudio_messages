@@ -6,6 +6,8 @@ module RecordingStudioMessages
       Support = Data.define(:actions, :names, :titles, :descriptions, :tags)
       PressCenter = Data.define(:actions, :names, :titles, :descriptions, :tags)
 
+      MESSAGE_CENTER = "Message Center"
+
       SUPPORT = Support.new(
         actions: %i[create_group list_conversations read_thread send_message mark_read unread_count],
         names: {
@@ -62,8 +64,8 @@ module RecordingStudioMessages
           read_thread: "Read messages",
           send_message: "Send message",
           rename_group: "Rename conversation",
-          mark_read: "Mark read",
-          unread_count: "Unread count"
+          mark_read: "Mark conversation read",
+          unread_count: "Count unread conversations"
         },
         descriptions: {
           list_conversations: "List conversations on this press center's message center. Pass unread, " \
@@ -83,7 +85,7 @@ module RecordingStudioMessages
                         "conversations as the list, including access inherited on that message center. " \
                         "Needs view access. Returns unread_count."
         },
-        tags: ["Press center"]
+        tags: [MESSAGE_CENTER]
       )
 
       ALL = { support: SUPPORT, press_center: PRESS_CENTER }.freeze
