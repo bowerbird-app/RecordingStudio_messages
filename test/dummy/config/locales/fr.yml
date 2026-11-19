@@ -81,8 +81,6 @@ fr:
         seen_by: "Vu par %{names}"
         title_label: Nom de la conversation
         title_placeholder: Nommer cette conversation
-      guest:
-        conversation: Conversation
       notices:
         personal_title: Nouveau message
         personal_title_named: "Nouveau message dans %{conversation}"

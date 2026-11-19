@@ -7,6 +7,7 @@ module RecordingStudioMessages
     rescue_from RecordingStudioMessages::NotAuthorized, with: :handle_not_authorized
 
     def index
+      load_viewable_roots
       load_inbox
     end
 
@@ -15,6 +16,7 @@ module RecordingStudioMessages
       authorize_group!(:view)
       RecordingStudioMessages.mark_read(group_recording: @group_recording, actor: current_messages_actor)
       @message_recordings = RecordingStudioMessages.message_recordings(@group_recording)
+      load_viewable_roots
       respond_after_show
     end
 
@@ -109,6 +111,12 @@ module RecordingStudioMessages
 
     def ready_inbox_group?(group)
       @inbox_page.ready?(group)
+    end
+
+    def load_viewable_roots
+      return if instance_variable_defined?(:@viewable_root_ids)
+
+      @viewable_root_ids = RecordingStudioMessages::Services::ViewableRoots.ids_for(current_messages_actor)
     end
   end
 end

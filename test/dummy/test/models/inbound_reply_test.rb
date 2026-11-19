@@ -266,7 +266,7 @@ class InboundReplyTest < ActiveSupport::TestCase
   end
 
   def guest_url
-    RecordingStudioMessages::Engine.routes.url_helpers.guest_conversation_path(@group)
+    RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(@group)
   end
 
   def message_count

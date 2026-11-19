@@ -57,7 +57,7 @@ class SendMessageTest < ActiveSupport::TestCase
     assert_equal @customer, notifications.first.recipient
     assert_equal @staff, notifications.first.actor
     assert_nil notifications.first.root_recording_id
-    assert_equal RecordingStudioMessages::Engine.routes.url_helpers.guest_conversation_path(@group),
+    assert_equal RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(@group),
                  notifications.first.url
     refute_equal "/staff/message_center", notifications.first.url
   end

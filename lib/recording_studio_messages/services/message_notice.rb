@@ -50,7 +50,7 @@ module RecordingStudioMessages
           type: RecordingStudioMessages::MESSAGE_RECEIVED_PERSONAL_TYPE,
           title: personal_title(notice[:group_recording]),
           body: notice[:body].to_s.truncate(120),
-          url: guest_url(notice[:group_recording]),
+          url: conversation_url(notice[:group_recording]),
           recording: true
         )
       end
@@ -117,10 +117,10 @@ module RecordingStudioMessages
       end
       private_class_method :conversation_title
 
-      def self.guest_url(group_recording)
-        RecordingStudioMessages::Engine.routes.url_helpers.guest_conversation_path(group_recording)
+      def self.conversation_url(group_recording)
+        RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(group_recording)
       end
-      private_class_method :guest_url
+      private_class_method :conversation_url
     end
   end
 end

@@ -209,6 +209,16 @@ module RecordingStudioMessages
       sender && message_sender_name(sender)
     end
 
+    def messages_can_view_workspace?(group_recording)
+      return true if group_recording.blank? || viewable_root_ids.nil?
+
+      viewable_root_ids.include?(group_recording.root_recording_id.to_s)
+    end
+
+    def messages_plain_conversation?(group_recording, inbox: nil)
+      inbox == :my_messages && !messages_can_view_workspace?(group_recording)
+    end
+
     def messages_inbox_href(group_recording, inbox: nil)
       return my_messages_href(group_recording) if inbox == :my_messages
 
@@ -272,6 +282,12 @@ module RecordingStudioMessages
       return page.actors_for(group_recording) if page
 
       RecordingStudioMessages.granted_actors(group_recording)
+    end
+
+    def viewable_root_ids
+      return unless instance_variable_defined?(:@viewable_root_ids)
+
+      @viewable_root_ids
     end
   end
 end

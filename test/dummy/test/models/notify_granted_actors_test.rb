@@ -289,7 +289,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
   end
 
   def guest_path
-    RecordingStudioMessages::Engine.routes.url_helpers.guest_conversation_path(@group)
+    RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(@group)
   end
 
   def inbox_for(recipient, root_recording)

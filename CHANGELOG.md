@@ -15,7 +15,7 @@ A person who can open one conversation, and cannot view its workspace, gets a pe
 
 - `:message_received_personal` is a global notification. It is stored with no root, so it shows in that person's inbox and menu on every workspace. Messages registers it only when Notifications can accept a reply from someone who can view the conversation and not the workspace (`NotificationAuthorization.visible_for_reply?`, Notifications 0.21.1).
 - On that Notifications release, fan-out asks Accessible once which recipients can `:view` the workspace root. People who can, and staff filed on `admin_notification_root`, keep `:message_received` exactly as in 0.36.0. Everyone else gets the personal notice.
-- The personal notice uses the same thread and the same reply handler. Its link opens `GET /guest_conversations/:id`, a conversation page authorised on that conversation. The page has no workspace navigation, no people list, and no host panel hooks.
+- The personal notice uses the same thread and the same reply handler. Its link opens that conversation in My Messages (`GET /my_messages/:id`). When the person cannot view the workspace root, that screen omits host page nav, the people list, and host panel hooks. The row still names the mount parent.
 - In-app is always available. Email is available too, and it is on by default only when an email channel is registered with Notifications. Otherwise the default is in-app.
 - Opening the conversation marks both notice types read.
 

@@ -3,7 +3,7 @@
 require "test_helper"
 require "devise/test/integration_helpers"
 
-class GuestConversationsTest < ActionDispatch::IntegrationTest
+class GuestMyMessagesTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
@@ -29,20 +29,27 @@ class GuestConversationsTest < ActionDispatch::IntegrationTest
     Current.actor = nil
   end
 
-  test "a guest opens the conversation from the personal notice and can reply" do
+  test "a guest opens the personal notice in my messages without host chrome" do
     sign_in @guest
-    get personal_notice.url
+    batch_calls, root_checks = count_root_lookups { get personal_notice.url }
 
     assert_response :success
+    assert_equal 1, batch_calls
+    assert_equal 0, root_checks
     assert_select "html[data-theme='rounded']", count: 1
     assert_select "link[rel='stylesheet'][href*='flat_pack/application']"
+    assert_includes response.body, "My messages"
     assert_includes response.body, "Print pickup"
     assert_includes response.body, "The print is ready."
+    assert_includes response.body, @workspace.name
     assert_select "form[action=?]", recording_studio_messages.message_group_messages_path(@group)
-    refute_includes response.body, @workspace.name
+    assert_select ".flat-pack-page-nav", count: 0
     refute_includes response.body, "/staff/message_center"
     refute_includes response.body, "Attach a page"
     refute_includes response.body, "dummy-thread-status"
+    refute_includes response.body, "Manage access"
+    refute_includes response.body, "+ Access"
+    refute_includes response.body, recording_studio_messages.message_groups_path(mount_id: @mount.id)
 
     post recording_studio_messages.message_group_messages_path(@group), params: {
       message: { body: "I can pick it up." },
@@ -53,12 +60,28 @@ class GuestConversationsTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     assert_includes response.body, "I can pick it up."
-    refute_includes response.body, @workspace.name
+    assert_includes response.body, @workspace.name
+    assert_select ".flat-pack-page-nav", count: 0
+    refute_includes response.body, "Attach a page"
+  end
+
+  test "a member who can view the workspace keeps my messages chrome" do
+    sign_in @staff
+    get recording_studio_messages.my_message_path(@group)
+
+    assert_response :success
+    assert_select ".flat-pack-page-nav"
+    assert_select "a[href=?]", recording_studio_messages.my_messages_path
+    assert_includes response.body, @workspace.name
+    assert_includes response.body, "Print pickup"
+    assert_includes response.body, "dummy-thread-status"
+    assert_includes response.body, "Attach a page"
+    assert_includes response.body, "Manage access"
   end
 
   test "a person who is not in the conversation cannot open it" do
     sign_in @stranger
-    get personal_notice.url
+    get recording_studio_messages.my_message_path(@group)
 
     assert_redirected_to "/"
     refute_includes response.body, "The print is ready."
@@ -92,5 +115,24 @@ class GuestConversationsTest < ActionDispatch::IntegrationTest
       notification_type: "message_received_personal",
       recipient: @guest
     )
+  end
+
+  def count_root_lookups
+    batch_calls = 0
+    root_checks = 0
+    original_ids = RecordingStudioAccessible.method(:authorized_root_recording_ids)
+    original_authorized = RecordingStudioAccessible.method(:authorized?)
+    RecordingStudioAccessible.stub(:authorized_root_recording_ids, lambda { |**kwargs|
+      batch_calls += 1
+      original_ids.call(**kwargs)
+    }) do
+      RecordingStudioAccessible.stub(:authorized?, lambda { |**kwargs|
+        root_checks += 1 if kwargs[:recording] == @root
+        original_authorized.call(**kwargs)
+      }) do
+        yield
+      end
+    end
+    [batch_calls, root_checks]
   end
 end

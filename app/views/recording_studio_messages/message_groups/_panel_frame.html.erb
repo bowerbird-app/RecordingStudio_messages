@@ -6,7 +6,9 @@
                current_actor: local_assigns.fetch(:current_actor),
                form_url: local_assigns[:form_url],
                return_to: local_assigns[:return_to],
-               inbox: local_assigns[:inbox] %>
+               inbox: local_assigns[:inbox],
+               plain: local_assigns[:plain],
+               show_people: local_assigns.fetch(:show_people, true) %>
   <% else %>
     <%= render FlatPack::Chat::SystemMessage::Component.new do %>
       <%= messages_t("inbox.empty_panel") %>

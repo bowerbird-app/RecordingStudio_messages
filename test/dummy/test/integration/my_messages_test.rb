@@ -36,7 +36,7 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     refute_includes response.body, recording_studio_messages.message_group_path(DummyCatalog.empty_group_recording)
   end
 
-  test "opening a conversation from my messages keeps the my messages sidebar and back link" do
+  test "opening a conversation from my messages keeps the sidebar and names the mount parent" do
     sign_in @customer
     group = DummyCatalog.inbox_group_recording
     get recording_studio_messages.my_message_path(group)
@@ -45,11 +45,25 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "My messages"
     assert_includes response.body, "Studio help"
     assert_includes response.body, "Site inbox"
+    assert_includes response.body, DummyCatalog.studio_workspace.name
     assert_includes response.body, "Did the press stills land?"
-    assert_select "a[href=?]", recording_studio_messages.my_messages_path
+    assert_select ".flat-pack-page-nav", count: 0
     refute_includes response.body, recording_studio_messages.message_groups_path(
       mount_id: DummyCatalog.inbox_mount_recording.id
     )
+  end
+
+  test "a member who can view the workspace keeps the my messages back link and host chrome" do
+    sign_in @staff
+    get recording_studio_messages.my_message_path(DummyCatalog.support_group_recording)
+
+    assert_response :success
+    assert_select ".flat-pack-page-nav"
+    assert_select "a[href=?]", recording_studio_messages.my_messages_path
+    assert_includes response.body, DummyCatalog.studio_workspace.name
+    assert_includes response.body, "dummy-thread-status"
+    assert_includes response.body, "Attach a page"
+    assert_includes response.body, "Manage access"
   end
 
   test "a turbo frame open from my messages still authorizes the conversation" do

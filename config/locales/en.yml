@@ -45,8 +45,6 @@ en:
         seen_by: "Seen by %{names}"
         title_label: Conversation name
         title_placeholder: Name this conversation
-      guest:
-        conversation: Conversation
       notices:
         personal_title: New message
         personal_title_named: "New message in %{conversation}"
