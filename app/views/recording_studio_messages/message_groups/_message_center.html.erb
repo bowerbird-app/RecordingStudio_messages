@@ -8,6 +8,7 @@
 <% list_toolbar = messages_list_toolbar(mount: mount_recording, actor: current_actor) %>
 <% list_title = messages_list_header_title(mount: mount_recording, actor: current_actor) %>
 <% inbox_rows = messages_inbox_rows(group_recordings, selected: selected_group, inbox: inbox) %>
+<% plain = messages_plain_conversation?(selected_group, inbox: inbox) %>
 <%# Fill the viewport under the host's page nav so the composer sits on the bottom edge. %>
 <% message_center_height_class = local_assigns[:message_center_height_class].presence || "h-[calc(100dvh-15.5rem)]" %>
 
@@ -51,7 +52,9 @@
                  current_actor: current_actor,
                  form_url: local_assigns[:form_url],
                  return_to: local_assigns[:return_to],
-                 inbox: inbox %>
+                 inbox: inbox,
+                 plain: plain,
+                 show_people: !plain %>
     <% end %>
   <% end %>
 </div>

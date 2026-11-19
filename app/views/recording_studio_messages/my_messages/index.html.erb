@@ -1,5 +1,7 @@
 <% content_for :title, messages_t("inbox.my_title") %>
-<% flat_pack_page_nav(round: true, style: :default, anchor_href: main_app.root_path) %>
+<% unless messages_plain_conversation?(@group_recording, inbox: :my_messages) %>
+  <% flat_pack_page_nav(round: true, style: :default, anchor_href: main_app.root_path) %>
+<% end %>
 
 <%= render "recording_studio_messages/message_groups/message_center",
            group_recordings: @group_recordings,

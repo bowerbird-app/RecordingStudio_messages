@@ -50,11 +50,16 @@ class SendMessageTest < ActiveSupport::TestCase
     assert_equal @group, message_recording.parent_recording
     assert message_recording.has_attachments?
 
-    notifications = RecordingStudioNotifications::Notification.where(notification_type: "message_received")
+    notifications = RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received_personal"
+    )
     assert_equal 1, notifications.count
     assert_equal @customer, notifications.first.recipient
     assert_equal @staff, notifications.first.actor
-    assert_equal "/staff/message_center", notifications.first.url
+    assert_nil notifications.first.root_recording_id
+    assert_equal RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(@group),
+                 notifications.first.url
+    refute_equal "/staff/message_center", notifications.first.url
   end
 
   test "send_message refuses actors without an accessible grant" do

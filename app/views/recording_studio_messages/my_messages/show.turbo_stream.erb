@@ -1,9 +1,12 @@
+<% plain = messages_plain_conversation?(@group_recording, inbox: :my_messages) %>
 <%= turbo_stream.update messages_message_center_panel_id do %>
   <%= render "recording_studio_messages/message_groups/panel",
              group_recording: @group_recording,
              message_recordings: @message_recordings,
              current_actor: current_messages_actor,
-             inbox: :my_messages %>
+             inbox: :my_messages,
+             plain: plain,
+             show_people: !plain %>
 <% end %>
 
 <%= turbo_stream.update messages_inbox_unread_dot_id(@group_recording) do %>

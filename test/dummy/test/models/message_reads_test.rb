@@ -227,7 +227,7 @@ class MessageReadsTest < ActiveSupport::TestCase
 
   def notice_for(group, recipient)
     RecordingStudioNotifications::Notification.where(
-      notification_type: "message_received",
+      notification_type: %w[message_received message_received_personal],
       recipient: recipient
     ).find { |note| note.metadata["message_group_id"] == group.id }
   end

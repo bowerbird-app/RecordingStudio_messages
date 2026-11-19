@@ -74,22 +74,31 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     assert_equal @ticket_root, @group.root_recording
   end
 
-  test "ticket owner stays on the ticket root when admin filing is on" do
+  test "a member who can view the workspace stays on the ticket root when admin filing is on" do
     RecordingStudioMessages.configuration.admin_notification_root = @admin_root
+    member = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Workspace Member"
+    )
+    grant_root!(member)
+    grant_group!(member)
 
     RecordingStudioMessages.send_message(
       group_recording: @group,
-      body: "Casey keeps the workspace inbox.",
+      body: "Members keep the workspace inbox.",
       actor: @staff,
       url: "/inbox"
     )
 
-    customer_note = last_message_received_for(@customer)
-    assert_equal @customer, customer_note.recipient
-    assert_equal @ticket_root.id, customer_note.root_recording_id
-    refute_equal @admin_root.id, customer_note.root_recording_id
-    assert_equal @group.id, customer_note.recording_id
-    assert_equal "Casey keeps the workspace inbox.", customer_note.body
+    member_note = last_message_received_for(member)
+    assert_equal member, member_note.recipient
+    assert_equal @ticket_root.id, member_note.root_recording_id
+    refute_equal @admin_root.id, member_note.root_recording_id
+    assert_equal @group.id, member_note.recording_id
+    assert_equal "Members keep the workspace inbox.", member_note.body
+    assert_equal "/inbox", member_note.url
   end
 
   test "admin root notice omits the message text" do
@@ -130,7 +139,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
       url: "/inbox"
     )
 
-    customer_note = last_message_received_for(@customer)
+    customer_note = last_personal_for(@customer)
     assert_equal "Brand notes", customer_note.body
     assert_equal "", RecordingStudioMessages.message_recordings(@group).last.recordable.body
   end
@@ -150,7 +159,168 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     refute_includes staff_note.title.to_s, "Resolver points at Admin."
   end
 
+  test "a guest gets one personal notice and a member keeps the workspace notice" do
+    member = User.create!(
+      email: "member-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Workspace Member"
+    )
+    grant_root!(member)
+    grant_group!(member)
+    extra_guest = User.create!(
+      email: "guest-#{SecureRandom.hex(4)}@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!",
+      name: "Extra Guest"
+    )
+    grant_group!(extra_guest)
+    access_calls = 0
+    root_checks = 0
+    original_access = RecordingStudioAccessible.method(:actors_with_access)
+    original_authorized = RecordingStudioAccessible.method(:authorized?)
+
+    RecordingStudioAccessible.stub(:actors_with_access, lambda { |**kwargs|
+      access_calls += 1 if kwargs[:recording] == @ticket_root
+      original_access.call(**kwargs)
+    }) do
+      RecordingStudioAccessible.stub(:authorized?, lambda { |**kwargs|
+        root_checks += 1 if kwargs[:recording] == @ticket_root
+        original_authorized.call(**kwargs)
+      }) do
+        RecordingStudioMessages.send_message(
+          group_recording: @group,
+          body: "The proof is ready.",
+          actor: @staff,
+          url: "/staff/message_center"
+        )
+      end
+    end
+
+    assert_equal 1, access_calls
+    assert_equal 0, root_checks
+
+    guest_note = last_personal_for(@customer)
+    assert_equal 1, personal_count(@customer)
+    assert_equal 0, message_received_count(@customer)
+    assert_nil guest_note.root_recording_id
+    assert_equal @group.id.to_s, guest_note.thread_key
+    assert_equal "New message in Root filing", guest_note.title
+    assert_equal "The proof is ready.", guest_note.body
+    assert_equal guest_path, guest_note.url
+    refute_includes guest_note.title.to_s, @workspace.name
+    refute_includes guest_note.body.to_s, @workspace.name
+
+    extra_note = last_personal_for(extra_guest)
+    assert_equal guest_path, extra_note.url
+    assert_equal 1, personal_count(extra_guest)
+
+    member_note = last_message_received_for(member)
+    assert_equal @ticket_root.id, member_note.root_recording_id
+    assert_equal @group.id, member_note.recording_id
+    assert_equal "/staff/message_center", member_note.url
+    assert_equal "The proof is ready.", member_note.body
+    assert_equal 0, personal_count(member)
+
+    inbox = inbox_for(@customer, @admin_root)
+    assert_includes inbox.map(&:id), guest_note.id
+    assert_equal [guest_note.id], inbox.map(&:id)
+  end
+
+  test "older notifications keeps every recipient on the workspace notice" do
+    RecordingStudioMessages.stub(:personal_notices_supported?, false) do
+      RecordingStudioMessages.send_message(
+        group_recording: @group,
+        body: "Legacy filing.",
+        actor: @staff,
+        url: "/staff/message_center"
+      )
+    end
+
+    note = last_message_received_for(@customer)
+    assert_equal @ticket_root.id, note.root_recording_id
+    assert_equal @group.id, note.recording_id
+    assert_equal "/staff/message_center", note.url
+    assert_equal 0, personal_count(@customer)
+  end
+
+  test "personal email default follows whether that channel is registered" do
+    type = RecordingStudioNotifications.notification_types[:message_received_personal]
+    assert_equal %i[in_app email], type.available_channels
+
+    without_email = lambda { |name| name.to_sym == :in_app }
+    with_email = lambda { |name| %i[in_app email].include?(name.to_sym) }
+
+    RecordingStudioNotifications.channels.stub(:registered?, without_email) do
+      RecordingStudioMessages.register_message_received_personal_type!
+      assert_equal [:in_app],
+                   RecordingStudioNotifications.notification_types[:message_received_personal].default_channels
+    end
+
+    RecordingStudioNotifications.channels.stub(:registered?, with_email) do
+      RecordingStudioMessages.register_message_received_personal_type!
+      assert_equal %i[in_app email],
+                   RecordingStudioNotifications.notification_types[:message_received_personal].default_channels
+    end
+  ensure
+    RecordingStudioMessages.register_message_received_personal_type!
+  end
+
   private
+
+  def grant_root!(actor)
+    result = RecordingStudioAccessible.grant_access(
+      recording: @ticket_root,
+      actor: actor,
+      role: :view,
+      manager_actor: @staff
+    )
+    raise result.error if result.failure?
+  end
+
+  def grant_group!(actor)
+    result = RecordingStudioAccessible.grant_access(
+      recording: @group,
+      actor: actor,
+      role: :edit,
+      manager_actor: @staff
+    )
+    raise result.error if result.failure?
+  end
+
+  def guest_path
+    RecordingStudioMessages::Engine.routes.url_helpers.my_message_path(@group)
+  end
+
+  def inbox_for(recipient, root_recording)
+    RecordingStudioNotifications::Services::InboxScope.relation(
+      recipient: recipient,
+      actor: recipient,
+      root_recording: root_recording,
+      inbox_scope: "current_root"
+    ).to_a
+  end
+
+  def personal_count(recipient)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received_personal",
+      recipient: recipient
+    ).count
+  end
+
+  def message_received_count(recipient)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received",
+      recipient: recipient
+    ).count
+  end
+
+  def last_personal_for(recipient)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received_personal",
+      recipient: recipient
+    ).order(:created_at).last
+  end
 
   def last_message_received_for(recipient)
     RecordingStudioNotifications::Notification.where(

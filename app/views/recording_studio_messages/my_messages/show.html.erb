@@ -1,18 +1,23 @@
+<% plain = messages_plain_conversation?(@group_recording, inbox: :my_messages) %>
 <% if turbo_frame_request? %>
   <%= render "recording_studio_messages/message_groups/panel_frame",
              group_recording: @group_recording,
              message_recordings: @message_recordings,
              current_actor: current_messages_actor,
-             inbox: :my_messages %>
+             inbox: :my_messages,
+             plain: plain,
+             show_people: !plain %>
 <% else %>
   <% content_for :title, messages_t("inbox.my_title") %>
-  <% flat_pack_page_nav(
-       round: true,
-       style: :default,
-       back_href: my_messages_path,
-       back_tooltip: messages_t("inbox.my_title"),
-       anchor_href: main_app.root_path
-     ) %>
+  <% unless plain %>
+    <% flat_pack_page_nav(
+         round: true,
+         style: :default,
+         back_href: my_messages_path,
+         back_tooltip: messages_t("inbox.my_title"),
+         anchor_href: main_app.root_path
+       ) %>
+  <% end %>
 
   <%= render "recording_studio_messages/message_groups/message_center",
              group_recordings: @group_recordings,
