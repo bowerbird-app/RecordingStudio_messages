@@ -34,6 +34,7 @@ require "recording_studio_messages/services/recording_subtree"
 require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
 require "recording_studio_messages/services/notify_granted_actors"
+require "recording_studio_messages/services/inbound_reply"
 require "recording_studio_messages/composer_action"
 require "recording_studio_messages/message_reference_slot"
 require "recording_studio_messages/services/auto_link"
@@ -177,6 +178,7 @@ module RecordingStudioMessages
     def register_integration!
       register_messages_capability!
       register_message_received_type!
+      register_message_received_reply_handler!
       MembershipLock.install_authorizer_wrap!
     end
 
@@ -233,6 +235,30 @@ module RecordingStudioMessages
       )
     end
 
+    def register_message_received_reply_handler!
+      return unless RecordingStudioNotifications.respond_to?(:register_reply_handler)
+
+      RecordingStudioNotifications.register_reply_handler(MESSAGE_RECEIVED_TYPE) do |notification:, recipient:, body:,
+                                                                                      attachments:|
+        Services::InboundReply.call(notification:, recipient:, body:, attachments:)
+      end
+    end
+
+    def thread_key_supported?
+      notify_accepts?(:thread_key)
+    end
+
+    def recording_supported?
+      notify_accepts?(:recording)
+    end
+
+    def notify_accepts?(keyword)
+      parameters = RecordingStudioNotifications::Services::Notify.instance_method(:initialize).parameters
+      parameters.any? { |_, name| name == keyword }
+    rescue NameError
+      false
+    end
+
     def embed_type_name(recordable_type)
       return recordable_type.name if recordable_type.is_a?(Class)
 
@@ -246,7 +272,7 @@ module RecordingStudioMessages
         icon: :chat_bubble_left,
         category: :general,
         default_channels: [:in_app],
-        available_channels: [:in_app],
+        available_channels: %i[in_app email],
         scope: :root
       }
     end

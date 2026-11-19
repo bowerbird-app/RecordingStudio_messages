@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.35.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.36.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -82,7 +82,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'gem "recording_studio_accessible", ">= 0.44.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.31.0"'
     assert_includes gemfile, 'gem "recording_studio_attachable", ">= 0.28.0", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.18.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.21.1"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.18.0", "< 1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.39.0"'
     assert_includes gemfile, 'gem "recording_studio_user", ">= 0.39.0"'
@@ -116,7 +116,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.3.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.45.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.31.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.19.1"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.21.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.16.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.39.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.7.0"'
@@ -153,12 +153,14 @@ class RecordingStudioMessagesTest < Minitest::Test
     root_lock = File.read(File.expand_path("../Gemfile.lock", __dir__))
     dummy_lock = File.read(File.expand_path("dummy/Gemfile.lock", __dir__))
 
-    assert_includes root_lock, "tag: v0.18.0"
-    assert_includes root_lock, "recording_studio_notifications (0.18.0)"
+    assert_includes root_lock, "tag: v0.21.1"
+    assert_includes root_lock, "recording_studio_notifications (0.21.1)"
     assert_includes root_lock, "recording_studio_notifications (>= 0.18.0, < 1)"
+    refute_includes root_lock, "recording_studio_notifications (0.18.0)"
     refute_includes root_lock, "recording_studio_notifications (0.15.0)"
-    assert_includes dummy_lock, "tag: v0.19.1"
-    assert_includes dummy_lock, "recording_studio_notifications (0.19.1)"
+    assert_includes dummy_lock, "tag: v0.21.1"
+    assert_includes dummy_lock, "recording_studio_notifications (0.21.1)"
+    refute_includes dummy_lock, "recording_studio_notifications (0.19.1)"
     refute_includes dummy_lock, "recording_studio_notifications (0.15.0)"
     assert_includes root_lock, "tag: v7.3.0"
     assert_includes root_lock, "recording_studio (7.3.0)"

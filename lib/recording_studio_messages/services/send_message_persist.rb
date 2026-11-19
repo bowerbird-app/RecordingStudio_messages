@@ -94,13 +94,19 @@ module RecordingStudioMessages
       end
 
       def notify_recipients!(message_recording)
-        NotifyGrantedActors.call(
+        notice = deferred_notice(message_recording)
+        connection = RecordingStudioMessages::Message.connection
+        connection.current_transaction.after_commit { NotifyGrantedActors.call(**notice) }
+      end
+
+      def deferred_notice(message_recording)
+        {
           group_recording: @group_recording,
           message_recording: message_recording,
           actor: @actor,
           body: @preview.presence || @body,
           url: @url
-        )
+        }
       end
     end
   end

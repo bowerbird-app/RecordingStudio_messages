@@ -111,6 +111,7 @@ module RecordingStudioMessages
       config.to_prepare do
         RecordingStudioMessages::MembershipLock.install_authorizer_wrap!
         RecordingStudioMessages::InboxCard.register_dashboard_widget!
+        RecordingStudioMessages.register_message_received_reply_handler!
       end
     end
 

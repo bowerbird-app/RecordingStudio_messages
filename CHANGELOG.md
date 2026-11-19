@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-11-19
+
+A reply to a new-message notice is posted back into that conversation.
+
+### Added
+
+- Messages registers a reply handler for `:message_received` when Notifications provides `register_reply_handler`. The handler reads `metadata["message_group_id"]`, posts with `send_message` as the recipient, and returns `ReplyResult.ok`. A recipient without `:edit` is `rejected(:not_authorized)`. A missing or trashed conversation is `rejected(:group_missing)`. A blank body with no files is `rejected(:empty)`.
+- `:message_received` lists `:email` in `available_channels`. `default_channels` stays `[:in_app]`. A host that registers the type first keeps its own channels. The reply handler still registers.
+- Each `:message_received` notice stores `thread_key` as the conversation id when `Notify` accepts `thread_key:`.
+- A notice filed on the conversation root also stores that conversation as `recording` when `Notify` accepts `recording:`. The root stays the workspace root. Staff filed on `admin_notification_root` stay there, and those copies still omit `recording`.
+- Notices for a send run after that write commits. A rolled-back reply does not notify anyone.
+
+### Upgrade notes
+
+Bump to **0.36.0**. The Messages gemspec still accepts Notifications `>= 0.18.0`. There is no Messages migration.
+
+To turn on inbound replies:
+
+1. Pin Notifications `v0.20.0` or newer. Run `bin/rails generate recording_studio_notifications:migrations`, then `bin/rails db:migrate`. Notifications `0.21.0` and `0.21.1` add no migration of their own.
+2. Opt `:message_received` into `:email` for the people who should get mail. The default stays in-app.
+3. Inbound mail is handled outside this gem. Messages posts the body and file blobs it is given.
+
+A guest who can view the conversation, and not the workspace root, can reply when Notifications is `0.21.1` or newer. On an older Notifications, a reply works for anyone who can view the root the notice is filed on. On Notifications older than 0.20.0, Messages does not register a reply handler and does not pass `thread_key:`. Sending stays as it was in 0.35.0.
+
 ## [0.35.0] - 2026-11-19
 
 Public contact can pass a signup source through to Recording Studio Users.

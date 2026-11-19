@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_19_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -422,6 +422,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_140000) do
     t.datetime "updated_at", null: false
     t.string "url"
     t.boolean "inbox", default: true, null: false
+    t.string "thread_key"
     t.index ["recipient_type", "recipient_id", "idempotency_key"], name: "idx_rsn_notifications_idempotency", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["recipient_type", "recipient_id", "notification_type"], name: "idx_rsn_notifications_recipient_type"
     t.index ["recording_id"], name: "idx_rsn_notifications_recording"
@@ -441,6 +442,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_140000) do
     t.index ["recipient_type", "recipient_id", "notification_type", "channel"], name: "idx_rsn_preferences_channel", unique: true, where: "(channel IS NOT NULL)"
     t.index ["recipient_type", "recipient_id", "notification_type"], name: "idx_rsn_preferences_cadence", unique: true, where: "(channel IS NULL)"
     t.check_constraint "channel IS NOT NULL AND enabled IS NOT NULL AND cadence IS NULL OR channel IS NULL AND enabled IS NULL AND cadence IS NOT NULL", name: "chk_rsn_preferences_shape"
+  end
+
+  create_table "recording_studio_notifications_replies", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "notification_id", null: false
+    t.string "channel", null: false
+    t.string "idempotency_key", null: false
+    t.string "status", null: false
+    t.string "reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["channel", "idempotency_key"], name: "idx_rsn_replies_channel_idempotency", unique: true
+    t.index ["notification_id"], name: "idx_rsn_replies_notification"
   end
 
   create_table "recording_studio_publishable_publishables", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -657,6 +670,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_140000) do
   add_foreign_key "recording_studio_events", "recording_studio_recordings", column: "recording_id"
   add_foreign_key "recording_studio_events", "recording_studio_recordings", column: "root_recording_id"
   add_foreign_key "recording_studio_notifications_deliveries", "recording_studio_notifications_notifications", column: "notification_id"
+  add_foreign_key "recording_studio_notifications_replies", "recording_studio_notifications_notifications", column: "notification_id"
   add_foreign_key "recording_studio_publishable_publishables", "recording_studio_recordings", column: "social_image_attachment_recording_id", name: "fk_rs_publishables_social_image_attachment_recording"
   add_foreign_key "recording_studio_recordings", "recording_studio_recordings", column: "parent_recording_id"
   add_foreign_key "recording_studio_recordings", "recording_studio_recordings", column: "root_recording_id"

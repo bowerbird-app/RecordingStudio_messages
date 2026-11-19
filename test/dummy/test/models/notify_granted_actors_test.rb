@@ -51,7 +51,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     staff_note = last_message_received_for(@staff)
     assert_equal @ticket_root.id, staff_note.root_recording_id
     assert_equal @staff, staff_note.recipient
-    assert_equal RecordingStudioMessages::MESSAGE_TYPE, staff_note.recording.recordable_type
+    assert_equal @group.id, staff_note.recording_id
     assert_equal "Default filing stays on the ticket.", staff_note.body
   end
 
@@ -88,6 +88,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     assert_equal @customer, customer_note.recipient
     assert_equal @ticket_root.id, customer_note.root_recording_id
     refute_equal @admin_root.id, customer_note.root_recording_id
+    assert_equal @group.id, customer_note.recording_id
     assert_equal "Casey keeps the workspace inbox.", customer_note.body
   end
 

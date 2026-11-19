@@ -62,7 +62,8 @@ module RecordingStudioMessages
           actor: @actor,
           root_recording: root_recording
         }.merge(notification_copy(on_ticket_root: on_ticket_root))
-        attributes[:recording] = @message_recording if on_ticket_root
+        attributes[:recording] = @group_recording if on_ticket_root && RecordingStudioMessages.recording_supported?
+        attributes[:thread_key] = @group_recording.id.to_s if RecordingStudioMessages.thread_key_supported?
         attributes
       end
 
