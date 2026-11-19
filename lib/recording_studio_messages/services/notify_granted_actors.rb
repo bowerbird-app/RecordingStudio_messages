@@ -55,14 +55,14 @@ module RecordingStudioMessages
       end
 
       def notification_attributes(recipients, root_recording:)
-        on_ticket_root = same_root?(root_recording, ticket_root)
         attributes = {
           recipients: recipients,
           notification_type: :message_received,
           actor: @actor,
           root_recording: root_recording
-        }.merge(notification_copy(on_ticket_root: on_ticket_root))
-        attributes[:recording] = @message_recording if on_ticket_root
+        }.merge(notification_copy(include_line: NotificationFiling.include_line?(root_recording)))
+        attributes[:recording] = @message_recording if same_root?(root_recording, ticket_root)
+        attributes[:thread_key] = @group_recording.id.to_s if RecordingStudioMessages.thread_key_supported?
         attributes
       end
 
@@ -75,28 +75,13 @@ module RecordingStudioMessages
       end
 
       def notification_root_for(recipient)
-        admin_root = RecordingStudioMessages.configuration.resolved_admin_notification_root
-        return ticket_root if admin_root.blank?
-        return ticket_root unless staff_recipient?(recipient, admin_root)
-
-        admin_root
+        NotificationFiling.root_for(group_recording: @group_recording, recipient: recipient)
       end
 
-      def staff_recipient?(recipient, admin_root)
-        return false unless defined?(RecordingStudioAccessible)
-        return false if recipient.blank?
-
-        RecordingStudioAccessible.authorized?(
-          actor: recipient,
-          recording: admin_root,
-          role: :view
-        )
-      end
-
-      def notification_copy(on_ticket_root:)
+      def notification_copy(include_line:)
         {
           title: notification_title,
-          body: on_ticket_root ? @body.to_s.truncate(120) : nil,
+          body: include_line ? @body.to_s.truncate(120) : nil,
           url: @url,
           metadata: {
             message_group_id: @group_recording.id,

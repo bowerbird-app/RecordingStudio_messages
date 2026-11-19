@@ -109,6 +109,17 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.36.0
+
+Messages `0.36.0` posts a reply to a new-message notice back into that conversation.
+
+1. Install Messages `0.36.0`. There is no Messages migration. The gemspec still accepts Notifications `>= 0.18.0`.
+2. Pin Notifications `v0.20.0`. Run `bin/rails generate recording_studio_notifications:migrations`, then `bin/rails db:migrate`.
+3. Opt `:message_received` into `:email` for the people who should get mail. The default stays in-app.
+4. The email gem handles inbound mail. Messages posts the body and file blobs it is given.
+
+On Notifications older than `0.20.0`, Messages does not register a reply handler and does not pass `thread_key:`. Sending stays as it was in `0.35.0`.
+
 ### Upgrading to 0.35.0
 
 Messages `0.35.0` can pass a signup source into Recording Studio Users `0.39.0` when a signed-out visitor creates an account through public contact.
@@ -755,9 +766,11 @@ Pass `recipients:` and `body:` to start a conversation with people. The actor ne
 
 `tagged_group_recordings(mount_recording:, tags:)` returns an unsorted relation of kept conversations on that mount. Every pair in the hash must match. `nil` and `{}` leave the tag filter off, so the relation is every kept conversation on the mount. The relation does not call Accessible. It is not an ACL. Pass a mount. A blank mount raises `ArgumentError`. A recording that is not a message mount raises `RecordingStudioMessages::Error`. Use this for counts, migrations, and the check before create. Use `viewable_group_recordings` for the message center. Call `.count`, `.exists?`, or `.to_a`. Trashed conversations are left out. Two processes can both read zero and both create. That race stays in the host.
 
-Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies with `:message_received`. On a `:members` mount that is every other direct grant. On an `:inherited` mount that is everyone with effective access of at least `:view`, including access inherited from the mount or root. The sender is left out. Inherited people still get no grant. An explicit `recipients:` list passed to the notifier replaces that set. The URL should open that same panel.
+Sending checks Accessible `:edit` on the conversation, writes a Message, stores files through Attachable, stamps `last_message_at`, upserts the sender's read cursor, and notifies with `:message_received`. On a `:members` mount that is every other direct grant. On an `:inherited` mount that is everyone with effective access of at least `:view`, including access inherited from the mount or root. The sender is left out. Inherited people still get no grant. An explicit `recipients:` list passed to the notifier replaces that set. The URL should open that same panel. Notices are filed after the send commits, so a rolled-back send does not notify anyone.
 
-`:message_received` stays root-scoped. By default every copy is filed under the conversation's root, so a ticket owner sees it when that workspace is selected. Staff who should see the same notice in the Admin inbox need a host opt-in:
+A reply to that notice is another message. When Notifications provides `register_reply_handler`, Messages registers one for `:message_received`. It reads `metadata["message_group_id"]` (a string key), requires the conversation to still be kept, and calls `send_message` as the recipient. `send_message` checks `:edit` again. Files on the reply are `ActiveStorage::Blob` records. A missing or trashed conversation is `rejected(:group_missing)`. A recipient without `:edit` is `rejected(:not_authorized)`. A blank body with no files is `rejected(:empty)`. The reply's own notices use `message_group_path` for that conversation, which does not need a request. Each notice stores `thread_key` as the conversation id when Notifications accepts it. `:email` is an available channel. The default stays `[:in_app]`. A host that registers `:message_received` first keeps its channel list. Messages does not read mail.
+
+`:message_received` stays root-scoped. A recipient who can view the conversation root is filed there, so that notice shows when that workspace is selected. A recipient who cannot view that root is filed on the conversation, so a reply to the notice is accepted. Staff who should see the same notice in the Admin inbox need a host opt-in:
 
 ```ruby
 RecordingStudioMessages.configure do |config|
@@ -767,9 +780,9 @@ RecordingStudioMessages.configure do |config|
 end
 ```
 
-Set `admin_notification_root` to an Admin root `Recording`, or a callable that returns one. Recipients with Accessible `:view` on that recording (the same staff check as operations metrics) get the notice filed there. Everyone else, including the ticket owner, stays on the conversation root. Tickets, mounts, and groups do not move. Leave it `nil` to keep today's filing. This gem does not add an Admin dependency. Support and hosts that already resolve the Admin root through `Api::Access.admin_root_recording` pass that recording in.
+Set `admin_notification_root` to an Admin root `Recording`, or a callable that returns one. Recipients with Accessible `:view` on that recording (the same staff check as operations metrics) get the notice filed there. Everyone else who can view the conversation root stays on that root. A recipient who cannot view the chosen root is filed on the conversation. Tickets, mounts, and groups do not move. Leave it `nil` and staff stay on the conversation root too. This gem does not add an Admin dependency. Hosts that already resolve an Admin root pass that recording in.
 
-Notifications requires `root_recording` to match the attached `recording` when both are set. Staff copies that file under Admin omit `recording` and the message text. They keep the URL plus `message_group_id` and `message_id` in metadata. The title stays the conversation name. Ticket-root copies still attach the message recording and include the truncated line.
+Notifications requires `root_recording` to match the attached `recording` when both are set. Staff copies that file under Admin omit `recording` and the message text. A copy filed on the conversation omits `recording` and still includes the truncated line. Both keep the URL plus `message_group_id` and `message_id` in metadata. The title stays the conversation name. Ticket-root copies still attach the message recording and include the truncated line.
 
 ## Inbox cards
 
@@ -1055,7 +1068,7 @@ The dummy proves two mounts at once:
 - `inbox` on the Site mailbox → Inbox (`/inbox`) lands on the conversation list (one row)
 
 The dummy mounts Recording Studio API at `/recording_studio_api`.
-Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.18.0` and mounts Site Settings (`v0.6.0`) and Terms and Conditions (`v0.22.0`). Publishable is on `v1.1.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.16.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.32.0` so public contact can use its code screen. Cache is `v0.7.0`. Recording Studio is on `v7.3.0`. The dummy sets `config.authorize_write` so a present actor may write, including a new root. Accessible is on `v0.45.1`. The dummy `admin_root_resolver` returns the Studio Workspace root so Accessible's page authorizer can allow an admin grant there. Attachable is on `v0.31.0` and needs Moveable `v6.0.0`. Recording Studio API is on `v1.2.1`. The dummy registers `RecordingStudioApi::AdminApi` only when `admin_root_recordable_type_names` is present, which is what core 7.3 requires before that class declares. Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without a recordable type, so the dummy opts those callers out and leaves the Messages endpoints scoped. Notifications is on `v0.19.1`. Metrics is on `v0.9.0`. Logs is on `v0.8.0` because Admin loads it. Icons is on `v0.4.0`. Trashable is on `v1.0.1` and registers the kept filter. The dummy schema has `purge_at` and `recording_studio_events.root_recording_id`. Kept queries use `Recording.kept` and `RecordingStudio.kept_sql`. Internationalization is on `v0.3.0` and is dummy-only. Flatpack is on `v0.1.377`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 7.0, < 8.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`. Terms registers `Section` and `Clause`, and Terms documents live under the shared `Library` root. Seeds create roots with `create_root_recording!`. The table is the dummy lock. The root Gemfile stays on the previous tags.
+Home also has a Contact button to that inbox's public form, and an Admin button. Admin is on `v2.18.0` and mounts Site Settings (`v0.6.0`) and Terms and Conditions (`v0.22.0`). Publishable is on `v1.1.0` and serves public `/terms/:uuid/:slug` and `/privacy/:uuid/:slug`. Root Switchable is on `v0.16.0` and uses the Recording Studio default layout. The switch page needs Accessible `:view` on the current root. Users is on `v0.32.0` so public contact can use its code screen. Cache is `v0.7.0`. Recording Studio is on `v7.3.0`. The dummy sets `config.authorize_write` so a present actor may write, including a new root. Accessible is on `v0.45.1`. The dummy `admin_root_resolver` returns the Studio Workspace root so Accessible's page authorizer can allow an admin grant there. Attachable is on `v0.31.0` and needs Moveable `v6.0.0`. Recording Studio API is on `v1.2.1`. The dummy registers `RecordingStudioApi::AdminApi` only when `admin_root_recordable_type_names` is present, which is what core 7.3 requires before that class declares. Notifications through `0.19` and Users through `0.31` still register `:id` endpoints without a recordable type, so the dummy opts those callers out and leaves the Messages endpoints scoped. Notifications is on `v0.20.0`. Metrics is on `v0.9.0`. Logs is on `v0.8.0` because Admin loads it. Icons is on `v0.4.0`. Trashable is on `v1.0.1` and registers the kept filter. The dummy schema has `purge_at` and `recording_studio_events.root_recording_id`. Kept queries use `Recording.kept` and `RecordingStudio.kept_sql`. Internationalization is on `v0.3.0` and is dummy-only. Flatpack is on `v0.1.377`. `view_component` is `4.19.0`. The messages gemspec requires `recording_studio >= 7.0, < 8.0`, `flat_pack >= 0.1.349`, `recording_studio_accessible >= 0.44.0, < 1.0`, `recording_studio_attachable >= 0.28.0, < 1.0`, `recording_studio_metrics >= 0.9.0, < 1.0`, and `recording_studio_notifications >= 0.18.0, < 1`. Terms registers `Section` and `Clause`, and Terms documents live under the shared `Library` root. Seeds create roots with `create_root_recording!`. The table is the dummy lock. The root Gemfile stays on the previous tags.
 
 Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the mailbox, Ada Staff, Casey Patron, the Relay agent, lines in each message center, and a hero-still attachment on the inbox. An empty conversation stays on the support mount so `+ Access` can be shown when opened by URL.
 
@@ -1064,7 +1077,7 @@ Seeds add **Studio help** and **Launch notes** on support, **Site inbox** on the
 | `recording_studio` | `>= 7.0, < 8.0` | `v7.3.0` | `7.3.0` |
 | `recording_studio_accessible` | `>= 0.44.0, < 1.0` | `v0.45.1` | `0.45.1` |
 | `recording_studio_attachable` | `>= 0.28.0, < 1.0` | `v0.31.0` | `0.31.0` |
-| `recording_studio_notifications` | `>= 0.18.0, < 1` | `v0.19.1` | `0.19.1` |
+| `recording_studio_notifications` | `>= 0.18.0, < 1` | `v0.20.0` | `0.20.0` |
 | `recording_studio_metrics` | `>= 0.9.0, < 1.0` | `v0.9.0` | `0.9.0` |
 | `flat_pack` (repo `bowerbird-app/flatpack`) | `>= 0.1.349` | `v0.1.377` | `0.1.377` |
 | `view_component` | `4.19.0` | | `4.19.0` |
@@ -1092,7 +1105,7 @@ Conversation titles, message bodies, attachment names, and notification titles w
 
 ## Out of this version
 
-Realtime, typing, read receipts, email as a notice channel, and Support-specific copy. The dummy host mounts Admin for Site Settings and Terms. Messages itself does not ship an admin screen.
+Realtime, typing, and Support-specific copy. Email is an available channel on `:message_received`. Hosts opt in. The default stays in-app. The dummy host mounts Admin for Site Settings and Terms. Messages itself does not ship an admin screen.
 
 ## Documentation
 
