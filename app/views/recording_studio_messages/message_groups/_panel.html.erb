@@ -5,17 +5,18 @@
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 <% membership_open = !RecordingStudioMessages.membership_locked_for_group?(group_recording) %>
 <% inbox = local_assigns[:inbox] %>
+<% plain = local_assigns[:plain] %>
 <% hook_mount = group_recording.parent_recording %>
-<% right_header = messages_panel_right_header(group_recording, actor: current_actor, mount: hook_mount) %>
-<% right_header_mobile = messages_panel_right_header_mobile(group_recording, actor: current_actor, mount: hook_mount) %>
-<% panel_after = messages_panel_after(group_recording, actor: current_actor, mount: hook_mount) %>
+<% right_header = plain ? nil : messages_panel_right_header(group_recording, actor: current_actor, mount: hook_mount) %>
+<% right_header_mobile = plain ? nil : messages_panel_right_header_mobile(group_recording, actor: current_actor, mount: hook_mount) %>
+<% panel_after = plain ? nil : messages_panel_after(group_recording, actor: current_actor, mount: hook_mount) %>
 
 <%= render FlatPack::Chat::Panel::Component.new(class: "flat-pack--chat-panel") do |panel| %>
   <% panel.header do %>
     <%= render FlatPack::Chat::Header::Component.new(
       title: messages_panel_header_title(group_recording, actor: current_actor, inbox: inbox)
     ) do |header| %>
-      <% if membership_open %>
+      <% if membership_open && local_assigns.fetch(:show_people, true) %>
         <% header.right do %>
           <%= recording_studio_accessible_avatars(group_recording, button_style: :ghost) %>
         <% end %>
@@ -52,6 +53,7 @@
                form_url: form_url,
                return_to: return_to,
                mount: hook_mount,
-               actor: current_actor %>
+               actor: current_actor,
+               include_actions: !plain %>
   <% end %>
 <% end %><% if panel_after.present? %><%= panel_after %><% end %>

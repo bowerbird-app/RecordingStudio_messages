@@ -19,18 +19,19 @@ module RecordingStudioMessages
       def call
         recipients = other_granted_actors
         return if recipients.empty?
+        return file_by_root(recipients) unless RecordingStudioMessages.personal_notices_supported?
 
-        recipients.group_by { |recipient| notification_root_for(recipient) }.each do |root_recording, batch|
-          RecordingStudioNotifications.notify_each(
-            **notification_attributes(batch, root_recording: root_recording)
-          )
-        end
+        staff, others = divide_staff(recipients)
+        file_workspace(staff, admin_root) if staff.any?
+        members, guests = MessageNotice.partition(others, root: ticket_root)
+        file_workspace(members, ticket_root) if members.any?
+        file_personal(guests) if guests.any?
       end
 
       private
 
       def other_granted_actors
-        notify_candidates.reject { |recipient| same_actor?(recipient, @actor) }
+        notify_candidates.reject { |recipient| MessageNotice.same?(recipient, @actor) }
       end
 
       def notify_candidates
@@ -54,67 +55,67 @@ module RecordingStudioMessages
         ).filter_map(&:actor).uniq
       end
 
-      def notification_attributes(recipients, root_recording:)
-        on_ticket_root = same_root?(root_recording, ticket_root)
-        attributes = {
+      def file_by_root(recipients)
+        recipients.group_by { |recipient| notification_root_for(recipient) }.each do |root_recording, batch|
+          file_workspace(batch, root_recording)
+        end
+      end
+
+      def divide_staff(recipients)
+        return [[], recipients] if admin_root.blank?
+
+        recipients.partition { |recipient| staff_recipient?(recipient, admin_root) }
+      end
+
+      def file_workspace(recipients, root_recording)
+        MessageNotice.workspace(
+          **notice_context,
+          url: @url,
           recipients: recipients,
-          notification_type: :message_received,
+          root_recording: root_recording,
+          ticket_root: ticket_root
+        )
+      end
+
+      def file_personal(recipients)
+        MessageNotice.personal(**notice_context, recipients: recipients)
+      end
+
+      def notice_context
+        {
+          group_recording: @group_recording,
+          message_recording: @message_recording,
           actor: @actor,
-          root_recording: root_recording
-        }.merge(notification_copy(on_ticket_root: on_ticket_root))
-        attributes[:recording] = @group_recording if on_ticket_root && RecordingStudioMessages.recording_supported?
-        attributes[:thread_key] = @group_recording.id.to_s if RecordingStudioMessages.thread_key_supported?
-        attributes
+          body: @body
+        }
       end
 
       def ticket_root
         @ticket_root ||= @group_recording.root_recording || @group_recording
       end
 
-      def same_root?(left, right)
-        left.present? && right.present? && left.instance_of?(right.class) && left.id.to_s == right.id.to_s
+      def admin_root
+        return @admin_root if defined?(@admin_root)
+
+        @admin_root = RecordingStudioMessages.configuration.resolved_admin_notification_root
       end
 
       def notification_root_for(recipient)
-        admin_root = RecordingStudioMessages.configuration.resolved_admin_notification_root
         return ticket_root if admin_root.blank?
         return ticket_root unless staff_recipient?(recipient, admin_root)
 
         admin_root
       end
 
-      def staff_recipient?(recipient, admin_root)
+      def staff_recipient?(recipient, root)
         return false unless defined?(RecordingStudioAccessible)
         return false if recipient.blank?
 
         RecordingStudioAccessible.authorized?(
           actor: recipient,
-          recording: admin_root,
+          recording: root,
           role: :view
         )
-      end
-
-      def notification_copy(on_ticket_root:)
-        {
-          title: notification_title,
-          body: on_ticket_root ? @body.to_s.truncate(120) : nil,
-          url: @url,
-          metadata: {
-            message_group_id: @group_recording.id,
-            message_id: @message_recording.id
-          }
-        }
-      end
-
-      def notification_title
-        title = @group_recording.recordable&.title
-        return "New message" if title.blank?
-
-        "New message in #{title}"
-      end
-
-      def same_actor?(left, right)
-        left.instance_of?(right.class) && left.id.to_s == right.id.to_s
       end
     end
   end

@@ -8,6 +8,7 @@ RecordingStudioMessages::Engine.routes.draw do
   end
 
   resources :my_messages, only: %i[index show]
+  resources :guest_conversations, only: [:show]
 
   get "/public_contact", to: "public_contacts#show", as: :public_contact
   post "/public_contact", to: "public_contacts#create"

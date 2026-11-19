@@ -3,7 +3,8 @@
 <% return_to = local_assigns[:return_to].presence || messages_panel_return_to %>
 <% mount = local_assigns[:mount] || group_recording.parent_recording %>
 <% actor = local_assigns[:actor] || (current_messages_actor if respond_to?(:current_messages_actor, true)) %>
-<% composer_actions = messages_composer_actions(group_recording, actor: actor, mount: mount) %>
+<% include_actions = local_assigns.fetch(:include_actions, true) %>
+<% composer_actions = include_actions ? messages_composer_actions(group_recording, actor: actor, mount: mount) : [] %>
 
 <%= form_with url: form_url,
               method: :post,

@@ -159,10 +159,17 @@ module RecordingStudioMessages
 
         RecordingStudioNotifications::Notification
           .for_recipient(@actor)
-          .of_type(RecordingStudioMessages::MESSAGE_RECEIVED_TYPE)
+          .where(notification_type: notice_types)
           .unread
           .where("metadata->>'message_group_id' = ?", group_recording.id.to_s)
           .update_all(read_at: at)
+      end
+
+      def notice_types
+        [
+          RecordingStudioMessages::MESSAGE_RECEIVED_TYPE,
+          RecordingStudioMessages::MESSAGE_RECEIVED_PERSONAL_TYPE
+        ].map(&:to_s)
       end
 
       def backfill_grant_scope

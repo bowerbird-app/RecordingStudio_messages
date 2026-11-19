@@ -33,6 +33,7 @@ require "recording_studio_messages/services/live_recording"
 require "recording_studio_messages/services/recording_subtree"
 require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
+require "recording_studio_messages/services/message_notice"
 require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/services/inbound_reply"
 require "recording_studio_messages/composer_action"
@@ -52,6 +53,7 @@ module RecordingStudioMessages
   MESSAGE_GROUP_TYPE = "RecordingStudioMessages::MessageGroup"
   MESSAGE_TYPE = "RecordingStudioMessages::Message"
   MESSAGE_RECEIVED_TYPE = :message_received
+  MESSAGE_RECEIVED_PERSONAL_TYPE = :message_received_personal
 
   class << self
     def configuration
@@ -178,6 +180,7 @@ module RecordingStudioMessages
     def register_integration!
       register_messages_capability!
       register_message_received_type!
+      register_message_received_personal_type!
       register_message_received_reply_handler!
       MembershipLock.install_authorizer_wrap!
     end
@@ -235,13 +238,47 @@ module RecordingStudioMessages
       )
     end
 
+    def register_message_received_personal_type!
+      return unless personal_notices_supported?
+
+      RecordingStudioNotifications.register_notification_type(
+        MESSAGE_RECEIVED_PERSONAL_TYPE,
+        **personal_type_options
+      )
+    end
+
     def register_message_received_reply_handler!
+      register_message_received_personal_type!
       return unless RecordingStudioNotifications.respond_to?(:register_reply_handler)
 
-      RecordingStudioNotifications.register_reply_handler(MESSAGE_RECEIVED_TYPE) do |notification:, recipient:, body:,
-                                                                                      attachments:|
+      handler = lambda { |notification:, recipient:, body:, attachments:|
         Services::InboundReply.call(notification:, recipient:, body:, attachments:)
-      end
+      }
+      RecordingStudioNotifications.register_reply_handler(MESSAGE_RECEIVED_TYPE, &handler)
+      return unless personal_notices_supported?
+
+      RecordingStudioNotifications.register_reply_handler(MESSAGE_RECEIVED_PERSONAL_TYPE, &handler)
+    end
+
+    def personal_notices_supported?
+      return false unless defined?(RecordingStudioAccessible)
+
+      authorization = RecordingStudioNotifications::Services::NotificationAuthorization
+      authorization.respond_to?(:visible_for_reply?)
+    rescue NameError
+      false
+    end
+
+    def email_channel_registered?
+      return false unless RecordingStudioNotifications.respond_to?(:channels)
+
+      RecordingStudioNotifications.channels.registered?(:email)
+    rescue StandardError
+      false
+    end
+
+    def personal_default_channels
+      email_channel_registered? ? %i[in_app email] : [:in_app]
     end
 
     def thread_key_supported?
@@ -274,6 +311,18 @@ module RecordingStudioMessages
         default_channels: [:in_app],
         available_channels: %i[in_app email],
         scope: :root
+      }
+    end
+
+    def personal_type_options
+      {
+        label: "Your messages",
+        description: "A new message in a conversation you're in.",
+        icon: :chat_bubble_left,
+        category: :general,
+        default_channels: personal_default_channels,
+        available_channels: %i[in_app email],
+        scope: :global
       }
     end
   end
