@@ -2,76 +2,13 @@
 
 module RecordingStudioMessages
   class InboxCard < ViewComponent::Base
+    extend InboxCardRegistration
+
     WIDGET_ID = :messages_inbox
 
-    def self.prepare(context, config)
-      source = Services::InboxCard.build(**options_from(context, config))
-      return ::RecordingStudioDashboard::Preparation.empty unless source.visible?
-
-      ::RecordingStudioDashboard::Preparation.content(source)
-    end
-
-    def self.register_dashboard_widget!
-      return unless defined?(::RecordingStudioDashboard)
-      return if dashboard_widget_registered?
-
-      ::RecordingStudioDashboard.register_widget(
-        WIDGET_ID,
-        component: self,
-        default_span: 6,
-        supported_spans: [6, 12],
-        options: %i[title mine mount limit],
-        empty: :hide
-      )
-    end
-
-    def self.options_from(context, config)
-      options = config.to_h.transform_keys(&:to_sym)
-      {
-        actor: actor_from(context),
-        title: options[:title],
-        mine: options[:mine] == true,
-        mount: resolve_mount(options[:mount], context),
-        limit: options.fetch(:limit, Services::InboxCard::PREVIEW_LIMIT)
-      }
-    end
-
-    def self.actor_from(context)
-      return if context.nil?
-      return context.actor if context.respond_to?(:actor)
-
-      context
-    end
-
-    def self.resolve_mount(mount, context)
-      return if mount.nil?
-      return mount.call(context) if mount.is_a?(Proc)
-
-      mount
-    end
-
-    def self.dashboard_widget_registered?
-      ::RecordingStudioDashboard.registry.widget(WIDGET_ID)
-      true
-    rescue KeyError
-      false
-    end
-
-    private_class_method :options_from, :actor_from, :resolve_mount, :dashboard_widget_registered?
-
-    def initialize(actor: nil, title: nil, mine: false, mount: nil, limit: Services::InboxCard::PREVIEW_LIMIT,
-                   context: nil, config: nil, preparation: nil)
-      @source = if preparation
-        preparation.data
-      else
-        Services::InboxCard.build(
-          actor: actor,
-          title: title,
-          mine: mine,
-          mount: mount,
-          limit: limit
-        )
-      end
+    def initialize(actor: nil, title: nil, mine: false, mount: nil,
+                   limit: Services::InboxCard::PREVIEW_LIMIT, preparation: nil, **_dashboard)
+      @source = card_source(preparation, actor:, title:, mine:, mount:, limit:)
       super()
     end
 
@@ -92,6 +29,12 @@ module RecordingStudioMessages
     end
 
     private
+
+    def card_source(preparation, actor:, title:, mine:, mount:, limit:)
+      return preparation.data if preparation
+
+      Services::InboxCard.build(actor:, title:, mine:, mount:, limit:)
+    end
 
     def card_data
       { inbox_card: @source.mine? ? "mine" : "mount" }
