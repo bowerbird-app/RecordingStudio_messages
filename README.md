@@ -113,8 +113,8 @@ The dummy staff message center proves the + item, a lazy picker with **Find a pa
 
 Messages `0.35.0` can pass a signup source into Recording Studio Users `0.39.0` when a signed-out visitor creates an account through public contact.
 
-1. Install Messages `0.35.0`. There is no Messages migration. Users stays out of the gemspec. Pin `recording_studio_user` `0.39.0` or newer where public contact signs people up. `complete_email_proof!` is called with `session:`. Older Users does not take that keyword.
-2. Pass `source:` on `public_contact_form`, `public_contact_modal`, or `begin_public_contact`. Omit it and the request matches `0.34.0`. A new signup still emits `registration.completed` with `method: :otp`.
+1. Install Messages `0.35.0`. There is no Messages migration. Users stays out of the gemspec. Public contact keeps working on the Users you already run. Pin `recording_studio_user` `0.39.0` or newer only when you want the signup source and the `registration.completed` event.
+2. Pass `source:` on `public_contact_form`, `public_contact_modal`, or `begin_public_contact`. Omit it and the request matches `0.34.0`. On Users `0.39.0` a new signup still emits `registration.completed` with `method: :otp`.
 3. The code step no longer shows a terms checkbox. Users `0.36` collects signup consent through `signup_notice_partials` and `after_registration`. A new address can finish the code and send without ticking a box. This gem does not record that acceptance.
 4. A resend in the first minute after the code is sent now waits. Users shares one account cooldown between send and resend.
 
@@ -847,7 +847,7 @@ Include `RecordingStudioMessages::PublicContactHelper` on the host controller th
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 
-Signed-out contact needs Recording Studio Users 0.39.0. Users is not a dependency of this gem. Pin `recording_studio_user` 0.39.0 or newer in the host Gemfile. Mount Users, turn on `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`, and register the notification channels those codes use. New-address public contact sends a code only when OTP registration is on. An existing confirmed account sends a code only when OTP login is on. When registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created and nothing crashes.
+Signed-out contact needs Recording Studio Users with email codes. Users is not a dependency of this gem. Mount Users, turn on `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`, and register the notification channels those codes use. Pin `recording_studio_user` 0.39.0 or newer only when a new signup should carry `source:` onto `registration.completed`. Older Users is called without `source:` and without `session:`, the same as 0.34.0. New-address public contact sends a code only when OTP registration is on. An existing confirmed account sends a code only when OTP login is on. When registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created and nothing crashes.
 
 A signed-out send collects the address here, then Users sends the code. A new email is an OTP registration. Users creates an unconfirmed account when the code is sent and finishes it when the code verifies, and the person is signed in. The code box does not show a terms checkbox. Signup consent belongs on Users `signup_notice_partials` and `after_registration`. This gem does not record that acceptance. An existing unconfirmed OTP account is reused and gets a registration code. An existing confirmed account that can sign in gets a login code, then the person is signed in. An unconfirmed password account is refused with "Confirm that email, then try again." This gem does not confirm that account and does not send a code. This gem does not create a second user for an address that already exists.
 
@@ -878,7 +878,7 @@ end
 group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: verified_user, session: session)
 ```
 
-`complete_public_contact` is the host call after `verify_otp!` has consumed the code. Pass the same `session:` the code was issued with so a new signup emits `registration.completed` with `method: :otp` and, when `source:` was set, that hash. Calling it again returns the same conversation and does not send a second message. The public pages do not call `submit_code!` or `resend!`. Those methods are gone. Resend is the button on the Users code screen.
+`complete_public_contact` is the host call after `verify_otp!` has consumed the code. Pass the same `session:` the code was issued with. On Users 0.39.0 that session makes a new signup emit `registration.completed` with `method: :otp` and, when `source:` was set, that hash. An older Users is called without `session:`. Calling it again returns the same conversation and does not send a second message. The public pages do not call `submit_code!` or `resend!`. Those methods are gone. Resend is the button on the Users code screen.
 
 `begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation.
 
