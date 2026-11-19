@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-11-19
+
+A person who can open one conversation, and cannot view its workspace, gets a personal new-message notice they can see and open.
+
+### Added
+
+- `:message_received_personal` is a global notification. It is stored with no root, so it shows in that person's inbox and menu on every workspace. Messages registers it only when Notifications can accept a reply from someone who can view the conversation and not the workspace (`NotificationAuthorization.visible_for_reply?`, Notifications 0.21.1).
+- On that Notifications release, fan-out asks Accessible once which recipients can `:view` the workspace root. People who can, and staff filed on `admin_notification_root`, keep `:message_received` exactly as in 0.36.0. Everyone else gets the personal notice.
+- The personal notice uses the same thread and the same reply handler. Its link opens `GET /guest_conversations/:id`, a conversation page authorised on that conversation. The page has no workspace navigation, no people list, and no host panel hooks.
+- In-app is always available. Email is available too, and it is on by default only when an email channel is registered with Notifications. Otherwise the default is in-app.
+- Opening the conversation marks both notice types read.
+
+### Upgrade notes
+
+Bump to **0.38.0**. There is no Messages migration. The gemspec still accepts Notifications `>= 0.18.0`. 0.37.0 already shipped the Recording Studio 7.8 and Flatpack 0.2 pin bump.
+
+Guests have their own notification settings for **Your messages** (`:message_received_personal`). Changing `:message_received` does not change that type, and registering `:message_received` again does not remove its reply handler.
+
+On Notifications older than 0.21.1, every recipient still gets `:message_received` under the workspace root, the same as 0.36.0. Email for the personal type turns on only after the host registers an email channel. Members and admin-root staff are unchanged.
+
 ## [0.37.0] - 2026-11-19
 
 Development and dummy pins move to Recording Studio 7.8, Flatpack 0.2, and the current L0–L4 Recording Studio gems. Gemspec floors stay the same.
