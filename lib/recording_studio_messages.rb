@@ -184,12 +184,15 @@ module RecordingStudioMessages
       PublicContact.enabled?(mount_recording)
     end
 
-    def begin_public_contact(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil)
-      PublicContact.begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags:)
+    def begin_public_contact(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil,
+                             source: nil)
+      PublicContact.begin(
+        mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags:, source:
+      )
     end
 
-    def complete_public_contact(intent:, actor:)
-      PublicContact.complete(intent: intent, actor: actor)
+    def complete_public_contact(intent:, actor:, session: nil)
+      PublicContact.complete(intent: intent, actor: actor, session: session)
     end
 
     def membership_locked?(mount_recording)

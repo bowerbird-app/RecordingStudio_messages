@@ -45,11 +45,16 @@ module RecordingStudioMessages
     end
 
     def sent_presentation_params
-      presentation_params.except(PublicContact::TagToken::PARAM, PublicContact::TagToken::PARAM.to_s)
+      presentation_params.except(
+        PublicContact::TagToken::PARAM,
+        PublicContact::TagToken::PARAM.to_s,
+        PublicContact::SourceToken::PARAM,
+        PublicContact::SourceToken::PARAM.to_s
+      )
     end
 
     def presentation_params
-      extra = tag_token_query
+      extra = tag_token_query.merge(source_token_query)
       return extra unless modal_presentation?
 
       { presentation: PublicContactHelper::MODAL }.merge(

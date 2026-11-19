@@ -109,6 +109,19 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.35.0
+
+Messages `0.35.0` can pass a signup source into Recording Studio Users `0.39.0` when a signed-out visitor creates an account through public contact.
+
+1. Install Messages `0.35.0`. There is no Messages migration. Users stays out of the gemspec. Public contact keeps working on the Users you already run. Pin `recording_studio_user` `0.39.0` or newer only when you want the signup source and the `registration.completed` event.
+2. Pass `source:` on `public_contact_form`, `public_contact_modal`, or `begin_public_contact`. Omit it and the request matches `0.34.0`. On Users `0.39.0` a new signup still emits `registration.completed` with `method: :otp`.
+3. The code step no longer shows a terms checkbox. Users `0.36` collects signup consent through `signup_notice_partials` and `after_registration`. A new address can finish the code and send without ticking a box. This gem does not record that acceptance.
+4. A resend in the first minute after the code is sent now waits. Users shares one account cooldown between send and resend.
+
+```erb
+<%= public_contact_form(mount, source: { campaign: "spring" }) %>
+```
+
 ### Upgrading to 0.33.0
 
 Messages `0.33.0` does not register API endpoints. The host places each surface, and Messages keeps the handlers, the access checks, and the response shape.
@@ -812,17 +825,21 @@ The gem page is `recording_studio_messages.public_contact_path(mount_id: mount.i
 <%= public_contact_form(mount) %>
 <%= public_contact_form(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
 <%= public_contact_form(mount, tags: { "press_center" => press_center }) %>
+<%= public_contact_form(mount, source: { campaign: "spring" }) %>
 ```
 
-`public_contact_modal` keeps the contact steps in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose and "Message sent" replace that frame. The code step draws `RecordingStudioUser::OtpCodeForm` in the same frame. The heading "Verify it's you" sits in the box. On the code step and on "Message sent" the Contact title is hidden, so the box heading is the only one. That box shows the masked email, a code field, Continue, and Resend. When live signup terms are pending, a new address also sees the terms checkbox. An existing account does not. Resend and a wrong code stay inside Users' frame. A right code signs the person in. The modal asks that box for an HTML response so Turbo swaps the frame and the Users script can run. The modal copies `csrf_token` from `recording_studio_user:signed_in` onto the finish POST, then posts back into `public_contact`. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows the code box while the pending note is still open, and does not send a second code. After "Message sent", opening it again starts a new note. An expired pending note stays in the dialog with "Send it again".
+`public_contact_modal` keeps the contact steps in a dialog on the host page. The button opens a Flatpack modal. The body is a Turbo Frame, `public_contact`, loaded from the same URL with `presentation=modal`. Compose and "Message sent" replace that frame. The code step draws `RecordingStudioUser::OtpCodeForm` in the same frame. The heading "Verify it's you" sits in the box. On the code step and on "Message sent" the Contact title is hidden, so the box heading is the only one. That box shows the masked email, a code field, Continue, and Resend. It does not show a terms checkbox. Resend and a wrong code stay inside Users' frame. A right code signs the person in. The modal asks that box for an HTML response so Turbo swaps the frame and the Users script can run. The modal copies `csrf_token` from `recording_studio_user:signed_in` onto the finish POST, then posts back into `public_contact`. The dialog stays open. A signed-in person still skips the code. That same single button leaves the dialog. Closing during the code step does not send another code. Opening the dialog again shows the code box while the pending note is still open, and does not send a second code. After "Message sent", opening it again starts a new note. An expired pending note stays in the dialog with "Send it again".
 
 ```erb
 <%= public_contact_modal(mount) %>
 <%= public_contact_modal(mount, title: "Contact", introduction: "We reply by email.", submit_label: "Send message") %>
 <%= public_contact_modal(mount, tags: { "press_center" => press_center }) %>
+<%= public_contact_modal(mount, source: { campaign: "spring" }) %>
 ```
 
 `tags:` is the same hash as `begin_public_contact` and `create_group`. A key is a string. A value is any recording. Messages does not know kits. The helper signs the ids into `tag_token` with Rails `MessageVerifier`, a purpose, and a 24-hour expiry. The modal src carries that token as a query param. The form keeps it in a hidden field. Restart keeps it too. The public contact controller verifies the token before `PublicContact.begin`. A tampered or expired token is rejected. Each tagged recording must be live and inside the subtree of the mount's parent recording. That check walks `parent_recording_id` in batches. It does not use recursive SQL. A rejected token does not create a conversation. The visitor sees "We couldn't send that message. Start a new one." Tags never grant access. Omit `tags:` and nothing in the request changes.
+
+`source:` is an optional flat hash for a new signup. The helper signs it into `source_token` with its own purpose and the same 24-hour expiry, bound to the mount id. The modal URL, the hidden field, and restart keep it. A cached page can still post the token. The controller verifies it before `begin`. A tampered token, an expired token, or a token for another mount is rejected the same way as a bad `tag_token`. Messages does not read the hash. Users checks the keys and values when a new address gets a code. A signed-in person and an existing confirmed account do not send the source. Omit `source:` and the form matches 0.34.0.
 
 One dialog per page. A normal visit to `public_contact_path`, including `presentation=modal` without the frame header, still uses the centered page. The page posts are full document posts. Coming back to the host page does not restore an open dialog.
 
@@ -830,9 +847,9 @@ Include `RecordingStudioMessages::PublicContactHelper` on the host controller th
 
 Signed-in `begin_public_contact` skips OTP, ignores the submitted email and name, and returns the conversation. The title is `actor.name` when present, otherwise the titleized email local-part, otherwise "Message".
 
-Signed-out contact needs Recording Studio Users 0.28.1. Users is not a dependency of this gem. Pin `recording_studio_user`, `~> 0.28.1`, in the host Gemfile. Mount Users, turn on `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`, and register the notification channels those codes use. New-address public contact sends a code only when OTP registration is on. An existing confirmed account sends a code only when OTP login is on. When registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created and nothing crashes.
+Signed-out contact needs Recording Studio Users with email codes. Users is not a dependency of this gem. Mount Users, turn on `otp_enabled`, `otp_login_enabled`, and `otp_registration_enabled`, and register the notification channels those codes use. Pin `recording_studio_user` 0.39.0 or newer only when a new signup should carry `source:` onto `registration.completed`. Older Users is called without `source:` and without `session:`, the same as 0.34.0. New-address public contact sends a code only when OTP registration is on. An existing confirmed account sends a code only when OTP login is on. When registration is off, a new address is refused with "Public contact needs Recording Studio Users email codes." No account is created and nothing crashes.
 
-A signed-out send collects the address here, then Users sends the code. A new email is an OTP registration. Users creates an unconfirmed account when the code is sent and finishes it when the code verifies, and the person is signed in. When live signup terms are pending, the modal code box shows a terms checkbox. Unticked, verify does not finish the account, sign the person in, or send the message. Ticked, Users records acceptance with source `checkbox`. An existing unconfirmed OTP account is reused and gets a registration code. An existing confirmed account that can sign in gets a login code, then the person is signed in. An unconfirmed password account is refused with "Confirm that email, then try again." This gem does not confirm that account and does not send a code. This gem does not create a second user for an address that already exists.
+A signed-out send collects the address here, then Users sends the code. A new email is an OTP registration. Users creates an unconfirmed account when the code is sent and finishes it when the code verifies, and the person is signed in. The code box does not show a terms checkbox. Signup consent belongs on Users `signup_notice_partials` and `after_registration`. This gem does not record that acceptance. An existing unconfirmed OTP account is reused and gets a registration code. An existing confirmed account that can sign in gets a login code, then the person is signed in. An unconfirmed password account is refused with "Confirm that email, then try again." This gem does not confirm that account and does not send a code. This gem does not create a second user for an address that already exists.
 
 Signed-out `begin_public_contact` requires `request:`. Users stores the code on that request's session.
 
@@ -848,7 +865,8 @@ outcome = RecordingStudioMessages.begin_public_contact(
   body: "The quieter crop is in.",
   current_actor: current_actor,
   request: request,
-  session: session
+  session: session,
+  source: { campaign: "spring" }
 )
 
 if outcome.awaiting_verification?
@@ -857,10 +875,10 @@ else
   group = outcome.group_recording
 end
 
-group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: verified_user)
+group = RecordingStudioMessages.complete_public_contact(intent: intent, actor: verified_user, session: session)
 ```
 
-`complete_public_contact` is the host call after `verify_otp!` has consumed the code. Calling it again returns the same conversation and does not send a second message. The public pages do not call `submit_code!` or `resend!`. Those methods are gone. Resend is the button on the Users code screen.
+`complete_public_contact` is the host call after `verify_otp!` has consumed the code. Pass the same `session:` the code was issued with. On Users 0.39.0 that session makes a new signup emit `registration.completed` with `method: :otp` and, when `source:` was set, that hash. An older Users is called without `session:`. Calling it again returns the same conversation and does not send a second message. The public pages do not call `submit_code!` or `resend!`. Those methods are gone. Resend is the button on the Users code screen.
 
 `begin_public_contact` accepts `tags:`. Signed in, it tags the new conversation and passes the hash to the resolver. Signed out, it stores the tagged recording ids on the pending intent. `complete_public_contact` reads those ids, tags the new conversation, and passes that hash to the resolver. The complete call has no `tags:` argument. Calling it again returns the same conversation.
 

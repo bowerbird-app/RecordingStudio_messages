@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-11-19
+
+Public contact can pass a signup source through to Recording Studio Users.
+
+### Added
+
+- `public_contact_form`, `public_contact_modal`, and `begin_public_contact` take optional `source:`. It is a flat hash. Messages signs it into `source_token` (own purpose, 24-hour expiry, bound to the mount). The form, the modal URL, and restart keep that token.
+- A new address that signs up through public contact passes the hash to `start_otp_challenge!` when that method accepts `source:`. `complete_public_contact` and the return POST pass `session:` into `complete_email_proof!` when that method accepts `session:`. On Users 0.39.0, `registration.completed.recording_studio_user` then includes `source:` for `method: :otp`, and `after_registration` hooks that declare `source:` receive it.
+- Omit `source:` and the request matches 0.34.0. On Users 0.39.0 a new signup still emits `registration.completed` with `method: :otp` and no `source` key. An older Users keeps the 0.34.0 calls, with neither keyword.
+
+### Changed
+
+- On Users 0.36 and newer, the code step has no terms checkbox. Consent belongs on `signup_notice_partials` and `after_registration`. This gem does not record that acceptance. An older Users keeps its own code step.
+- On Users that share one account cooldown between send and resend, a resend in that window waits. An older Users keeps its own resend timing.
+
+### Upgrade notes
+
+No migration. Bump to **0.35.0**. Users stays out of the gemspec. The development Gemfile pins Recording Studio `v7.3.0`, API `v1.2.1`, and Attachable `v0.31.0` so Users 0.39.0 resolves. The gemspec floors are unchanged.
+
+Users **0.39.0** is needed only to get the signup source and the `registration.completed` event. Public contact keeps working on an older Users. Messages passes `source:` and `session:` only when the loaded Users method accepts that keyword. A method that forwards with `...` is treated as 0.39.0 or newer when that is the loaded gem version. Hosts already on Users 0.39 have the sign-in lock and sign-in link tables from Users 0.34 and 0.35. The dummy app copies those tables so it boots on that pin. This gem adds no table of its own.
+
+The code step no longer includes the terms checkbox from 0.24.1. Put signup consent on Users `signup_notice_partials` and record acceptance from `after_registration` if the host still needs it. A resend inside `otp_resend_cooldown` (60 seconds by default) now waits, because Users counts the send and the resend on one account cooldown.
+
+Pass `source:` from the helper or from `begin_public_contact`. Messages does not read the hash. Users checks the keys and values when the code is sent. A tampered token, an expired token, or a token minted for another mount is rejected. No conversation is written. A signed-in person and an existing confirmed account do not send the source.
+
+Hosts that call `complete_public_contact` themselves should pass the same `session:` the code was issued with.
+
+```erb
+<%= public_contact_form(mount, source: { campaign: "spring" }) %>
+```
+
+```ruby
+RecordingStudioMessages.begin_public_contact(
+  mount_recording: mount,
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+  body: "The quieter crop is in.",
+  current_actor: nil,
+  request: request,
+  session: session,
+  source: { campaign: "spring" }
+)
+```
+
 ## [0.34.0] - 2026-11-19
 
 Hosts can place an inbox card for each conversation source.

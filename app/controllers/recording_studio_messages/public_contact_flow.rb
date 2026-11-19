@@ -24,12 +24,16 @@ module RecordingStudioMessages
         current_actor: public_contact_actor,
         request: request,
         session: session,
-        tags: contact_tags
+        tags: contact_tags, source: contact_source
       )
     end
 
     def contact_tags
       PublicContact::TagToken.tags_for(mount: @mount, token: params[PublicContact::TagToken::PARAM])
+    end
+
+    def contact_source
+      PublicContact::SourceToken.source_for(mount: @mount, token: params[PublicContact::SourceToken::PARAM])
     end
 
     def resume_verification?

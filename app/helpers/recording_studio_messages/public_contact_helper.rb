@@ -1,34 +1,39 @@
 # frozen_string_literal: true
 
 require_relative "public_contact_tag_helper"
+require_relative "public_contact_source_helper"
 
 module RecordingStudioMessages
   module PublicContactHelper
     include CopyHelper
     include PublicContactTagHelper
+    include PublicContactSourceHelper
 
     FRAME_ID = "public_contact"
     MODAL = "modal"
     DEFAULT_TITLE = "Contact"
     DEFAULT_SUBMIT = "Send message"
 
-    def public_contact_form(mount, title: nil, introduction: nil, submit_label: nil, heading: nil, tags: nil)
+    def public_contact_form(mount, title: nil, introduction: nil, submit_label: nil, heading: nil, tags: nil,
+                            source: nil)
       render "recording_studio_messages/public_contacts/form",
              mount: mount,
              title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence || params[:introduction].presence,
              submit_label: submit_label.presence || params[:submit_label].presence || Copy.t("contact.submit"),
              heading: heading.nil? ? show_public_contact_heading? : heading,
-             tag_token: contact_tag_token(mount, tags)
+             tag_token: contact_tag_token(mount, tags),
+             source_token: contact_source_token(mount, source)
     end
 
-    def public_contact_modal(mount, title: nil, introduction: nil, submit_label: nil, tags: nil)
+    def public_contact_modal(mount, title: nil, introduction: nil, submit_label: nil, tags: nil, source: nil)
       render "recording_studio_messages/public_contacts/modal",
              mount: mount,
              title: title.presence || Copy.t("contact.title"),
              introduction: introduction.presence,
              submit_label: submit_label.presence || Copy.t("contact.submit"),
-             tag_token: contact_tag_token(mount, tags)
+             tag_token: contact_tag_token(mount, tags),
+             source_token: contact_source_token(mount, source)
     end
 
     def public_contact_frame_id

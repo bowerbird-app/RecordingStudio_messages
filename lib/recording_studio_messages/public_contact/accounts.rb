@@ -54,12 +54,35 @@ module RecordingStudioMessages
           RecordingStudioUser.config.otp_enabled?
       end
 
-      def send_challenge!(email, request)
-        result = RecordingStudioUser.start_otp_challenge!(request: request, email: email)
+      def send_challenge!(email, request, source: nil)
+        result = RecordingStudioUser.start_otp_challenge!(**challenge_arguments(email, request, source))
         return result if result.issued?
         raise Error, Copy.t("errors.rate_limited") if result.throttled?
 
         raise Error, Copy.t("errors.users_required")
+      end
+
+      def challenge_arguments(email, request, source)
+        arguments = { request: request, email: email }
+        arguments[:source] = source if !source.nil? && users_accepts?(:start_otp_challenge!, :source)
+        arguments
+      end
+
+      def users_accepts?(method_name, keyword)
+        method = RecordingStudioUser.method(method_name)
+        return true if listed_keyword?(method, keyword)
+        return false unless method.parameters.any? { |kind, _name| kind == :keyrest }
+
+        users_signup_source?
+      end
+
+      def listed_keyword?(method, keyword)
+        method.parameters.any? { |kind, name| name == keyword && %i[key keyreq].include?(kind) }
+      end
+
+      def users_signup_source?
+        version = Gem.loaded_specs["recording_studio_user"]&.version
+        version.present? && version >= Gem::Version.new("0.39.0")
       end
     end
   end
