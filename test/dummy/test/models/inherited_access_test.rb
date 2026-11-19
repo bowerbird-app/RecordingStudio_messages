@@ -153,7 +153,8 @@ class InheritedAccessTest < ActiveSupport::TestCase
       group_recording: group, body: "The team should hear this.", actor: @owner
     )
 
-    assert_notified mount_only
+    assert personal_for(mount_only), "#{mount_only.name} should get a personal notice"
+    assert_nil message_received_for(mount_only)
     assert_notified @editor
     assert_equal 1, message_received_count(@editor)
     assert_notified @viewer
@@ -175,7 +176,8 @@ class InheritedAccessTest < ActiveSupport::TestCase
       group_recording: group, body: "Direct grants only.", actor: @owner
     )
 
-    assert_notified customer
+    assert personal_for(customer), "#{customer.name} should get a personal notice"
+    assert_nil message_received_for(customer)
     refute_notified @editor
     refute_notified @viewer
     refute_notified @owner
@@ -240,6 +242,13 @@ class InheritedAccessTest < ActiveSupport::TestCase
 
   def refute_notified(actor)
     assert_nil message_received_for(actor), "#{actor.name} should not be notified"
+  end
+
+  def personal_for(actor)
+    RecordingStudioNotifications::Notification.find_by(
+      notification_type: "message_received_personal",
+      recipient: actor
+    )
   end
 
   def message_received_for(actor)

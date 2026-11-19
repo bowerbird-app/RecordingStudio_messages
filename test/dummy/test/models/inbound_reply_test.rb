@@ -53,7 +53,7 @@ class InboundReplyTest < ActiveSupport::TestCase
     assert_equal @customer, created.actor
     assert_equal "I will pick it up.", posted.recordable.body
 
-    staff_notes = notices_for(@staff)
+    staff_notes = workspace_notices_for(@staff)
     assert_equal 1, staff_notes.count
     note = staff_notes.first
     assert_equal @group.id.to_s, note.thread_key
@@ -62,11 +62,12 @@ class InboundReplyTest < ActiveSupport::TestCase
     assert_equal @customer, note.actor
     assert_includes note.body, "I will pick it up."
     assert_equal conversation_url, note.url
-    opening = notices_for(@customer).first
-    assert_equal 1, notices_for(@customer).count
+    opening = personal_notices_for(@customer).first
+    assert_equal 1, personal_notices_for(@customer).count
+    assert_equal 0, workspace_notices_for(@customer).count
     assert_equal @group.id.to_s, opening.thread_key
-    assert_equal @root.id, opening.root_recording_id
-    assert_equal @group.id, opening.recording_id
+    assert_nil opening.root_recording_id
+    assert_equal guest_url, opening.url
     refute RecordingStudioAccessible.authorized?(actor: @customer, recording: @root, role: :view)
   end
 
@@ -116,7 +117,8 @@ class InboundReplyTest < ActiveSupport::TestCase
   end
 
   test "a raise inside the handler leaves no message and sends no notification" do
-    RecordingStudioNotifications.register_reply_handler(:message_received) do |notification:, recipient:, body:, attachments:|
+    RecordingStudioNotifications.register_reply_handler(:message_received_personal) do |notification:, recipient:, body:,
+                                                                                         attachments:|
       RecordingStudioMessages::Services::InboundReply.call(notification:, recipient:, body:, attachments:)
       raise "reply blew up"
     end
@@ -173,6 +175,7 @@ class InboundReplyTest < ActiveSupport::TestCase
     assert_equal [:in_app], type.default_channels
     assert_equal %i[in_app email], type.available_channels
     assert RecordingStudioNotifications.replyable?(:message_received)
+    assert RecordingStudioNotifications.replyable?(:message_received_personal)
   end
 
   test "a host that registers the type keeps its channels and the reply handler" do
@@ -191,6 +194,9 @@ class InboundReplyTest < ActiveSupport::TestCase
     assert_equal "Host message", type.label
     assert_equal [:in_app], type.available_channels
     assert RecordingStudioNotifications.replyable?(:message_received)
+    personal = RecordingStudioNotifications.notification_types[:message_received_personal]
+    assert_equal :global, personal.scope
+    assert RecordingStudioNotifications.replyable?(:message_received_personal)
   ensure
     restore_message_received_type!
   end
@@ -202,11 +208,14 @@ class InboundReplyTest < ActiveSupport::TestCase
       refute RecordingStudioNotifications.replyable?(:message_received)
     end
 
-    RecordingStudioMessages.stub(:thread_key_supported?, false) do
-      RecordingStudioMessages.send_message(group_recording: @group, body: "Legacy path", actor: @staff)
+    RecordingStudioMessages.stub(:personal_notices_supported?, false) do
+      RecordingStudioMessages.stub(:thread_key_supported?, false) do
+        RecordingStudioMessages.send_message(group_recording: @group, body: "Legacy path", actor: @staff)
+      end
     end
 
-    assert_nil notices_for(@customer).order(:created_at).last.thread_key
+    assert_nil workspace_notices_for(@customer).order(:created_at).last.thread_key
+    assert_equal @root.id, workspace_notices_for(@customer).order(:created_at).last.root_recording_id
   ensure
     RecordingStudioMessages.register_message_received_reply_handler!
   end
@@ -239,10 +248,25 @@ class InboundReplyTest < ActiveSupport::TestCase
   end
 
   def notices_for(actor)
+    personal_notices_for(actor).or(workspace_notices_for(actor))
+  end
+
+  def personal_notices_for(actor)
+    RecordingStudioNotifications::Notification.where(
+      notification_type: "message_received_personal",
+      recipient: actor
+    )
+  end
+
+  def workspace_notices_for(actor)
     RecordingStudioNotifications::Notification.where(
       notification_type: "message_received",
       recipient: actor
     )
+  end
+
+  def guest_url
+    RecordingStudioMessages::Engine.routes.url_helpers.guest_conversation_path(@group)
   end
 
   def message_count

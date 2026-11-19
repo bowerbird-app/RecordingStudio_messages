@@ -297,7 +297,7 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
 
   def notice_for(group)
     RecordingStudioNotifications::Notification.where(
-      notification_type: "message_received",
+      notification_type: %w[message_received message_received_personal],
       recipient: @customer
     ).find { |note| note.metadata["message_group_id"] == group.id }
   end
