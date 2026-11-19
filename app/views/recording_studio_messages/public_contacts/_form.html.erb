@@ -18,6 +18,9 @@
   <% if local_assigns[:tag_token].present? %>
     <%= hidden_field_tag(RecordingStudioMessages::PublicContact::TagToken::PARAM, local_assigns[:tag_token]) %>
   <% end %>
+  <% if local_assigns[:source_token].present? %>
+    <%= hidden_field_tag(RecordingStudioMessages::PublicContact::SourceToken::PARAM, local_assigns[:source_token]) %>
+  <% end %>
   <div class="space-y-4">
     <% if actor %>
       <% if actor.respond_to?(:name) && actor.name.present? %>

@@ -5,16 +5,17 @@ module RecordingStudioMessages
     class << self
       private
 
-      def settle_identity!(actor, intent)
-        prove_email!(actor, intent)
+      def settle_identity!(actor, intent, session)
+        prove_email!(actor, intent, session)
         apply_submitted_name!(actor, intent)
       end
 
-      def prove_email!(actor, intent)
+      def prove_email!(actor, intent, session)
         RecordingStudioUser.complete_email_proof!(
           user: actor,
           challenge_id: intent.otp_challenge_id,
-          profile_attributes: profile_attributes_for(intent)
+          profile_attributes: profile_attributes_for(intent),
+          session: session
         )
       rescue ArgumentError
         raise Error, Copy.t("errors.confirm_code") unless actor.reload.confirmed?

@@ -534,20 +534,22 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
     first_challenge_id = intent.otp_challenge_id
 
-    post otp_resend_path
-    assert_redirected_to otp_challenge_path
-    assert_equal first_challenge_id, intent.reload.otp_challenge_id
-    assert_not_equal first_challenge_id, session[:otp_challenge_id]
-    assert_equal 0, RecordingStudioMessages::MessageGroup.count
+    travel_to RecordingStudioUser.config.otp_resend_cooldown.from_now + 1.second do
+      post otp_resend_path
+      assert_redirected_to otp_challenge_path
+      assert_equal first_challenge_id, intent.reload.otp_challenge_id
+      assert_not_equal first_challenge_id, session[:otp_challenge_id]
+      assert_equal 0, RecordingStudioMessages::MessageGroup.count
 
-    fresh_code = RecordingStudioUser.otp_message(session[:otp_challenge_id]).fetch(:body)[/\d{6}/]
-    post otp_resend_path
-    assert_redirected_to otp_challenge_path
-    follow_redirect!
-    assert_includes response.body, "Please wait before requesting another code."
-    assert_equal 0, RecordingStudioMessages::MessageGroup.count
+      fresh_code = RecordingStudioUser.otp_message(session[:otp_challenge_id]).fetch(:body)[/\d{6}/]
+      post otp_resend_path
+      assert_redirected_to otp_challenge_path
+      follow_redirect!
+      assert_includes response.body, "Please wait before requesting another code."
+      assert_equal 0, RecordingStudioMessages::MessageGroup.count
 
-    deliver_code!(intent, code: fresh_code)
+      deliver_code!(intent, code: fresh_code)
+    end
     assert_redirected_to recording_studio_messages.public_contact_sent_path
     assert_equal 1, RecordingStudioMessages::Message.where(body: "Need another code.").count
   ensure
@@ -1372,54 +1374,26 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "an unticked terms box does not finish a new address or send the message" do
+  test "a new address finishes without a terms checkbox when signup terms are pending" do
     publish_signup_terms!
     email = "terms-off@example.com"
     post contact_path, params: modal_message(email: email), headers: modal_headers
     assert_redirected_to contact_path(presentation: "modal")
     get response.location, headers: modal_headers
 
-    assert_select "input[type=checkbox][name=accept_terms][value=1]"
+    assert_select "input[name=accept_terms]", count: 0
     assert_select "h2", text: "Verify it's you"
     user = User.find_by!(email: email)
     refute user.confirmed?
     intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
 
-    assert_no_difference -> { RecordingStudioTermsAndConditions::Acceptance.count } do
-      post otp_challenge_path,
-           params: { code: otp_code_for(intent) },
-           headers: inline_otp_headers
-    end
-
-    assert_response :unprocessable_entity
-    refute user.reload.confirmed?
-    assert_nil session["warden.user.user.key"]
-    assert_equal 0, RecordingStudioMessages::Message.count
-    assert intent.reload.open?
-    assert_equal 1, User.where(email: email).count
-  end
-
-  test "a ticked terms box records acceptance, sends once, and a second post stays one conversation" do
-    publish_signup_terms!
-    email = "terms-on@example.com"
-    post contact_path, params: modal_message(email: email), headers: modal_headers
-    get response.location, headers: modal_headers
-    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
-    user = User.find_by!(email: email)
-    code = otp_code_for(intent)
-
-    post otp_challenge_path, params: { code: code }, headers: inline_otp_headers
-    assert_response :unprocessable_entity
-    refute user.reload.confirmed?
-
     post otp_challenge_path,
-         params: { code: code, accept_terms: "1" },
+         params: { code: otp_code_for(intent) },
          headers: inline_otp_headers
+
     assert_response :success
     assert user.reload.confirmed?
-    receipt = RecordingStudioTermsAndConditions::Acceptance.order(:created_at).last
-    assert_equal user.id, receipt.actor_id
-    assert_equal({ "source" => "checkbox" }, receipt.provenance)
+    assert_empty RecordingStudioTermsAndConditions::Acceptance.where(actor_id: user.id)
     token = return_token_from(response.body)
 
     post recording_studio_messages.public_contact_return_path,
@@ -1527,6 +1501,211 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_select "[role=alert]", text: "You cannot send this message."
     assert_equal 0, RecordingStudioMessages::Message.count
     assert intent.reload.open?
+  end
+
+  test "a public contact form signs a signup source into the hidden field and the modal url" do
+    source = { campaign: "spring", visits: 2, kind: :launch }
+    html = HomeController.render(
+      inline: "<%= public_contact_form(@mount, source: @contact_source) %>",
+      assigns: { mount: @mount, contact_source: source },
+      layout: false
+    )
+    token = source_token_from(html)
+    assert_equal(
+      { "campaign" => "spring", "visits" => 2, "kind" => :launch },
+      RecordingStudioMessages::PublicContact::SourceToken.source_for(mount: @mount, token: token)
+    )
+
+    modal = HomeController.render(
+      inline: "<%= public_contact_modal(@mount, source: @contact_source) %>",
+      assigns: { mount: @mount, contact_source: source },
+      layout: false
+    )
+    href = Nokogiri::HTML.fragment(modal).at_css("a")["href"]
+    modal_token = Rack::Utils.parse_query(URI(href).query)["source_token"]
+    assert_equal(
+      RecordingStudioMessages::PublicContact::SourceToken.source_for(mount: @mount, token: token),
+      RecordingStudioMessages::PublicContact::SourceToken.source_for(mount: @mount, token: modal_token)
+    )
+  end
+
+  test "a signed source reaches registration completed and an after_registration hook" do
+    source = { campaign: "spring", visits: 2, kind: :launch }
+    token = contact_source_token(source)
+    email = "sourced-contact@example.com"
+    plain = []
+    sourced = []
+    original_hooks = nil
+    original_hooks = RecordingStudioUser.config.after_registration_hooks.dup
+    RecordingStudioUser.config.after_registration_hooks.clear
+    RecordingStudioUser.config.after_registration ->(user:, method:) { plain << [ user.email, method ] }
+    RecordingStudioUser.config.after_registration ->(user:, method:, source: nil) { sourced << [ user.email, method, source ] }
+
+    registration_events do |events|
+      post contact_path, params: {
+        name: "Ada Lovelace", email: email, body: "Hello from the form.", source_token: token
+      }
+      assert_equal({ campaign: "spring", visits: 2, kind: :launch }, RecordingStudioUser::SignupSource.read(session))
+
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      deliver_code!(intent)
+
+      user = User.find_by!(email: email)
+      assert_equal [ { user_id: user.id, method: :otp, source: { campaign: "spring", visits: 2, kind: :launch } } ], events
+      assert_nil RecordingStudioUser::SignupSource.read(session)
+    end
+
+    assert_equal [ [ email, :otp ] ], plain
+    assert_equal [ [ email, :otp, { campaign: "spring", visits: 2, kind: :launch } ] ], sourced
+  ensure
+    RecordingStudioUser.config.after_registration_hooks.replace(original_hooks) if original_hooks
+  end
+
+  test "begin_public_contact passes a signup source through to registration completed" do
+    source = { campaign: "spring", kind: :launch }
+    request = contact_request
+    outcome = RecordingStudioMessages.begin_public_contact(
+      mount_recording: @mount,
+      name: "Ada Lovelace",
+      email: "direct-source@example.com",
+      body: "Hello from Ruby.",
+      current_actor: nil,
+      request: request,
+      session: request.session,
+      source: source
+    )
+    assert_equal source, RecordingStudioUser::SignupSource.read(request.session)
+
+    intent = outcome.intent
+    verified = RecordingStudioUser.verify_otp!(
+      challenge_id: intent.otp_challenge_id,
+      code: otp_code_for(intent),
+      purpose: otp_purpose_for(intent),
+      session: request.session
+    )
+    assert verified.success?
+    user = User.find_by!(email: "direct-source@example.com")
+
+    registration_events do |events|
+      RecordingStudioMessages.complete_public_contact(intent: intent, actor: user, session: request.session)
+      assert_equal [ { user_id: user.id, method: :otp, source: source } ], events
+    end
+
+    assert_nil RecordingStudioUser::SignupSource.read(request.session)
+    assert user.reload.confirmed?
+  end
+
+  test "a new signup without a source still emits registration completed" do
+    get contact_path
+    assert_select "input[name=source_token]", count: 0
+
+    registration_events do |events|
+      post contact_path, params: { name: "Ada Lovelace", email: "no-source@example.com", body: "Hello." }
+      assert_nil RecordingStudioUser::SignupSource.read(session)
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      deliver_code!(intent)
+      user = User.find_by!(email: "no-source@example.com")
+      assert_equal [ { user_id: user.id, method: :otp } ], events
+      refute events.first.key?(:source)
+    end
+  end
+
+  test "a signed-in sender ignores a signup source" do
+    token = contact_source_token(campaign: "spring")
+    sign_in @staff
+
+    registration_events do |events|
+      assert_difference -> { RecordingStudioMessages::Message.count }, 1 do
+        post contact_path, params: { body: "Already signed in.", source_token: token }
+      end
+      assert_empty events
+    end
+
+    assert_redirected_to recording_studio_messages.public_contact_sent_path
+    assert_nil RecordingStudioUser::SignupSource.read(session)
+  end
+
+  test "an existing confirmed account ignores a signup source" do
+    email = "existing-source@example.com"
+    User.create!(
+      email: email, password: "Password123!", password_confirmation: "Password123!",
+      name: "Casey Patron", confirmed_at: Time.current
+    )
+    token = contact_source_token(campaign: "spring")
+
+    registration_events do |events|
+      post contact_path, params: { name: "Casey Patron", email: email, body: "Hello again.", source_token: token }
+      assert_nil RecordingStudioUser::SignupSource.read(session)
+      intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+      assert_equal "login", otp_purpose_for(intent)
+      deliver_code!(intent)
+      assert_empty events
+    end
+
+    assert User.find_by!(email: email).confirmed?
+    assert_equal 1, RecordingStudioMessages::Message.count
+  end
+
+  test "a tampered source token does not create a conversation" do
+    token = contact_source_token(campaign: "spring")
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post contact_path, params: {
+        name: "Ada Lovelace", email: "tampered-source@example.com", body: "Hello.", source_token: "#{token}x"
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+    assert_nil User.find_by(email: "tampered-source@example.com")
+  end
+
+  test "a source token for another mount is rejected" do
+    token = RecordingStudioMessages::PublicContact::SourceToken.generate(mount: @support, source: { campaign: "spring" })
+
+    assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+      post contact_path, params: {
+        name: "Ada Lovelace", email: "other-mount-source@example.com", body: "Hello.", source_token: token
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "an expired source token does not create a conversation" do
+    token = contact_source_token(campaign: "spring")
+
+    travel RecordingStudioMessages::PublicContact::SourceToken::LIFETIME + 1.second do
+      assert_no_difference -> { RecordingStudioMessages::MessageGroup.count } do
+        post contact_path, params: {
+          name: "Ada Lovelace", email: "expired-source@example.com", body: "Hello.", source_token: token
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /couldn't send that message/i
+    assert_equal 0, RecordingStudioMessages::PublicContactIntent.count
+  end
+
+  test "modal restart keeps a source token" do
+    token = contact_source_token(campaign: "spring")
+
+    get contact_path(presentation: "modal", source_token: token), headers: modal_headers
+    assert_response :success
+    assert_select "input[name=source_token][value=?]", token
+
+    post contact_path,
+         params: modal_message(email: "restart-source@example.com").merge(source_token: token),
+         headers: modal_headers
+    intent = RecordingStudioMessages::PublicContactIntent.order(:created_at).last
+    intent.update!(expires_at: 1.hour.ago)
+    get contact_path(presentation: "modal", source_token: token), headers: modal_headers
+
+    assert_select "a[href=?]", contact_path(presentation: "modal", source_token: token), text: "Send it again"
   end
 
   private
@@ -1668,6 +1847,26 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
   def contact_path(**extra)
     recording_studio_messages.public_contact_path({ mount_id: @mount.id }.merge(extra))
+  end
+
+  def contact_source_token(source)
+    RecordingStudioMessages::PublicContact::SourceToken.generate(mount: @mount, source: source)
+  end
+
+  def source_token_from(html)
+    field = Nokogiri::HTML.fragment(html).at_css("input[name=source_token]")
+    assert field, "source token field missing"
+    field["value"]
+  end
+
+  def registration_events
+    events = []
+    subscriber = ActiveSupport::Notifications.subscribe("registration.completed.recording_studio_user") do |*, payload|
+      events << payload
+    end
+    yield events
+  ensure
+    ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
   end
 
   def contact_tag_token(tags)

@@ -42,7 +42,7 @@ module RecordingStudioMessages
       actor = public_contact_actor
       raise Error, Copy.t("errors.cannot_send") if actor.blank?
 
-      remember_sent(PublicContact.complete(intent: @intent, actor: actor))
+      remember_sent(PublicContact.complete(intent: @intent, actor: actor, session: session))
       session.delete(PublicContact::SESSION_KEY)
       redirect_to_sent
     end

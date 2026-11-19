@@ -26,7 +26,7 @@ module RecordingStudioMessages
       public_contact_keys_for(parent.recordable_type).include?(key)
     end
 
-    def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil)
+    def begin(mount_recording:, name:, email:, body:, current_actor:, request:, session:, tags: nil, source: nil)
       raise Error, Copy.t("errors.not_enabled") unless enabled?(mount_recording)
 
       mount = live_contact_mount_id!(mount_recording.id)
@@ -36,12 +36,12 @@ module RecordingStudioMessages
 
       queue_verification(
         mount: mount, name: name, email: email, text: text,
-        request: request, session: session, tags: checked
+        request: request, session: session, tags: checked, source: source
       )
     end
 
-    def complete(intent:, actor:)
-      intent.with_lock { complete_locked(intent, actor) }
+    def complete(intent:, actor:, session: nil)
+      intent.with_lock { complete_locked(intent, actor, session) }
     end
   end
 end
@@ -53,4 +53,5 @@ require_relative "public_contact/inherited"
 require_relative "public_contact/verification"
 require_relative "public_contact/intake"
 require_relative "public_contact/tag_token"
+require_relative "public_contact/source_token"
 require_relative "public_contact/return_token"

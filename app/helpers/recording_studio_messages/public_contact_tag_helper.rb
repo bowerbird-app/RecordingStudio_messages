@@ -17,16 +17,18 @@ module RecordingStudioMessages
       contact_routes.public_contact_path(
         { mount_id: mount_id, presentation: PublicContactHelper::MODAL }.merge(
           modal_display_params(params[:introduction], params[:submit_label])
-        ).merge(tag_token_query)
+        ).merge(tag_token_query).merge(source_token_query)
       )
     end
 
-    def public_contact_modal_src(mount, introduction:, submit_label:, tags: nil, tag_token: nil)
+    def public_contact_modal_src(mount, introduction:, submit_label:, tags: nil, tag_token: nil,
+                                 source: nil, source_token: nil)
       token = tag_token.presence || contact_tag_token(mount, tags)
+      signed_source = source_token.presence || contact_source_token(mount, source)
       contact_routes.public_contact_path(
         { mount_id: mount.id, presentation: PublicContactHelper::MODAL }.merge(
           modal_display_params(introduction, submit_label)
-        ).merge(tag_token_query(token))
+        ).merge(tag_token_query(token)).merge(source_token_query(signed_source))
       )
     end
   end

@@ -4,7 +4,7 @@ require "test_helper"
 
 class RecordingStudioMessagesTest < Minitest::Test
   def test_version_matches_release
-    assert_equal "0.34.0", ::RecordingStudioMessages::VERSION
+    assert_equal "0.35.0", ::RecordingStudioMessages::VERSION
   end
 
   def test_facade_creates_and_lists_groups_by_tag_without_an_actor
@@ -25,8 +25,12 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes api, "def preview_text(body, references: [])"
     assert_includes api, "def send_message(...)"
     assert_includes flow, "tags: contact_tags"
+    assert_includes flow, "source: contact_source"
     assert_includes helper, "tags: nil"
     assert_includes helper, "tag_token:"
+    assert_includes helper, "source: nil"
+    assert_includes helper, "source_token:"
+    assert_includes api, "source: nil"
   end
 
   def test_engine_exists
@@ -73,15 +77,15 @@ class RecordingStudioMessagesTest < Minitest::Test
   def test_root_gemfile_resolves_the_same_family_tags
     gemfile = File.read(File.expand_path("../Gemfile", __dir__))
 
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.0.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio", tag: "v7.3.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_accessible", tag: "v0.44.0"'
     assert_includes gemfile, 'gem "recording_studio_accessible", ">= 0.44.0", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.28.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.31.0"'
     assert_includes gemfile, 'gem "recording_studio_attachable", ">= 0.28.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.18.0"'
     assert_includes gemfile, 'gem "recording_studio_notifications", ">= 0.18.0", "< 1"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.30.0"'
-    assert_includes gemfile, 'gem "recording_studio_user", ">= 0.30.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.39.0"'
+    assert_includes gemfile, 'gem "recording_studio_user", ">= 0.39.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.6.3"'
     assert_equal "~> 0.5", gemfile_constraint(gemfile, "recording_studio_cache")
     assert Gem::Requirement.new("~> 0.5").satisfied_by?(Gem::Version.new("0.6.3"))
@@ -93,7 +97,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
     assert_includes gemfile, 'gem "recording_studio_metrics", ">= 0.9.0", "< 1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_logs", tag: "v0.8.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v0.26.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_api", tag: "v1.2.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_icons", tag: "v0.2.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_moveable", tag: "v5.0.0"'
     assert_equal ">= 7.0", gemfile_constraint(gemfile, "recording_studio")
@@ -114,7 +118,7 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_attachable", tag: "v0.31.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.19.1"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_root_switchable", tag: "v0.16.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.32.0"'
+    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_users", tag: "v0.39.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_cache", tag: "v0.7.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_publishable", tag: "v1.1.0"'
     assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_site_settings", tag: "v0.6.0"'
@@ -156,8 +160,8 @@ class RecordingStudioMessagesTest < Minitest::Test
     assert_includes dummy_lock, "tag: v0.19.1"
     assert_includes dummy_lock, "recording_studio_notifications (0.19.1)"
     refute_includes dummy_lock, "recording_studio_notifications (0.15.0)"
-    assert_includes root_lock, "tag: v7.0.0"
-    assert_includes root_lock, "recording_studio (7.0.0)"
+    assert_includes root_lock, "tag: v7.3.0"
+    assert_includes root_lock, "recording_studio (7.3.0)"
     assert_includes dummy_lock, "tag: v7.3.0"
     assert_includes dummy_lock, "recording_studio (7.3.0)"
     assert_includes root_lock, "tag: v0.1.376"

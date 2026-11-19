@@ -5,13 +5,14 @@ module RecordingStudioMessages
     class << self
       private
 
-      def queue_verification(mount:, name:, email:, text:, request:, session:, tags:)
+      def queue_verification(mount:, name:, email:, text:, request:, session:, tags:, source:)
         require_otp_request!(request)
         checked_email = normalize_email(email)
         user = account_for(checked_email)
         ensure_recipient!(mount, user, tags: tags)
         details = contact_details(checked_email, name, text, tags)
-        Outcome.new(intent: remember_intent(mount, user, request, session, details))
+        signed_source = challenge_source(user, source)
+        Outcome.new(intent: remember_intent(mount, user, request, session, details, source: signed_source))
       end
 
       def require_otp_request!(request)
@@ -27,8 +28,8 @@ module RecordingStudioMessages
         }
       end
 
-      def remember_intent(mount, user, request, session, details)
-        issued = send_challenge!(details.fetch(:email), request)
+      def remember_intent(mount, user, request, session, details, source:)
+        issued = send_challenge!(details.fetch(:email), request, source: source)
         intent = PublicContactIntent.create!(
           details.merge(
             mount_recording_id: mount.id, user_id: user.id, otp_challenge_id: issued.challenge_id
@@ -38,20 +39,26 @@ module RecordingStudioMessages
         intent
       end
 
+      def challenge_source(user, source)
+        return if source.nil? || user.confirmed?
+
+        source
+      end
+
       def ensure_recipient!(mount, user, tags:)
         return if MountAccess.inherited?(mount)
 
         raise Error, Copy.t("errors.no_recipient") if opener_among(mount, recipients_for(mount, user, tags: tags)).nil?
       end
 
-      def complete_locked(intent, actor)
+      def complete_locked(intent, actor, session)
         raise NotAuthorized, Copy.t("errors.cannot_send") unless actor_matches?(intent, actor)
         return intent.group_recording if intent.fulfilled?
         raise Error, Copy.t("errors.expired") unless intent_open?(intent)
 
         mount = live_contact_mount_id!(intent.mount_recording_id)
         tags = tags_for_intent(intent)
-        settle_identity!(actor, intent)
+        settle_identity!(actor, intent, session)
         publish_intent!(intent, actor, mount: mount, tags: tags)
       end
 

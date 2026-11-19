@@ -54,12 +54,18 @@ module RecordingStudioMessages
           RecordingStudioUser.config.otp_enabled?
       end
 
-      def send_challenge!(email, request)
-        result = RecordingStudioUser.start_otp_challenge!(request: request, email: email)
+      def send_challenge!(email, request, source: nil)
+        result = RecordingStudioUser.start_otp_challenge!(**challenge_arguments(email, request, source))
         return result if result.issued?
         raise Error, Copy.t("errors.rate_limited") if result.throttled?
 
         raise Error, Copy.t("errors.users_required")
+      end
+
+      def challenge_arguments(email, request, source)
+        arguments = { request: request, email: email }
+        arguments[:source] = source unless source.nil?
+        arguments
       end
     end
   end
