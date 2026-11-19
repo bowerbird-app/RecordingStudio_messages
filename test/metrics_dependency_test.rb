@@ -11,16 +11,16 @@ class MetricsDependencyTest < Minitest::Test
     dummy_lock = File.read(File.expand_path("dummy/Gemfile.lock", __dir__))
 
     assert_includes gemspec, 'spec.add_dependency "recording_studio_metrics", ">= 0.9.0", "< 1.0"'
-    assert_includes gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
-    assert_includes dummy_gemfile, 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"'
+    assert_metrics_pin(gemfile)
+    assert_metrics_pin(dummy_gemfile)
     assert_includes root_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
-    assert_includes root_lock, "tag: v0.9.0"
-    assert_includes root_lock, "recording_studio_metrics (0.9.0)"
+    assert_includes root_lock, "tag: v0.10.0"
+    assert_includes root_lock, "recording_studio_metrics (0.10.0)"
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
-    assert_includes dummy_lock, "tag: v0.9.0"
-    assert_includes dummy_lock, "recording_studio_metrics (0.9.0)"
-    assert_includes root_lock, "recording_studio_messages (0.36.0)"
-    assert_includes dummy_lock, "recording_studio_messages (0.36.0)"
+    assert_includes dummy_lock, "tag: v0.10.0"
+    assert_includes dummy_lock, "recording_studio_metrics (0.10.0)"
+    assert_includes root_lock, "recording_studio_messages (0.37.0)"
+    assert_includes dummy_lock, "recording_studio_messages (0.37.0)"
     refute_includes gemspec, "recording_studio_dashboard"
   end
 
@@ -33,5 +33,14 @@ class MetricsDependencyTest < Minitest::Test
     source = File.read(File.expand_path("../lib/recording_studio_messages/engine_frontend.rb", __dir__))
     assert_includes source, "RecordingStudioMessages::Metrics.register!"
     refute_includes source, "RecordingStudioMetrics::Api.register!"
+  end
+
+  private
+
+  def assert_metrics_pin(source)
+    head = 'gem "recording_studio_metrics", "~> 0.10"'
+    tail = 'github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.10.0"'
+    message = "#{head}, #{tail}"
+    assert source.include?(message) || source.include?("#{head},\n    #{tail}"), message
   end
 end
