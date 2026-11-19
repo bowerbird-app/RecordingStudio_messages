@@ -6,7 +6,12 @@ en:
       staff_message_center: Staff message center
       inbox: Inbox
       my_messages: My messages
+      inbox_cards: Inbox cards
       admin: Admin
+    inbox_cards:
+      title: Inbox cards
+      mine: My messages
+      team: Team inbox
     composer:
       attach_page: Attach a page
       find_a_page: Find a page

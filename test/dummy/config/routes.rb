@@ -25,6 +25,7 @@ Rails.application.routes.draw do
   end
   namespace :dummy do
     get "page_picker", to: "page_picker#show", as: :page_picker
+    get "inbox_cards", to: "inbox_cards#show", as: :inbox_cards
   end
   get "/inbox", to: "customer/inboxes#show", as: :inbox
 

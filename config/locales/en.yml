@@ -37,6 +37,9 @@ en:
         send: Send
         new_untitled: New conversation
         find_people: Find someone
+      inbox_card:
+        see_all: See all
+        unread: "%{count} unread"
       panel:
         someone: Someone
         seen_by: "Seen by %{names}"
