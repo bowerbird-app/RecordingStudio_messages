@@ -33,7 +33,6 @@ require "recording_studio_messages/services/live_recording"
 require "recording_studio_messages/services/recording_subtree"
 require "recording_studio_messages/services/message_group_tags"
 require "recording_studio_messages/services/uploaded_file"
-require "recording_studio_messages/services/notification_filing"
 require "recording_studio_messages/services/notify_granted_actors"
 require "recording_studio_messages/services/inbound_reply"
 require "recording_studio_messages/composer_action"
@@ -246,8 +245,16 @@ module RecordingStudioMessages
     end
 
     def thread_key_supported?
+      notify_accepts?(:thread_key)
+    end
+
+    def recording_supported?
+      notify_accepts?(:recording)
+    end
+
+    def notify_accepts?(keyword)
       parameters = RecordingStudioNotifications::Services::Notify.instance_method(:initialize).parameters
-      parameters.any? { |_, name| name == :thread_key }
+      parameters.any? { |_, name| name == keyword }
     rescue NameError
       false
     end

@@ -20,7 +20,7 @@ gem "recording_studio_logs", ">= 0.4.1", "< 1.0",
 gem "recording_studio_metrics", ">= 0.9.0", "< 1.0",
     github: "bowerbird-app/RecordingStudio_metrics", tag: "v0.9.0"
 gem "recording_studio_notifications", ">= 0.18.0", "< 1",
-    github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.20.0"
+    github: "bowerbird-app/RecordingStudio_notifications", tag: "v0.21.1"
 # Accessible 0.44 needs Trashable >= 0.17. Trashable registers the kept filter.
 gem "recording_studio_trashable",
     github: "bowerbird-app/RecordingStudio_trashable", tag: "v0.17.0"

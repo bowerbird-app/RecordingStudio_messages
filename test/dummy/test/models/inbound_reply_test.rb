@@ -30,7 +30,7 @@ class InboundReplyTest < ActiveSupport::TestCase
     )
   end
 
-  test "a reply posts one message as the recipient and notifies the other person after commit" do
+  test "a guest with only a conversation grant replies and notifies the other person after commit" do
     calls = 0
     result = nil
     original = RecordingStudioNotifications.method(:notify_each)
@@ -57,11 +57,17 @@ class InboundReplyTest < ActiveSupport::TestCase
     assert_equal 1, staff_notes.count
     note = staff_notes.first
     assert_equal @group.id.to_s, note.thread_key
+    assert_equal @root.id, note.root_recording_id
+    assert_equal @group.id, note.recording_id
     assert_equal @customer, note.actor
     assert_includes note.body, "I will pick it up."
     assert_equal conversation_url, note.url
+    opening = notices_for(@customer).first
     assert_equal 1, notices_for(@customer).count
-    assert_equal @group.id.to_s, notices_for(@customer).first.thread_key
+    assert_equal @group.id.to_s, opening.thread_key
+    assert_equal @root.id, opening.root_recording_id
+    assert_equal @group.id, opening.recording_id
+    refute RecordingStudioAccessible.authorized?(actor: @customer, recording: @root, role: :view)
   end
 
   test "a recipient without edit is rejected and nothing is posted" do

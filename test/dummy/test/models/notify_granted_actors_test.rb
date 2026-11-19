@@ -51,7 +51,7 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     staff_note = last_message_received_for(@staff)
     assert_equal @ticket_root.id, staff_note.root_recording_id
     assert_equal @staff, staff_note.recipient
-    assert_equal RecordingStudioMessages::MESSAGE_TYPE, staff_note.recording.recordable_type
+    assert_equal @group.id, staff_note.recording_id
     assert_equal "Default filing stays on the ticket.", staff_note.body
   end
 
@@ -74,15 +74,8 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     assert_equal @ticket_root, @group.root_recording
   end
 
-  test "a participant who can view the ticket root stays there when admin filing is on" do
+  test "ticket owner stays on the ticket root when admin filing is on" do
     RecordingStudioMessages.configuration.admin_notification_root = @admin_root
-    grant = RecordingStudioAccessible.grant_access(
-      recording: @ticket_root,
-      actor: @customer,
-      role: :view,
-      manager_actor: @staff
-    )
-    raise grant.error if grant.failure?
 
     RecordingStudioMessages.send_message(
       group_recording: @group,
@@ -92,27 +85,11 @@ class NotifyGrantedActorsTest < ActiveSupport::TestCase
     )
 
     customer_note = last_message_received_for(@customer)
-    assert_equal @ticket_root.id, customer_note.root_recording_id
-    assert_equal "Casey keeps the workspace inbox.", customer_note.body
-    assert_equal RecordingStudioMessages::MESSAGE_TYPE, customer_note.recording.recordable_type
-  end
-
-  test "a participant who cannot view the ticket root is filed on the conversation" do
-    RecordingStudioMessages.configuration.admin_notification_root = @admin_root
-
-    RecordingStudioMessages.send_message(
-      group_recording: @group,
-      body: "Casey still gets the line.",
-      actor: @staff,
-      url: "/inbox"
-    )
-
-    customer_note = last_message_received_for(@customer)
     assert_equal @customer, customer_note.recipient
-    assert_equal @group.id, customer_note.root_recording_id
+    assert_equal @ticket_root.id, customer_note.root_recording_id
     refute_equal @admin_root.id, customer_note.root_recording_id
-    assert_nil customer_note.recording_id
-    assert_equal "Casey still gets the line.", customer_note.body
+    assert_equal @group.id, customer_note.recording_id
+    assert_equal "Casey keeps the workspace inbox.", customer_note.body
   end
 
   test "admin root notice omits the message text" do
