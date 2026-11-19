@@ -775,14 +775,14 @@ messages_inbox_card(title: "Team inbox", actor: current_actor, mount: mount)
 
 Messages loads without Recording Studio Dashboard. When that gem is loaded, Messages registers a `:messages_inbox` widget (`empty: :hide`, spans 6 and 12). The widget renders this card. `prepare` returns `Preparation.empty` when the actor cannot view any conversation in that source, and Dashboard removes the placement. A first row with `empty: :hide` stays first while any card has conversations, and the row drops when every card is empty. Registration runs once per process. Restart the app after Dashboard is added so the widget is registered.
 
-The dashboard context is the actor, or an object that responds to `actor`. Widget `mount` is a message center recording, or a Proc that receives the context.
+The dashboard context is the actor, or an object that responds to `actor`. Widget `title` is a string, or a Proc that receives the context. Widget `mount` is a message center recording, or a Proc that receives the context.
 
 ```ruby
 RecordingStudioDashboard.register(:home) do
   row :inboxes, empty: :hide do
     widget :messages_inbox, id: :mine, span: 6, config: { title: "My messages", mine: true }
     widget :messages_inbox, id: :team, span: 6, config: {
-      title: "Team inbox",
+      title: ->(context) { context.team_mount.parent_recording.recordable.name },
       mount: ->(context) { context.team_mount }
     }
   end

@@ -119,6 +119,22 @@ class InboxCardTest < ActiveSupport::TestCase
     assert_equal ["Ready"], filled.data.groups.map { |group| group.recordable.title }
   end
 
+  test "dashboard prepare resolves a proc title with the context" do
+    install_dashboard_stub
+    open_conversation(@mount, "Ready", "Hello from the desk.")
+    context = Struct.new(:actor, :team_mount).new(@viewer, @mount)
+    filled = RecordingStudioMessages::InboxCard.prepare(
+      context,
+      {
+        title: ->(ctx) { ctx.team_mount.parent_recording.recordable.name },
+        mount: ->(ctx) { ctx.team_mount }
+      }
+    )
+
+    assert_equal :content, filled.state
+    assert_equal @root.recordable.name, filled.data.title
+  end
+
   test "dashboard registration is skipped until the gem is loaded, then once" do
     refute defined?(RecordingStudioDashboard)
     assert_nil RecordingStudioMessages::InboxCard.register_dashboard_widget!

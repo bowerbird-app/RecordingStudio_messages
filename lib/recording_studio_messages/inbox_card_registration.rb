@@ -29,9 +29,9 @@ module RecordingStudioMessages
       options = config.to_h.transform_keys(&:to_sym)
       {
         actor: actor_from(context),
-        title: options[:title],
+        title: resolve_with_context(options[:title], context),
         mine: options[:mine] == true,
-        mount: resolve_mount(options[:mount], context),
+        mount: resolve_with_context(options[:mount], context),
         limit: options.fetch(:limit, Services::InboxCard::PREVIEW_LIMIT)
       }
     end
@@ -43,11 +43,11 @@ module RecordingStudioMessages
       context
     end
 
-    def resolve_mount(mount, context)
-      return if mount.nil?
-      return mount.call(context) if mount.is_a?(Proc)
+    def resolve_with_context(value, context)
+      return if value.nil?
+      return value.call(context) if value.is_a?(Proc)
 
-      mount
+      value
     end
 
     def dashboard_widget_registered?

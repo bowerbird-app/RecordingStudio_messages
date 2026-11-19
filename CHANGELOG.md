@@ -29,13 +29,13 @@ messages_inbox_card(title: "My messages", actor: current_actor, mine: true)
 messages_inbox_card(title: "Team inbox", actor: current_actor, mount: mount)
 ```
 
-With Dashboard, register a first row and pass the actor as the dashboard context, or an object that responds to `actor`. `mount` may be a Proc that receives that context.
+With Dashboard, register a first row and pass the actor as the dashboard context, or an object that responds to `actor`. `title` and `mount` may each be a Proc that receives that context.
 
 ```ruby
 row :inboxes, empty: :hide do
   widget :messages_inbox, id: :mine, span: 6, config: { title: "My messages", mine: true }
   widget :messages_inbox, id: :team, span: 6, config: {
-    title: "Team inbox",
+    title: ->(context) { context.team_mount.parent_recording.recordable.name },
     mount: ->(context) { context.team_mount }
   }
 end
