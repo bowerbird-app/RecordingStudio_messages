@@ -22,6 +22,12 @@
       style: :secondary,
       size: :md
     ) %>
+    <%= render FlatPack::Button::Component.new(
+      text: t("dummy.home.inbox_cards"),
+      href: dummy_inbox_cards_path,
+      style: :secondary,
+      size: :md
+    ) %>
     <%= render "recording_studio_messages/message_groups/unread_badge",
                unread_count: @messages_unread_count %>
     <%= render FlatPack::Button::Component.new(

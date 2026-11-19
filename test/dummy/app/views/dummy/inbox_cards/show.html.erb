@@ -1,0 +1,7 @@
+<% content_for :title, t("dummy.inbox_cards.title") %>
+<% flat_pack_page_nav(round: true, style: :default) %>
+
+<%= render FlatPack::Grid::Component.new(cols: 2, gap: :md) do %>
+  <%= messages_inbox_card(title: t("dummy.inbox_cards.mine"), actor: @actor, mine: true) %>
+  <%= messages_inbox_card(title: t("dummy.inbox_cards.team"), actor: @actor, mount: @mount) %>
+<% end %>

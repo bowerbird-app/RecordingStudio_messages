@@ -73,6 +73,9 @@ fr:
         send: Envoyer
         new_untitled: Nouvelle conversation
         find_people: Trouver quelqu’un
+      inbox_card:
+        see_all: Tout voir
+        unread: "%{count} non lues"
       panel:
         someone: Quelqu’un
         seen_by: "Vu par %{names}"
@@ -119,7 +122,12 @@ fr:
       staff_message_center: Centre de messages
       inbox: Boîte de réception
       my_messages: Mes messages
+      inbox_cards: Cartes de messages
       admin: Admin
+    inbox_cards:
+      title: Cartes de messages
+      mine: Mes messages
+      team: Boîte d’équipe
     composer:
       attach_page: Joindre une page
       find_a_page: Trouver une page

@@ -57,3 +57,5 @@
 /* Accessible's blank layout uses pt-16. Keep the utility even if a gem glob misses. */
 @source inline("pt-16");
 @source inline("min-h-dvh");
+/* Grid cols: 2 emits md:grid-cols-2 from a Ruby comment. Tailwind does not keep that class. */
+@source inline("md:grid-cols-2");

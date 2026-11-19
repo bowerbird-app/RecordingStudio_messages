@@ -12,8 +12,18 @@ module RecordingStudioMessages
       Copy.t("inbox.title")
     end
 
-    def messages_inbox_rows(group_recordings, selected: nil, inbox: nil)
-      page = inbox_page_for(group_recordings)
+    def messages_inbox_card(title:, actor: nil, mine: false, mount: nil, limit: Services::InboxCard::PREVIEW_LIMIT)
+      render RecordingStudioMessages::InboxCard.new(
+        title: title,
+        actor: actor || inbox_actor,
+        mine: mine,
+        mount: mount,
+        limit: limit
+      )
+    end
+
+    def messages_inbox_rows(group_recordings, selected: nil, inbox: nil, actor: nil)
+      page = inbox_page_for(group_recordings, actor: actor)
       Array(group_recordings).filter_map do |group_recording|
         row = messages_inbox_row(group_recording, selected: selected, inbox: inbox, page: page)
         row if messages_inbox_row_complete?(row)
@@ -229,10 +239,10 @@ module RecordingStudioMessages
       end
     end
 
-    def inbox_page_for(group_recordings)
-      return @inbox_page if defined?(@inbox_page) && @inbox_page
+    def inbox_page_for(group_recordings, actor: nil)
+      return @inbox_page if actor.nil? && defined?(@inbox_page) && @inbox_page
 
-      RecordingStudioMessages::Services::InboxPage.new(group_recordings, actor: inbox_actor)
+      RecordingStudioMessages::Services::InboxPage.new(group_recordings, actor: actor || inbox_actor)
     end
 
     def inbox_actor

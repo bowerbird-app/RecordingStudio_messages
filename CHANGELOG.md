@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-11-19
+
+Hosts can place an inbox card for each conversation source.
+
+### Added
+
+- `messages_inbox_card(title:, actor: nil, mine: false, mount: nil, limit: 3)` and `RecordingStudioMessages::InboxCard.new` with the same keywords.
+- `mine: true` lists direct grants through `my_group_recordings`. `mount:` lists one message center through `viewable_group_recordings`.
+- The card shows the host title, an unread badge, the latest conversations, and a link to that inbox. A source with no viewable conversations renders nothing.
+- When Recording Studio Dashboard is loaded, Messages registers a `:messages_inbox` widget with `empty: :hide`. Messages does not depend on that gem.
+
+### Upgrade notes
+
+No migration. Bump to **0.34.0**. Existing routes, list methods, and delivery behavior stay as they are. Restart the app after Recording Studio Dashboard is loaded so `:messages_inbox` registers. Messages does not depend on that gem.
+
+Render one card per source. `mine: true` means direct grants. On a mount using `access: :members`, team members also hold direct grants, so the same thread can appear in both a `mine` card and that mount's card. Hosts that want a clean split use `access: :inherited` on the shared inbox mount.
+
+```ruby
+messages_inbox_card(title: "My messages", actor: current_actor, mine: true)
+messages_inbox_card(title: "Team inbox", actor: current_actor, mount: mount)
+```
+
+With Dashboard, register a first row and pass the actor as the dashboard context, or an object that responds to `actor`. `title` and `mount` may each be a Proc that receives that context.
+
+```ruby
+row :inboxes, empty: :hide do
+  widget :messages_inbox, id: :mine, span: 6, config: { title: "My messages", mine: true }
+  widget :messages_inbox, id: :team, span: 6, config: {
+    title: ->(context) { context.team_mount.parent_recording.recordable.name },
+    mount: ->(context) { context.team_mount }
+  }
+end
+```
+
 ## [0.33.2] - 2026-11-18
 
 Message API `created_at` is a UTC ISO 8601 string.

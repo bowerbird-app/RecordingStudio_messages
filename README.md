@@ -732,7 +732,7 @@ Pass `recipients:` and `body:` to start a conversation with people. The actor ne
 
 `viewable_group_recordings(actor:, mount_recording:, tags: nil, unread: false, after: nil, limit: nil)` returns the kept `MessageGroup` recordings the actor can view under that mount. It calls Accessible `recordings_for` with `minimum_role: :view` and `recordable_type` set to `MessageGroup`, then sorts by the latest message time and then by title. Pass the mount. A blank actor or a blank mount returns `[]`. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. That filter reuses `MessageReads.unread_ids_among` after Accessible and tags. `after:` and `limit:` still page that filtered list. The engine index, the staff message center, and the inbox all use this list.
 
-`my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount.
+`my_group_recordings(actor:, after: nil, limit: nil, unread: false)` returns a relation of kept conversations that have a kept, effective direct Accessible grant for that actor, across every mount. It does not call `recordings_for`. Inherited access on a root or mount is not enough. The relation orders by `last_message_at` descending, then recording id. Pass `unread: true` to keep conversations whose `last_message_at` is after that actor's `last_read_at`, or that have a `last_message_at` and no read row. `after:` and `limit:` still page that filtered list. A blank actor returns `Recording.none`. Use this for `GET /my_messages`. Keep `viewable_group_recordings` for one mount. An inbox card with `mine: true` uses this same direct-grant list.
 
 `mark_read(group_recording:, actor:)` upserts that person's cursor (`last_read_at` and the latest message id). It requires Accessible `:view`. It also marks that person's unread `:message_received` notices for that conversation as read, through the Notifications model. It does not grant access. `unread?(group_recording:, actor:)` is true only for a viewer who still has a newer `last_message_at`. `unread_count(actor:)` counts unread rows in `my_group_recordings` with one join. Read rows are private until `read_receipts` is on. `seen_by(group_recording:, viewer:)` then lists current granted readers whose cursor has reached the latest message. Bell clear-all does not change these cursors.
 
@@ -757,6 +757,39 @@ end
 Set `admin_notification_root` to an Admin root `Recording`, or a callable that returns one. Recipients with Accessible `:view` on that recording (the same staff check as operations metrics) get the notice filed there. Everyone else, including the ticket owner, stays on the conversation root. Tickets, mounts, and groups do not move. Leave it `nil` to keep today's filing. This gem does not add an Admin dependency. Support and hosts that already resolve the Admin root through `Api::Access.admin_root_recording` pass that recording in.
 
 Notifications requires `root_recording` to match the attached `recording` when both are set. Staff copies that file under Admin omit `recording` and the message text. They keep the URL plus `message_group_id` and `message_id` in metadata. The title stays the conversation name. Ticket-root copies still attach the message recording and include the truncated line.
+
+## Inbox cards
+
+Render one card per source. A person with several kinds of conversation gets several cards. There is no toggle. A source with no conversations that actor can view renders nothing. The hide check is `exists?` on that source, so a large empty inbox does not count every row.
+
+```ruby
+messages_inbox_card(title: "My messages", actor: current_actor, mine: true)
+messages_inbox_card(title: "Team inbox", actor: current_actor, mount: mount)
+```
+
+`RecordingStudioMessages::InboxCard.new` takes the same keywords. Pass `title:` and either `mine: true` or `mount:`. `limit:` defaults to 3.
+
+`mine: true` reads `my_group_recordings`. That is direct grants. `mount:` reads `viewable_group_recordings` for that message center. The card is a Flatpack card: the title, an unread badge when the count is above zero, the latest rows from `messages_inbox_rows` and `InboxPage`, and a link to the full inbox. `mine: true` links to My messages. `mount:` links to that mount's conversation index.
+
+`mine: true` means direct grants. On a mount using `access: :members`, team members also hold direct grants, so the same thread can appear in both a `mine` card and that mount's card. Hosts that want a clean split use `access: :inherited` on the shared inbox mount.
+
+Messages loads without Recording Studio Dashboard. When that gem is loaded, Messages registers a `:messages_inbox` widget (`empty: :hide`, spans 6 and 12). The widget renders this card. `prepare` returns `Preparation.empty` when the actor cannot view any conversation in that source, and Dashboard removes the placement. A first row with `empty: :hide` stays first while any card has conversations, and the row drops when every card is empty. Registration runs once per process. Restart the app after Dashboard is added so the widget is registered.
+
+The dashboard context is the actor, or an object that responds to `actor`. Widget `title` is a string, or a Proc that receives the context. Widget `mount` is a message center recording, or a Proc that receives the context.
+
+```ruby
+RecordingStudioDashboard.register(:home) do
+  row :inboxes, empty: :hide do
+    widget :messages_inbox, id: :mine, span: 6, config: { title: "My messages", mine: true }
+    widget :messages_inbox, id: :team, span: 6, config: {
+      title: ->(context) { context.team_mount.parent_recording.recordable.name },
+      mount: ->(context) { context.team_mount }
+    }
+  end
+end
+```
+
+Pass that context to `RecordingStudioDashboard.component(:home, context:)`.
 
 ## Public contact
 

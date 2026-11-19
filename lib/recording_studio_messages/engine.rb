@@ -110,6 +110,7 @@ module RecordingStudioMessages
 
       config.to_prepare do
         RecordingStudioMessages::MembershipLock.install_authorizer_wrap!
+        RecordingStudioMessages::InboxCard.register_dashboard_widget!
       end
     end
 
