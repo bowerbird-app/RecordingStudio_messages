@@ -204,7 +204,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Message sent"
     assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
     assert_includes response.body, "fp-heading--3xl"
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_rendered_heroicon "rocket-launch"
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."
     assert_select "a[data-turbo-frame=_top][data-fp-style=primary]", text: "View conversation"
@@ -225,17 +225,17 @@ class PublicContactTest < ActionDispatch::IntegrationTest
 
     assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
     assert_includes response.body, "fp-heading--3xl"
-    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_rendered_heroicon "rocket-launch", selector: "[data-public-contact-step=sent] svg"
     assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "paper-airplane"
     get recording_studio_messages.public_contact_sent_path
-    assert_select "[data-public-contact-step=sent] svg[data-flat-pack--icon-name-value=?]", "paper-airplane"
+    assert_rendered_heroicon "paper-airplane", selector: "[data-public-contact-step=sent] svg"
     assert_select "[data-public-contact-step=sent] img", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = nil
     get recording_studio_messages.public_contact_sent_path
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
     assert_select "[data-public-contact-step=sent] img", count: 0
     assert_select ".text-center h1.fp-heading.fp-heading--3xl", text: "Message sent"
     assert_includes response.body, "fp-heading--3xl"
@@ -251,12 +251,12 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages.configuration.public_contact_sent_icon = "/icon.png"
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] img.block.h-8.w-8[src=?]", "/icon.png"
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "https://cdn.example.com/sent.webp"
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] img[src=?]", "https://cdn.example.com/sent.webp"
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "images/brand-mark.png"
     get recording_studio_messages.public_contact_sent_path
@@ -265,7 +265,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages.configuration.public_contact_sent_icon = "mark.svg"
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] img[src=?]", "mark.svg"
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = "http://cdn.example.com/mark.gif"
     get recording_studio_messages.public_contact_sent_path
@@ -274,12 +274,12 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages.configuration.public_contact_sent_icon = "brand/mark"
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] img[src=?]", "brand/mark"
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
 
     RecordingStudioMessages.configuration.public_contact_sent_icon = nil
     get recording_studio_messages.public_contact_sent_path
     assert_select "[data-public-contact-step=sent] img", count: 0
-    assert_select "[data-public-contact-step=sent] svg[data-controller='flat-pack--icon']", count: 0
+    assert_select "[data-public-contact-step=sent] svg", count: 0
   ensure
     RecordingStudioMessages.configuration.public_contact_sent_icon = "rocket-launch"
   end
@@ -608,7 +608,7 @@ class PublicContactTest < ActionDispatch::IntegrationTest
     get response.location, headers: modal_headers
 
     assert_select "turbo-frame#public_contact h1", text: "Message sent"
-    assert_select "svg[data-flat-pack--icon-name-value=?]", "rocket-launch"
+    assert_rendered_heroicon "rocket-launch"
     assert_select "[data-public-contact-step=sent]"
     assert_includes response.body, "Powered by #{@workspace.name}"
     refute_includes response.body, "Your message has been sent."

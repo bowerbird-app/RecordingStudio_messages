@@ -34,9 +34,7 @@ class MountUnreadFilterTest < ActionDispatch::IntegrationTest
     assert_select "a[aria-label=?][title=?][aria-current=page]",
                   "Show all",
                   "Show all"
-    assert_select "svg[data-flat-pack--icon-name-value=?][data-flat-pack--icon-variant-value=?]",
-                  "bell-alert",
-                  "solid"
+    assert_rendered_heroicon "bell-alert", variant: "solid"
   end
 
   test "mount unread toggle drops after_id, keeps other query params, and stays on the mount" do
