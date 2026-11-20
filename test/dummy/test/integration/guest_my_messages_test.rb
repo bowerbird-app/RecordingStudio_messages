@@ -15,7 +15,7 @@ class GuestMyMessagesTest < ActionDispatch::IntegrationTest
     RecordingStudioAccessible.bootstrap_owner_access!(recording: @root, actor: @staff)
     @mount = @root.ensure_message_mount("support", actor: @staff)
     @group = RecordingStudioMessages.create_group(@mount, title: "Print pickup", actor: @staff)
-    grant!(@guest)
+    grant!(@group, @guest)
     Current.actor = @staff
     RecordingStudioMessages.send_message(
       group_recording: @group,
@@ -79,6 +79,34 @@ class GuestMyMessagesTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Manage access"
   end
 
+  test "a guest with only a direct grant sees an older conversation pinned on the sidebar" do
+    page_size = RecordingStudioMessages::MyMessagesController::PAGE_SIZE
+    stamp_last_message_at!(@group, Time.zone.parse("2020-01-01 00:00:00"))
+    page_size.times do |index|
+      newer = RecordingStudioMessages.create_group(@mount, title: "Newer guest #{index}", actor: @staff)
+      grant!(newer, @guest)
+      Current.actor = @staff
+      RecordingStudioMessages.send_message(
+        group_recording: newer,
+        body: "Newer guest #{index} body",
+        actor: @staff,
+        notify: false
+      )
+      stamp_last_message_at!(newer, Time.zone.parse("2027-01-01 00:00:00") + index.minutes)
+    end
+
+    sign_in @guest
+    get recording_studio_messages.my_message_path(@group)
+
+    assert_response :success
+    sidebar = css_select("[data-flat-pack--chat-layout-target='sidebar'] a[data-turbo-stream]")
+    assert_equal recording_studio_messages.my_message_path(@group), sidebar.first["href"]
+    assert_equal "page", sidebar.first["aria-current"]
+    assert_includes sidebar.first.text, "Print pickup"
+    assert_select ".flat-pack-page-nav", count: 0
+    refute_includes response.body, "Attach a page"
+  end
+
   test "a person who is not in the conversation cannot open it" do
     sign_in @stranger
     get recording_studio_messages.my_message_path(@group)
@@ -100,14 +128,20 @@ class GuestMyMessagesTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def grant!(actor)
+  def grant!(recording = @group, actor = @guest)
     result = RecordingStudioAccessible.grant_access(
-      recording: @group,
+      recording: recording,
       actor: actor,
       role: :edit,
       manager_actor: @staff
     )
     raise result.error if result.failure?
+  end
+
+  def stamp_last_message_at!(recording, time)
+    RecordingStudioMessages::MessageGroup.unscoped.where(id: recording.recordable_id).update_all(
+      last_message_at: time
+    )
   end
 
   def personal_notice
