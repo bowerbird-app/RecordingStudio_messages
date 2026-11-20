@@ -37,7 +37,6 @@ module RecordingStudioMessages
       @unread_filter = unread_filter?
       @older_href = older_href_for(page)
       @group_recordings = page
-      @inbox_page = RecordingStudioMessages::Services::InboxPage.new(page, actor: current_messages_actor)
       @group_recording = selected || selected_group_from_params || first_ready_group
       return if @group_recording.blank?
 
@@ -106,6 +105,10 @@ module RecordingStudioMessages
     end
 
     def first_ready_group
+      @inbox_page = RecordingStudioMessages::Services::InboxPage.new(
+        @group_recordings,
+        actor: current_messages_actor
+      )
       @group_recordings.find { |group| ready_inbox_group?(group) }
     end
 

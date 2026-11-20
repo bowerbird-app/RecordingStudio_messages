@@ -275,6 +275,33 @@ class MyMessagesTest < ActionDispatch::IntegrationTest
     refute_select "a[aria-label=?][href*='after_id']", "Show unread only"
   end
 
+  test "opening a conversation older than the first page pins it at the top of the sidebar" do
+    Current.actor = @staff
+    older = seeded_unread_conversation("Buried thread")
+    stamp_last_message_at!(older, Time.zone.parse("2020-01-01 00:00:00"))
+    page_size = RecordingStudioMessages::MyMessagesController::PAGE_SIZE
+    page_size.times do |index|
+      newer = seeded_unread_conversation("Newer page #{index}")
+      stamp_last_message_at!(newer, Time.zone.parse("2027-01-01 00:00:00") + index.minutes)
+    end
+
+    sign_in @customer
+    get recording_studio_messages.my_messages_path
+
+    assert_response :success
+    refute_select "[data-flat-pack--chat-layout-target='sidebar'] a[href=?]",
+                  recording_studio_messages.my_message_path(older)
+
+    get recording_studio_messages.my_message_path(older)
+
+    assert_response :success
+    sidebar = css_select("[data-flat-pack--chat-layout-target='sidebar'] a[data-turbo-stream]")
+    assert_equal recording_studio_messages.my_message_path(older), sidebar.first["href"]
+    assert_equal "page", sidebar.first["aria-current"]
+    assert_includes sidebar.first.text, "Buried thread"
+    assert_includes css_select("[data-flat-pack--chat-layout-target='sidebar']").text, "Newer page 0"
+  end
+
   test "stranger cannot open a conversation from my messages" do
     stranger = User.create!(
       email: "my-stranger-#{SecureRandom.hex(4)}@example.com",

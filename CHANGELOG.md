@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-11-20
+
+Opening a My Messages conversation keeps that conversation on the sidebar when it is older than the first page.
+
+### Fixed
+
+- `GET /my_messages/:id` shows that conversation as the first sidebar row and marks the row as the current page (`aria-current="page"`). A conversation outside the first 50 stays on that row. The sidebar batch is built once from the list after the row is added, and the row keeps its preview. `GET /my_messages` still shows only the first page. A guest who can open the conversation and cannot view its workspace still gets the plain panel.
+
+### Upgrade notes
+
+Bump to **0.38.1**. There is no Messages migration.
+
 ## [0.38.0] - 2026-11-19
 
 A person who can open one conversation, and cannot view its workspace, gets a personal new-message notice they can see and open.
