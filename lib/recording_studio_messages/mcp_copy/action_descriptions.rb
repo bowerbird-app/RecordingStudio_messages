@@ -32,7 +32,7 @@ module RecordingStudioMessages
       def fill(names)
         list = names[:list_conversations] || Api::ToolDescriptions::LIST_REF
         start = names[:create_group] || Api::ToolDescriptions::START_REF
-        blanks.merge(ids(list, start)).merge(verbs(list, start)).merge(
+        blanks.merge(ids(list)).merge(verbs(list, start)).merge(
           read: names[:read_thread] || Api::ToolDescriptions::READ_REF
         )
       end
@@ -41,12 +41,11 @@ module RecordingStudioMessages
         { view_access: "", edit_access: "", inherited: "" }
       end
 
-      def ids(list, start)
+      def ids(list)
         {
           id: PRESS_CENTER_ID,
           missing_mount: Api::ToolDescriptions::MISSING_MOUNT,
           list:,
-          start:,
           conversation: "conversation_id from #{list}",
           start_args: START_ARGS
         }

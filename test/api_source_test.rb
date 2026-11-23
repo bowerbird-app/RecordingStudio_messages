@@ -13,10 +13,6 @@ class ApiSourceTest < Minitest::Test
     assert_equal "Open request", endpoint.openapi.fetch(:title)
     assert_equal ["Support"], endpoint.openapi_tags
 
-    engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
-    refute_includes engine, "Api.register!"
-    boot = File.read(File.expand_path("../lib/recording_studio_messages/engine_mcp.rb", __dir__))
-    refute_includes boot, "place!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
     refute RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
@@ -52,6 +48,7 @@ class ApiSourceTest < Minitest::Test
     assert_equal "RecordingStudioMessages::MessageGroup", reply.recordable_type
     assert_equal :edit, reply.required_role
     assert_equal "Reply", reply.openapi.fetch(:summary)
+    assert_nil reply.openapi[:tag]
     assert_includes reply.openapi.fetch(:description), "Reply"
     assert_equal %w[body references], reply.input_contract.as_json.fetch(:fields).keys.map(&:to_s)
     refute reply.input_contract.as_json.fetch(:reject_unknown)

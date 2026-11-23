@@ -28,7 +28,7 @@ module RecordingStudioMessages
     end
 
     def tool_names(api: nil)
-      press_center_endpoints(api: api).map { |entry| entry.fetch(:name) }
+      placed_endpoints(api: api).map { |entry| entry.fetch(:name) }
     end
 
     def register_types
@@ -42,7 +42,7 @@ module RecordingStudioMessages
 
     def register_press_center_tools
       client = mcp
-      press_center_endpoints.each { |entry| register_endpoint_tool(client, entry) }
+      placed_endpoints.each { |entry| register_endpoint_tool(client, entry) }
     end
 
     def register_endpoint_tool(client, entry)
@@ -69,14 +69,6 @@ module RecordingStudioMessages
       placement.endpoints.to_h { |endpoint| [endpoint.handler.action, endpoint.name.to_s] }
     end
 
-    def press_center_endpoints(api: nil)
-      placed_endpoints(api: api).select { |entry| press_center_tool?(entry.fetch(:placement)) }
-    end
-
-    def press_center_tool?(placement)
-      placement.preset == Api::Presets::PRESS_CENTER
-    end
-
     def placed_endpoints(api: nil)
       named_apis(api).flat_map do |name|
         registry = RecordingStudioApi.configuration.fetch_api(name).registered_endpoint_registry
@@ -87,7 +79,7 @@ module RecordingStudioMessages
     def placed_entry(api, endpoint)
       handler = endpoint.handler
       return unless messages_handler?(handler)
-      return if handler.placement.preset == Api::Presets::SUPPORT
+      return unless handler.placement.preset == Api::Presets::PRESS_CENTER
 
       { api:, name: endpoint.name.to_s, endpoint:, placement: handler.placement, action: handler.action }
     end

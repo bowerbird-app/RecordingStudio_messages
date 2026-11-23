@@ -76,6 +76,10 @@ class ApiToolDescriptionsTest < Minitest::Test
       endpoint = RecordingStudioApi.registered_endpoint(:"#{at}_#{suffix}")
 
       assert_equal expected, endpoint.openapi.fetch(:description), action
+      assert_equal RecordingStudioMessages::Api::Presets::PRESS_CENTER.titles.fetch(action),
+                   endpoint.openapi.fetch(:title), action
+      assert_equal ["Press Center Messages"], endpoint.openapi_tags, action
+      assert_equal({ group: "Press Center" }, endpoint.openapi[:tag], action)
     end
   end
 

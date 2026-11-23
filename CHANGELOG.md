@@ -13,7 +13,7 @@ Named MCP tools for press-center message endpoints.
 
 ### Added
 
-- `RecordingStudioMessages::McpCopy` registers named Recording Studio MCP 0.45.2 tools when that gem is loaded. This gem still does not depend on MCP.
+- `RecordingStudioMessages::McpCopy` registers named Recording Studio MCP 0.45.2 tools when that gem is loaded. This gem still does not depend on MCP. It also registers show-only type copy for `Message`, `MessageGroup`, and `MessageMount`.
 - Press-center placements (`preset: :press_center`) become tools under the **Press Center Messages** doc group (`tag.group` Press Center). Tool names match the live endpoint names (`press_center_messages_*` on hosts that place `at: :press_center_messages`, `press_centers_*` in the dummy). MCP tool copy shares the press-center format templates and adds that those tools return Message center not found when the press center has no message center yet. That copy has no Access wording.
 - `:support` placements stay off MCP. Support wraps those endpoints. Messages still registers no API endpoints on its own.
 

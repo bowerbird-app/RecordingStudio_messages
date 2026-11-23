@@ -281,7 +281,6 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "press_centers/:id/conversations", listed.path
     assert_equal "Mailbox", listed.recordable_type
     assert_nil RecordingStudioApi.registered_endpoint(:support_rename_conversation)
-
   end
 
   private

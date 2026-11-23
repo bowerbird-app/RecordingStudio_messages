@@ -67,10 +67,8 @@ class McpCopyTest < Minitest::Test
     assert_equal expected, names
     names.each { |name| assert fake.tools.key?(name), "missing registered tool #{name}" }
 
-    listed = RecordingStudioApi.registered_endpoint(:"#{at}_list_conversations")
-    assert_equal ["Press Center Messages"], listed.openapi_tags
-    assert_equal({ group: "Press Center" }, listed.openapi[:tag])
     assert_list_tool fake.tools.fetch("#{at}_list_conversations"), at
+    fake.tools.each_value { |tool| refute_access_wording tool[:description] }
     refute_includes RecordingStudioMessages::McpCopy.tool_names(api: :public), "#{at}s_reply"
     refute fake.tools.key?("#{at}s_list_requests")
     refute fake.tools.key?("#{at}s_open_request")
@@ -125,7 +123,6 @@ class McpCopyTest < Minitest::Test
 
     refute fake.tools.key?("list_my_messages")
     refute fake.tools.key?("support_reply")
-    assert_nil RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
 
   private
