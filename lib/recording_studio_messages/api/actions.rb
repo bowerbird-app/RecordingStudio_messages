@@ -204,3 +204,5 @@ module RecordingStudioMessages
     end
   end
 end
+
+require_relative "my_messages_actions"

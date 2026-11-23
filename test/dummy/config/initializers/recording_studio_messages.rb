@@ -22,6 +22,11 @@ Rails.application.config.to_prepare do
     mount: { recordable_type: "Mailbox", key: :inbox },
     preset: :press_center
   )
+  RecordingStudioMessages::Api.place(
+    api: :public,
+    at: :my_messages,
+    preset: :my_messages
+  )
 
   RecordingStudioMessages.register_composer_action(
     :attach_page,

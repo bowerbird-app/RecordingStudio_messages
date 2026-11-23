@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-11-23
+
+My Messages MCP tools for the personal inbox.
+
+### Added
+
+- `preset: :my_messages` places `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. Omit `mount`. `at` is the path segment. The endpoint names stay those five tools.
+- The list uses `my_group_recordings`. The unread count uses `unread_count`, the same number as the HTML inbox badge. Read uses `message_recordings`. Send uses `send_message`.
+- When Recording Studio MCP is loaded, `McpCopy` registers those endpoints and `McpCopy.tool_names` includes them. `:support` stays off that list.
+
+### Upgrade notes
+
+Bump to **0.40.0**. There is no Messages migration. This gem still does not depend on MCP. Nothing is placed on a host by default.
+
+Place the inbox on the API that should expose it:
+
+```ruby
+RecordingStudioMessages::Api.place(
+  api: :public,
+  at: :my_messages,
+  preset: :my_messages
+)
+```
+
+Add the tools to the host `include_tools` list. `tool_names` also returns any `:press_center` tools already placed on that API.
+
+```ruby
+include_tools: [
+  *RecordingStudioMessages::McpCopy.tool_names
+]
+```
+
+List, read, mark read, and the unread count need `:view` on the conversation. Send needs `:edit`. A conversation in another root, with no grant, is not found. Hosts that already place `:press_center` keep those endpoint names.
+
 ## [0.39.0] - 2026-11-23
 
 Named MCP tools for press-center message endpoints.

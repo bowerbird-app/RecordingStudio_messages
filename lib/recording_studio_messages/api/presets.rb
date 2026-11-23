@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require_relative "my_messages_preset"
 require_relative "tool_descriptions"
 
 module RecordingStudioMessages
@@ -85,9 +86,13 @@ module RecordingStudioMessages
         tag_group: PRESS_CENTER_GROUP
       )
 
-      ALL = { support: SUPPORT, press_center: PRESS_CENTER }.freeze
+      ALL = { support: SUPPORT, press_center: PRESS_CENTER, my_messages: MY_MESSAGES }.freeze
 
       module_function
+
+      def my_messages?(preset)
+        preset.equal?(MY_MESSAGES)
+      end
 
       def fetch(name)
         key = name&.to_sym

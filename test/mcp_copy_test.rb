@@ -73,7 +73,6 @@ class McpCopyTest < Minitest::Test
     refute fake.tools.key?("#{at}s_list_requests")
     refute fake.tools.key?("#{at}s_open_request")
     refute_includes RecordingStudioMessages::McpCopy.tool_names, "support_reply"
-    refute_includes RecordingStudioMessages::McpCopy.tool_names, "list_my_messages"
     assert_registered_types fake.types
   end
 
@@ -115,14 +114,47 @@ class McpCopyTest < Minitest::Test
     refute_access_wording send_copy.fetch(:description)
   end
 
-  def test_register_does_not_place_my_messages_or_support_tools
+  def test_register_does_not_place_support_tools
     fake = FakeMcp.new
+    at = unique_at
+    place_support(at)
     RecordingStudioMessages::McpCopy.stub(:mcp, fake) do
       RecordingStudioMessages::McpCopy.register!
     end
 
-    refute fake.tools.key?("list_my_messages")
+    refute fake.tools.key?("#{at}_reply")
+    refute fake.tools.key?("#{at}_list_requests")
     refute fake.tools.key?("support_reply")
+  end
+
+  def test_my_messages_tools_use_fixed_names
+    fake = FakeMcp.new
+    place_my_messages
+    RecordingStudioMessages::McpCopy.stub(:mcp, fake) do
+      RecordingStudioMessages::McpCopy.register!
+    end
+
+    expected = %w[
+      list_my_messages
+      read_my_messages
+      send_my_message
+      mark_my_message_read
+      count_unread_my_messages
+    ]
+    names = RecordingStudioMessages::McpCopy.tool_names(api: :public)
+    expected.each do |name|
+      assert_includes names, name
+      assert fake.tools.key?(name), "missing registered tool #{name}"
+      refute_access_wording fake.tools.fetch(name).fetch(:description)
+    end
+
+    listed = fake.tools.fetch("list_my_messages")
+    assert_equal :list_my_messages, listed[:endpoint]
+    assert_equal "List my messages", listed[:title]
+    assert_equal RecordingStudioMessages::MESSAGE_GROUP_TYPE, listed[:type]
+    assert_includes listed[:description], "after_id"
+    assert_equal "Count unread messages", fake.tools.fetch("count_unread_my_messages").fetch(:title)
+    refute_includes names, "my_messages_list_my_messages"
   end
 
   private
@@ -171,6 +203,10 @@ class McpCopyTest < Minitest::Test
 
   def place_support(at)
     RecordingStudioMessages::Api.place(api: :public, at:, mount: -> {}, preset: :support)
+  end
+
+  def place_my_messages
+    RecordingStudioMessages::Api.place(api: :public, at: :my_messages, preset: :my_messages)
   end
 
   def unique_at

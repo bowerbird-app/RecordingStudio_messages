@@ -24,7 +24,7 @@ module RecordingStudioMessages
       return unless mcp_available?
 
       register_types
-      register_press_center_tools
+      register_tools
     end
 
     def tool_names(api: nil)
@@ -40,15 +40,16 @@ module RecordingStudioMessages
       end
     end
 
-    def register_press_center_tools
+    def register_tools
       client = mcp
       placed_endpoints.each { |entry| register_endpoint_tool(client, entry) }
     end
 
     def register_endpoint_tool(client, entry)
       action = entry.fetch(:action)
-      names = sibling_names(entry.fetch(:placement))
-      copy = ActionDescriptions.copy_for(action, names)
+      placement = entry.fetch(:placement)
+      names = sibling_names(placement)
+      copy = ActionDescriptions.copy_for(action, names, preset: placement.preset)
       client.register_tool(**tool_kwargs(entry, copy, action))
     end
 
@@ -79,13 +80,17 @@ module RecordingStudioMessages
     def placed_entry(api, endpoint)
       handler = endpoint.handler
       return unless messages_handler?(handler)
-      return unless handler.placement.preset == Api::Presets::PRESS_CENTER
+      return unless mcp_preset?(handler.placement.preset)
 
       { api:, name: endpoint.name.to_s, endpoint:, placement: handler.placement, action: handler.action }
     end
 
     def messages_handler?(handler)
       handler.respond_to?(:placement) && handler.respond_to?(:action)
+    end
+
+    def mcp_preset?(preset)
+      preset.equal?(Api::Presets::PRESS_CENTER) || preset.equal?(Api::Presets::MY_MESSAGES)
     end
 
     def named_apis(api)

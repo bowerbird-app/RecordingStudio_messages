@@ -47,6 +47,22 @@ module RecordingStudioMessages
         }
       }.freeze
 
+      INBOX_LIST_FIELDS = {
+        unread: {
+          type: :boolean, required: false,
+          description: "When true, only conversations with unread lines for this actor."
+        },
+        after_id: {
+          type: :string, required: false, allow_blank: true,
+          description: "Conversation id to page after. Use a records id from an earlier My Messages page. " \
+                       "An id you cannot open is rejected."
+        },
+        limit: {
+          type: :integer, required: false,
+          description: "Page size. Defaults to 50, the HTML inbox page size, and is clamped from 1 through 50."
+        }
+      }.freeze
+
       RENAME_FIELDS = {
         title: {
           type: :string, required: true, allow_blank: false,
@@ -107,6 +123,44 @@ module RecordingStudioMessages
           singleton_path: "unread_count", parent_path: "unread_count",
           title: "Count unread conversations",
           description: "Count unread conversations on this message center. Returns unread_count.",
+          fields: {}
+        },
+        list_my_messages: {
+          handler: :ListMyMessages, verb: :get, role: :view, scope: :actor,
+          singleton_path: "conversations", parent_path: "conversations",
+          title: "List my messages",
+          description: "List your conversations across message centers. Returns records and after_id.",
+          fields: INBOX_LIST_FIELDS
+        },
+        read_my_messages: {
+          handler: :ReadMyMessages, verb: :get, role: :view, scope: :actor,
+          singleton_path: "conversations/:id/messages", parent_path: "messages",
+          title: "Read my messages",
+          description: "Read the messages in one of your conversations. Returns records.",
+          id_description: "The conversation id from list_my_messages.",
+          fields: {}
+        },
+        send_my_message: {
+          handler: :SendMyMessage, verb: :post, role: :edit, scope: :actor,
+          singleton_path: "conversations/:id/send_message", parent_path: "send_message",
+          title: "Send my message",
+          description: "Send a message in one of your conversations. Returns the new message.",
+          id_description: "The conversation id from list_my_messages.",
+          fields: SEND_FIELDS
+        },
+        mark_my_message_read: {
+          handler: :MarkMyMessageRead, verb: :post, role: :view, scope: :actor,
+          singleton_path: "conversations/:id/mark_read", parent_path: "mark_read",
+          title: "Mark my message read",
+          description: "Mark one of your conversations read. Returns the conversation.",
+          id_description: "The conversation id from list_my_messages.",
+          fields: {}
+        },
+        count_unread_my_messages: {
+          handler: :CountUnreadMyMessages, verb: :get, role: :view, scope: :actor,
+          singleton_path: "unread_count", parent_path: "unread_count",
+          title: "Count unread messages",
+          description: "Count your unread conversations across message centers. Returns unread_count.",
           fields: {}
         }
       }.freeze

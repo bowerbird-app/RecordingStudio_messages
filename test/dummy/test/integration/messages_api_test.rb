@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "devise/test/integration_helpers"
 
 class MessagesApiTest < ActionDispatch::IntegrationTest
+  include Devise::Test::IntegrationHelpers
+
   BASE = "/recording_studio_api/api/v1"
 
   setup do
@@ -37,7 +40,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     @editor_access = grant!(@workspace, @editor, :edit)
     @viewer_access = grant!(@workspace, @viewer, :view)
     @editor_token, @editor_client = token_for(@editor_access)
-    @viewer_token, = token_for(@viewer_access)
+    @viewer_token, @viewer_client = token_for(@viewer_access)
     @admin_token, @admin_client = token_for(owner_access, role: :admin)
   end
 
@@ -283,7 +286,121 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_nil RecordingStudioApi.registered_endpoint(:support_rename_conversation)
   end
 
+  test "my messages list pages direct grants and skips other roots" do
+    mine = granted_conversation("Mine", @editor_client, :edit)
+    second = granted_conversation("Second", @editor_client, :view)
+    third = granted_conversation("Third", @editor_client, :view)
+    RecordingStudioMessages.mark_read(group_recording: third, actor: @editor_client)
+
+    listed = call(:get, "/my_messages/conversations", @editor_token)
+    assert_response :success, response.body
+    ids = listed.fetch("records").map { |row| row.fetch("id") }
+    assert_includes ids, mine.id
+    assert_includes ids, second.id
+    assert_includes ids, third.id
+    refute_includes ids, @group.id
+    refute_includes ids, @inbox_group.id
+    refute_includes ids, @other_group.id
+    row = listed.fetch("records").find { |record| record.fetch("id") == mine.id }
+    assert_utc_iso8601 row.fetch("created_at"), mine.created_at
+
+    page = call(:get, "/my_messages/conversations", @editor_token, limit: 2)
+    assert_response :success, response.body
+    first_ids = page.fetch("records").map { |record| record.fetch("id") }
+    assert_equal 2, first_ids.size
+    assert_equal first_ids.last, page.fetch("after_id")
+
+    rest = call(:get, "/my_messages/conversations", @editor_token, limit: 2, after_id: first_ids.last)
+    assert_response :success, response.body
+    rest_ids = rest.fetch("records").map { |record| record.fetch("id") }
+    assert_empty first_ids & rest_ids
+
+    clamped = call(:get, "/my_messages/conversations", @editor_token, limit: 0)
+    assert_equal 1, clamped.fetch("records").size
+
+    unread = call(:get, "/my_messages/conversations", @editor_token, unread: true)
+    unread_ids = unread.fetch("records").map { |record| record.fetch("id") }
+    assert_includes unread_ids, mine.id
+    refute_includes unread_ids, third.id
+
+    call(:get, "/my_messages/conversations", @editor_token, after_id: @other_group.id)
+    assert_response :unprocessable_entity, response.body
+    assert_includes response.body, "after_id is not a conversation in My Messages"
+  end
+
+  test "my messages read mark and send follow view and edit" do
+    mine = granted_conversation("Desk line", @editor_client, :edit)
+    grant!(mine, @viewer_client, :view)
+    before = RecordingStudioMessages.message_recordings(mine).size
+
+    thread = call(:get, "/my_messages/conversations/#{mine.id}/messages", @viewer_token)
+    assert_response :success, response.body
+    assert_includes thread.fetch("records").map { |row| row.fetch("body") }, "Hello Desk line"
+    message = thread.fetch("records").find { |row| row.fetch("body") == "Hello Desk line" }
+    assert_utc_iso8601 message.fetch("created_at"), RecordingStudioMessages.message_recordings(mine).last.created_at
+
+    call(:get, "/my_messages/conversations/#{@other_group.id}/messages", @editor_token)
+    assert_response :not_found, response.body
+    call(:post, "/my_messages/conversations/#{@other_group.id}/send_message", @editor_token, body: "Leak")
+    assert_response :not_found, response.body
+    call(:post, "/my_messages/conversations/#{@other_group.id}/mark_read", @editor_token)
+    assert_response :not_found, response.body
+
+    call(:post, "/my_messages/conversations/#{mine.id}/send_message", @viewer_token, body: "Nope")
+    assert_response :forbidden, response.body
+    assert_equal before, RecordingStudioMessages.message_recordings(mine).size
+
+    sent = call(:post, "/my_messages/conversations/#{mine.id}/send_message", @editor_token, body: "From the inbox")
+    assert_response :success, response.body
+    assert_equal "From the inbox", sent.fetch("body")
+    assert_equal mine.id, sent.fetch("parent_id")
+    assert_equal "From the inbox", RecordingStudioMessages.message_recordings(mine).last.recordable.body
+    assert_utc_iso8601 sent.fetch("created_at"), RecordingStudioMessages.message_recordings(mine).last.created_at
+
+    marked = call(:post, "/my_messages/conversations/#{mine.id}/mark_read", @viewer_token)
+    assert_response :success, response.body
+    assert_equal mine.id, marked.fetch("id")
+    refute RecordingStudioMessages.unread?(group_recording: mine, actor: @viewer_client)
+  end
+
+  test "count unread my messages matches the html inbox for that actor" do
+    kept = granted_conversation("Keep unread", @editor, :edit)
+    opened = granted_conversation("Opened", @editor, :edit)
+    grant!(kept, @editor_client, :view)
+    grant!(opened, @editor_client, :view)
+    RecordingStudioMessages.mark_read(group_recording: opened, actor: @editor)
+    RecordingStudioMessages.mark_read(group_recording: opened, actor: @editor_client)
+    RecordingStudioMessages.send_message(
+      group_recording: @other_group, body: "Other root", actor: @stranger, notify: false
+    )
+
+    expected = RecordingStudioMessages.unread_count(actor: @editor)
+    sign_in @editor
+    get recording_studio_messages.my_messages_path
+    assert_response :success
+    assert_select "turbo-frame#messages-unread-badge", text: expected.to_s
+    sign_out @editor
+
+    counted = call(:get, "/my_messages/unread_count", @editor_token)
+    assert_response :success, response.body
+    assert_equal RecordingStudioMessages.unread_count(actor: @editor_client), counted.fetch("unread_count")
+    assert_equal expected, counted.fetch("unread_count")
+    refute_includes(
+      RecordingStudioMessages.my_group_recordings(actor: @editor_client, unread: true).map(&:id),
+      @other_group.id
+    )
+  end
+
   private
+
+  def granted_conversation(title, actor, role)
+    group = RecordingStudioMessages.create_group(@mount, title: title, actor: @owner)
+    RecordingStudioMessages.send_message(
+      group_recording: group, body: "Hello #{title}", actor: @owner, notify: false
+    )
+    grant!(group, actor, role)
+    group
+  end
 
   def user(name)
     User.create!(

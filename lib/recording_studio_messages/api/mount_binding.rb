@@ -58,6 +58,20 @@ module RecordingStudioMessages
         end
       end
 
+      class None
+        def parent?
+          false
+        end
+
+        def recordable_type
+          nil
+        end
+
+        def resolve(_context = nil)
+          nil
+        end
+      end
+
       class Parent
         attr_reader :recordable_type, :key
 

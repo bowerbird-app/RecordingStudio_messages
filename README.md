@@ -109,6 +109,31 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.40.0
+
+Messages `0.40.0` adds My Messages tools for the personal inbox. The inbox is one list of every conversation the current actor was added to, across message centers. It is not a new message type.
+
+1. Install Messages `0.40.0`. There is no Messages migration.
+2. Place the inbox on the API that should expose it. Omit `mount`. `at` is the path segment. The tool names stay fixed.
+
+```ruby
+RecordingStudioMessages::Api.place(
+  api: :public,
+  at: :my_messages,
+  preset: :my_messages
+)
+```
+
+3. When the host exposes MCP, add the tool names to `include_tools`. Placing the surface registers the endpoints. `McpCopy.tool_names` returns the press-center names and these five, for the APIs you placed.
+
+```ruby
+include_tools: [
+  *RecordingStudioMessages::McpCopy.tool_names
+]
+```
+
+The names are `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. List, read, mark read, and the unread count need `:view` on that conversation. Send needs `:edit`. The unread count is the HTML inbox badge for that same actor. Nothing is placed on a host by default. Hosts that already place `:press_center` keep those tool names.
+
 ### Upgrading to 0.39.0
 
 Messages `0.39.0` registers named Recording Studio MCP tools for press-center message endpoints.
@@ -197,7 +222,21 @@ RecordingStudioMessages::Api.place(
 
 `:support` is open request, list my requests, read messages, reply, mark read, and unread count. `:press_center` adds rename and uses list, start, read, send, rename, mark read, and unread count. `:support` tools use the Support group. `:press_center` tools use the Press Center Messages tag. Endpoints set `tag.group` Press Center, used by MCP tool docs. A placement with no preset and no `tags:` uses Message Center. On `:press_center`, mark read is titled Mark conversation read, and unread count is titled Count unread conversations. A singleton path looks like `support/conversations` and `support/conversations/:id/messages`. A parent path looks like `press_centers/:id/conversations`, and the conversation id is the `conversation_id` input because a path can carry only one `:id`.
 
-When Recording Studio MCP is loaded, `McpCopy.register!` turns press-center endpoints into named tools. `:support` stays off that list. Nothing is placed on a host by default.
+When Recording Studio MCP is loaded, `McpCopy.register!` turns `:press_center` and `:my_messages` endpoints into named tools. `:support` stays off that list. `McpCopy.tool_names` returns the live names. Nothing is placed on a host by default.
+
+```ruby
+RecordingStudioMessages::Api.place(
+  api: :public,
+  at: :my_messages,
+  preset: :my_messages
+)
+
+include_tools: [
+  *RecordingStudioMessages::McpCopy.tool_names
+]
+```
+
+`:my_messages` omits `mount`. The names are `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. `at` only chooses the path, such as `my_messages/conversations`.
 
 A conversation from another message center is not found. Unread count uses the same conversations as the list for that message center, including access inherited on it.
 
