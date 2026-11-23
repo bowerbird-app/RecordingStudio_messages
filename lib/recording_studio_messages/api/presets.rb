@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "tool_descriptions"
+
 module RecordingStudioMessages
   module Api
     module Presets
@@ -71,20 +73,13 @@ module RecordingStudioMessages
           unread_count: "Count unread conversations"
         },
         descriptions: {
-          list_conversations: "List conversations on this press center's message center. Pass unread, " \
-                              "after_id, or limit. Returns records and after_id.",
-          create_group: "Start a conversation on this press center's message center. Pass title. Pass body " \
-                        "when recipients are present. Returns the new conversation.",
-          read_thread: "Read the messages in one conversation on this press center. Pass the conversation id. " \
-                       "Returns records.",
-          send_message: "Send a message in a conversation on this press center. Pass the conversation id and " \
-                        "body, or references. Returns the new message.",
-          rename_group: "Rename one conversation on this press center. Pass the conversation id and title. " \
-                        "Title is required and must be 120 characters or fewer. Returns the conversation.",
-          mark_read: "Mark one conversation read on this press center. Pass the conversation id. " \
-                     "Returns the conversation.",
-          unread_count: "Count unread conversations on this press center's message center. Uses the same " \
-                        "conversations as the list. Returns unread_count."
+          list_conversations: ToolDescriptions::LIST,
+          create_group: ToolDescriptions::CREATE,
+          read_thread: ToolDescriptions::READ,
+          send_message: ToolDescriptions::SEND,
+          rename_group: ToolDescriptions::RENAME,
+          mark_read: ToolDescriptions::MARK_READ,
+          unread_count: ToolDescriptions::UNREAD_COUNT
         },
         tags: [PRESS_CENTER_MESSAGES],
         tag_group: PRESS_CENTER_GROUP

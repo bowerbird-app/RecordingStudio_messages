@@ -3,64 +3,53 @@
 require_relative "mcp_copy/action_descriptions"
 require_relative "mcp_copy/outputs"
 require_relative "mcp_copy/type_descriptions"
-require_relative "api/my_messages"
 
 module RecordingStudioMessages
   # Registers named MCP tools when Recording Studio MCP is loaded.
   # This gem does not depend on it. Hosts that skip MCP keep the UI and API only.
   module McpCopy
-    MY_MESSAGE_NAMES = Api::MyMessages::NAMES
-    MY_MESSAGES_GROUP = Api::MyMessages::GROUP
-    PRESS_CENTER_MESSAGES_GROUP = Api::Presets::PRESS_CENTER_MESSAGES
-
     module_function
 
-    def register!
+    def mcp
       return unless defined?(::RecordingStudioMcp)
-      return unless ::RecordingStudioMcp.respond_to?(:register_tool)
 
-      Api::MyMessages.place!
+      ::RecordingStudioMcp
+    end
+
+    def mcp_available?
+      mcp.respond_to?(:register_tool)
+    end
+
+    def register!
+      return unless mcp_available?
+
       register_types
       register_press_center_tools
-      register_my_message_tools
     end
 
     def tool_names(api: nil)
-      press_center_tool_names(api: api) + my_message_tool_names(api: api)
-    end
-
-    def press_center_tool_names(api: nil)
       press_center_endpoints(api: api).map { |entry| entry.fetch(:name) }
     end
 
-    def my_message_tool_names(api: nil)
-      my_message_endpoints(api: api).map { |entry| entry.fetch(:name) }
-    end
-
-    def description_for(kind, action)
-      ActionDescriptions.copy_for(kind, action).fetch(:description)
-    end
-
     def register_types
-      return unless ::RecordingStudioMcp.respond_to?(:register_type)
+      client = mcp
+      return unless client.respond_to?(:register_type)
 
       TypeDescriptions::BY_TYPE.each do |type, description|
-        ::RecordingStudioMcp.register_type(type: type, description: description)
+        client.register_type(type: type, description: description)
       end
     end
 
     def register_press_center_tools
-      press_center_endpoints.each { |entry| register_endpoint_tool(entry, :press_center) }
+      client = mcp
+      press_center_endpoints.each { |entry| register_endpoint_tool(client, entry) }
     end
 
-    def register_my_message_tools
-      my_message_endpoints.each { |entry| register_endpoint_tool(entry, :my_messages) }
-    end
-
-    def register_endpoint_tool(entry, kind)
+    def register_endpoint_tool(client, entry)
       action = entry.fetch(:action)
-      copy = ActionDescriptions.copy_for(kind, action)
-      ::RecordingStudioMcp.register_tool(**tool_kwargs(entry, copy, action))
+      names = sibling_names(entry.fetch(:placement))
+      copy = ActionDescriptions.copy_for(action, names)
+      client.register_tool(**tool_kwargs(entry, copy, action))
     end
 
     def tool_kwargs(entry, copy, action)
@@ -72,20 +61,16 @@ module RecordingStudioMessages
         title: copy.fetch(:title),
         description: copy.fetch(:description),
         input: {},
-        output: Outputs.for(kind_for(entry), action)
+        output: Outputs.for(action)
       }
     end
 
-    def kind_for(entry)
-      entry.fetch(:placement).actor_inbox? ? :my_messages : :press_center
+    def sibling_names(placement)
+      placement.endpoints.to_h { |endpoint| [endpoint.handler.action, endpoint.name.to_s] }
     end
 
     def press_center_endpoints(api: nil)
       placed_endpoints(api: api).select { |entry| press_center_tool?(entry.fetch(:placement)) }
-    end
-
-    def my_message_endpoints(api: nil)
-      placed_endpoints(api: api).select { |entry| entry.fetch(:placement).actor_inbox? }
     end
 
     def press_center_tool?(placement)
@@ -112,9 +97,11 @@ module RecordingStudioMessages
     end
 
     def named_apis(api)
-      return Array(api).map(&:to_sym) if api
+      names = RecordingStudioApi.configuration.api_names.map(&:to_s)
+      return names if api.nil?
 
-      %i[public operations].select { |name| Api::MyMessages.named_api?(name) }
+      key = api.to_s
+      names.select { |name| name == key }
     end
   end
 end

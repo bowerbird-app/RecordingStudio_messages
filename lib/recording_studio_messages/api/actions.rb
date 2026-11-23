@@ -54,40 +54,23 @@ module RecordingStudioMessages
         end
 
         def list(placement)
-          page = groups(placement)
+          mount = Scope.mount!(@context, placement, :view)
+          page = groups(mount)
           {
             records: page.map { |group| Target.serialize(group) },
             after_id: (page.last.id if page.length >= page_size)
           }
         end
 
-        def groups(placement)
-          return my_groups(**page_args(placement)) if placement.actor_inbox?
-
-          mount_groups(placement)
-        end
-
-        def mount_groups(placement)
-          RecordingStudioMessages.viewable_group_recordings(
-            **page_args(placement),
-            unread: unread?,
-            mount_recording: Scope.mount!(@context, placement, :view)
-          )
-        end
-
-        def my_groups(actor:, after:, limit:)
-          RecordingStudioMessages.my_group_recordings(
-            actor: actor, unread: unread?, after: after, limit: limit
-          )
-        end
-
-        def page_args(placement)
-          { actor: @context.access_grant.actor, after: after_recording(placement), limit: page_limit }
-        end
-
-        def page_limit
+        def groups(mount)
           requested = @context.params[:limit]
-          requested.nil? || requested == "" ? page_size : requested.to_i.clamp(1, page_size)
+          RecordingStudioMessages.viewable_group_recordings(
+            actor: @context.access_grant.actor,
+            mount_recording: mount,
+            unread: unread?,
+            after: after_recording(mount),
+            limit: requested.nil? || requested == "" ? page_size : requested.to_i.clamp(1, page_size)
+          )
         end
 
         def page_size
@@ -98,20 +81,14 @@ module RecordingStudioMessages
           ActiveModel::Type::Boolean.new.cast(@context.params[:unread])
         end
 
-        def after_recording(placement)
+        def after_recording(mount)
           raw = @context.params[:after_id].presence
           return if raw.blank?
 
           recording = @context.access_grant.accessible_recordings.find_by(id: raw)
-          return recording if listed_after?(placement, recording)
+          return recording if on_mount?(recording, mount)
 
           raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation on this message center"
-        end
-
-        def listed_after?(placement, recording)
-          return Scope.mine?(@context, recording) if placement.actor_inbox?
-
-          on_mount?(recording, Scope.message_center!(@context, placement))
         end
 
         def on_mount?(recording, mount)
@@ -215,12 +192,9 @@ module RecordingStudioMessages
         end
 
         def count(placement)
-          actor = @context.access_grant.actor
-          return { unread_count: RecordingStudioMessages.unread_count(actor: actor) } if placement.actor_inbox?
-
           mount = Scope.mount!(@context, placement, :view)
           groups = RecordingStudioMessages.viewable_group_recordings(
-            actor: actor,
+            actor: @context.access_grant.actor,
             mount_recording: mount,
             unread: true
           )

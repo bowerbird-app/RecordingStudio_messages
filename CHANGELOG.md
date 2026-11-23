@@ -7,25 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.38.2] - 2026-11-23
+## [0.39.0] - 2026-11-23
 
-Named MCP tools for press-center message endpoints and My Messages.
+Named MCP tools for press-center message endpoints.
 
 ### Added
 
 - `RecordingStudioMessages::McpCopy` registers named Recording Studio MCP 0.45.2 tools when that gem is loaded. This gem still does not depend on MCP.
 - Press-center placements (`preset: :press_center`) become tools under the **Press Center Messages** doc group (`tag.group` Press Center). Tool names match the live endpoint names (`press_center_messages_*` on hosts that place `at: :press_center_messages`, `press_centers_*` in the dummy).
-- The engine places My Messages on `:public`: `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. Those wrap `list_conversations`, `read_thread`, `send_message`, `mark_read`, and `unread_count` against the actor inbox (`my_group_recordings` / `unread_count(actor:)`). `send_my_message` replies only. It does not start a conversation.
-- `:support` placements stay off MCP. Support wraps those endpoints.
-- Message types register with short public names (`Message`, `MessageGroup`, `MessageMount`).
+- `:support` placements stay off MCP. Support wraps those endpoints. Messages still registers no API endpoints on its own.
 
 ### Changed
 
 - `:press_center` OpenAPI tags are **Press Center Messages**, grouped under **Press Center**.
+- Press-center OpenAPI descriptions and MCP tool descriptions share the same format templates. They state that MessageMount is show-only, and that a press center with no message center yet returns Message center not found.
 
 ### Upgrade notes
 
-Bump to **0.38.2**. There is no Messages migration. Pin Recording Studio MCP `0.45.2` or newer when the host exposes MCP. Place `:press_center` on `:public` or `:operations` the same way as the JSON API; tools follow that API. Hosts that already place a press-center surface do not rename endpoints. My Messages is placed on `:public` after host initializers.
+Bump to **0.39.0**. There is no Messages migration. Pin Recording Studio MCP `0.45.2` or newer when the host exposes MCP. Place `:press_center` on `:public` or `:operations` the same way as the JSON API; tools follow that API. Hosts that already place a press-center surface do not rename endpoints. Nothing is placed on a host by default.
 
 ## [0.38.1] - 2026-11-20
 

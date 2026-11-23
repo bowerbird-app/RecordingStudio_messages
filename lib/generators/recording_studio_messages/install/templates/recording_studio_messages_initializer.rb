@@ -6,8 +6,7 @@ RecordingStudioMessages.configure do |config|
   # config.time_break_after = 15.minutes
 end
 
-# Place each message-center surface on the API that should expose it.
-# The engine places My Messages on :public. :support stays off MCP.
+# Messages does not register API endpoints. Place each surface on the API that should expose it.
 # RecordingStudioMessages::Api.place(
 #   api: :public,
 #   at: :support,

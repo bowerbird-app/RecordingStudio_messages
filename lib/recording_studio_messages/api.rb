@@ -7,11 +7,8 @@ module RecordingStudioMessages
   module Api
     module_function
 
-    def place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, titles: {}, tags: nil,
-              tag_group: nil)
-      Placement.place(
-        api:, at:, mount:, preset:, actions:, names:, descriptions:, titles:, tags:, tag_group:
-      )
+    def place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, tags: nil)
+      Placement.place(api:, at:, mount:, preset:, actions:, names:, descriptions:, tags:)
     end
   end
 end

@@ -16,8 +16,9 @@ class ApiSourceTest < Minitest::Test
     engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
     refute_includes engine, "Api.register!"
     boot = File.read(File.expand_path("../lib/recording_studio_messages/engine_mcp.rb", __dir__))
-    assert_includes boot, "Api::MyMessages.place!"
+    refute_includes boot, "place!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
+    refute RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
 
   def test_place_registers_message_types_as_show_only
@@ -118,42 +119,6 @@ class ApiSourceTest < Minitest::Test
     assert_equal "Mark conversation read", marked.openapi.fetch(:title)
     assert_equal ["Message Center"], counted.openapi_tags
     assert_equal "Count unread conversations", counted.openapi.fetch(:title)
-  end
-
-  def test_actor_inbox_places_my_message_endpoints
-    RecordingStudioMessages::Api::MyMessages.place!
-    RecordingStudioMessages::Api::MyMessages.place!
-
-    listed = RecordingStudioApi.registered_endpoint(:list_my_messages)
-    sent = RecordingStudioApi.registered_endpoint(:send_my_message)
-    counted = RecordingStudioApi.registered_endpoint(:count_unread_my_messages)
-
-    assert_equal "my_messages/conversations", listed.path
-    assert_equal :get, listed.http_verb
-    assert_equal ["My Messages"], listed.openapi_tags
-    assert_equal({ group: "My Messages" }, listed.openapi[:tag])
-    assert_equal "List my messages", listed.openapi.fetch(:title)
-    assert listed.handler.placement.actor_inbox?
-    assert_equal :list_conversations, listed.handler.action
-    assert_equal "my_messages/conversations/:id/send_message", sent.path
-    assert_equal RecordingStudioMessages::MESSAGE_GROUP_TYPE, sent.recordable_type
-    assert_equal "my_messages/unread_count", counted.path
-    assert_nil RecordingStudioApi.registered_endpoint(:start_my_messages)
-    assert_nil RecordingStudioApi.registered_endpoint(:my_messages_create_group)
-  end
-
-  def test_message_types_use_short_public_names
-    at = unique_at
-    place_support(at)
-
-    [
-      [RecordingStudioMessages::MESSAGE_TYPE, "Message"],
-      [RecordingStudioMessages::MESSAGE_GROUP_TYPE, "MessageGroup"],
-      [RecordingStudioMessages::MESSAGE_MOUNT_TYPE, "MessageMount"]
-    ].each do |type, public_name|
-      registration = RecordingStudioApi.recordable_registration_for(type)
-      assert_equal public_name, registration.public_name
-    end
   end
 
   def test_explicit_tags_replace_the_press_center_group
