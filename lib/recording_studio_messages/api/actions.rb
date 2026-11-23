@@ -6,9 +6,12 @@ require_relative "scope"
 module RecordingStudioMessages
   module Api
     class BoundAction
-      def initialize(handler_name, placement)
+      attr_reader :placement, :action
+
+      def initialize(handler_name, placement, action)
         @handler = Actions.const_get(handler_name)
         @placement = placement
+        @action = action
       end
 
       def call(context)

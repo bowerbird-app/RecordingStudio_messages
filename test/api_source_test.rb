@@ -16,6 +16,7 @@ class ApiSourceTest < Minitest::Test
     engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
     refute_includes engine, "Api.register!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
+    refute RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
 
   def test_place_registers_message_types_as_show_only
@@ -49,6 +50,7 @@ class ApiSourceTest < Minitest::Test
     assert_equal "RecordingStudioMessages::MessageGroup", reply.recordable_type
     assert_equal :edit, reply.required_role
     assert_equal "Reply", reply.openapi.fetch(:summary)
+    assert_nil reply.openapi[:tag]
     assert_includes reply.openapi.fetch(:description), "Reply"
     assert_equal %w[body references], reply.input_contract.as_json.fetch(:fields).keys.map(&:to_s)
     refute reply.input_contract.as_json.fetch(:reject_unknown)
@@ -84,11 +86,12 @@ class ApiSourceTest < Minitest::Test
     assert_equal "#{at}/:id/conversations", listed.path
     assert_equal "Mailbox", listed.recordable_type
     assert_equal :view, listed.required_role
-    assert_equal ["Message Center"], listed.openapi_tags
+    assert_equal ["Press Center Messages"], listed.openapi_tags
+    assert_equal({ group: "Press Center" }, listed.openapi[:tag])
     assert_equal "List conversations", listed.openapi.fetch(:title)
-    assert_equal ["Message Center"], marked.openapi_tags
+    assert_equal ["Press Center Messages"], marked.openapi_tags
     assert_equal "Mark conversation read", marked.openapi.fetch(:title)
-    assert_equal ["Message Center"], counted.openapi_tags
+    assert_equal ["Press Center Messages"], counted.openapi_tags
     assert_equal "Count unread conversations", counted.openapi.fetch(:title)
     assert_equal :post, started.http_verb
     assert_equal "#{at}/:id/conversations", started.path
@@ -132,6 +135,7 @@ class ApiSourceTest < Minitest::Test
 
     assert_equal ["Desk"], listed.openapi_tags
     assert_equal ["Desk"], marked.openapi_tags
+    assert_nil listed.openapi[:tag]
     assert_equal "Mark conversation read", marked.openapi.fetch(:title)
   end
 

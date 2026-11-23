@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-11-23
+
+Named MCP tools for press-center message endpoints.
+
+### Added
+
+- `RecordingStudioMessages::McpCopy` registers named Recording Studio MCP 0.45.2 tools when that gem is loaded. This gem still does not depend on MCP. It also registers show-only type copy for `Message`, `MessageGroup`, and `MessageMount`.
+- Press-center placements (`preset: :press_center`) become tools under the **Press Center Messages** doc group (`tag.group` Press Center). Tool names match the live endpoint names (`press_center_messages_*` on hosts that place `at: :press_center_messages`, `press_centers_*` in the dummy). MCP tool copy shares the press-center format templates and adds that those tools return Message center not found when the press center has no message center yet. That copy has no Access wording.
+- `:support` placements stay off MCP. Support wraps those endpoints. Messages still registers no API endpoints on its own.
+
+### Changed
+
+- `:press_center` OpenAPI tags are **Press Center Messages**. Endpoints set `tag.group` Press Center, used by MCP tool docs. Press-center OpenAPI description strings are unchanged.
+
+### Upgrade notes
+
+Bump to **0.39.0**. There is no Messages migration. Pin Recording Studio MCP `0.45.2` or newer when the host exposes MCP. Place `:press_center` on `:public` or `:operations` the same way as the JSON API; tools follow that API. Hosts that already place a press-center surface do not rename endpoints. Nothing is placed on a host by default.
+
 ## [0.38.1] - 2026-11-20
 
 Opening a My Messages conversation keeps that conversation on the sidebar when it is older than the first page.

@@ -9,7 +9,7 @@ require_relative "types"
 module RecordingStudioMessages
   module Api
     class Placement
-      attr_reader :api, :at, :mount_binding, :actions, :endpoints, :names, :descriptions, :tags, :preset
+      attr_reader :api, :at, :mount_binding, :actions, :endpoints, :names, :descriptions, :tags, :tag_group, :preset
 
       def self.place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, tags: nil)
         placement = new(api:, at:, mount:, preset:, actions:, names:, descriptions:, tags:)
@@ -49,10 +49,16 @@ module RecordingStudioMessages
         @actions = normalize_actions(actions)
         @names = symbolize(names)
         @descriptions = symbolize(descriptions)
-        @tags = tags.nil? ? @preset&.tags || [Presets::MESSAGE_CENTER] : Array(tags)
+        @tags, @tag_group = tag_plan(tags)
         assert_override_keys!
         @endpoints = @actions.map { |action| Draft.build(self, action) }
         assert_plan_unique!
+      end
+
+      def tag_plan(tags)
+        return [@preset&.tags || [Presets::MESSAGE_CENTER], @preset&.tag_group] if tags.nil?
+
+        [Array(tags), nil]
       end
 
       def normalize_at(at)
@@ -141,7 +147,7 @@ module RecordingStudioMessages
       SERIALIZER = ->(result) { result }
       Endpoint = Data.define(
         :name, :verb, :path, :handler, :role, :recordable_type,
-        :fields, :title, :description, :tags, :id_description
+        :fields, :title, :description, :tags, :tag_group, :id_description
       )
 
       def self.build(placement, action)
@@ -164,6 +170,7 @@ module RecordingStudioMessages
           title: endpoint.title, summary: endpoint.title,
           description: endpoint.description, tags: endpoint.tags
         }
+        document[:tag] = { group: endpoint.tag_group } if endpoint.tag_group.present?
         parameters = path_parameters(endpoint)
         document[:parameters] = parameters if parameters
         document
@@ -187,11 +194,11 @@ module RecordingStudioMessages
       def endpoint
         Endpoint.new(
           name: endpoint_name, verb: @spec.fetch(:verb), path: full_path,
-          handler: BoundAction.new(@spec.fetch(:handler), @placement),
+          handler: BoundAction.new(@spec.fetch(:handler), @placement, @action),
           role: @spec.fetch(:role), recordable_type: recordable_type,
           fields: Catalog.conversation_fields(@action, parent: @placement.parent?),
           title: title, description: description,
-          tags: @placement.tags, id_description: id_description
+          tags: @placement.tags, tag_group: @placement.tag_group, id_description: id_description
         )
       end
 

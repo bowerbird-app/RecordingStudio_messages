@@ -138,3 +138,5 @@ module RecordingStudioMessages
     end
   end
 end
+
+require_relative "engine_mcp"
