@@ -13,6 +13,8 @@ class ApiSourceTest < Minitest::Test
     assert_equal "Open request", endpoint.openapi.fetch(:title)
     assert_equal ["Support"], endpoint.openapi_tags
 
+    engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
+    refute_includes engine, "Api.register!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
     refute RecordingStudioApi.registered_endpoint(:list_my_messages)
   end

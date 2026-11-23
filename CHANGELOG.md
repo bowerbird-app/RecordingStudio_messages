@@ -19,7 +19,7 @@ Named MCP tools for press-center message endpoints.
 
 ### Changed
 
-- `:press_center` OpenAPI tags are **Press Center Messages**, grouped under **Press Center**. Press-center OpenAPI description strings are unchanged.
+- `:press_center` OpenAPI tags are **Press Center Messages**. Endpoints set `tag.group` Press Center, used by MCP tool docs. Press-center OpenAPI description strings are unchanged.
 
 ### Upgrade notes
 
