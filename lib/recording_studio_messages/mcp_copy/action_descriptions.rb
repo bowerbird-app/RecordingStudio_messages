@@ -15,17 +15,42 @@ module RecordingStudioMessages
         unread_count: Api::ToolDescriptions::UNREAD_COUNT_FORMAT
       }.freeze
 
+      MY_MESSAGES = {
+        list_my_messages: "List your conversations across message centers. Pass unread to keep unread " \
+                          "conversations, after_id to continue, and limit for the page size. " \
+                          "Returns records and after_id.",
+        read_my_messages: "Read the messages in one of your conversations. Pass the conversation id from " \
+                          "list_my_messages. Returns records.",
+        send_my_message: "Send a message in one of your conversations. Pass the conversation id from " \
+                         "list_my_messages. Pass body, or references to attach a recording. " \
+                         "Returns the new message.",
+        mark_my_message_read: "Mark one of your conversations read. Pass the conversation id from " \
+                              "list_my_messages. Returns the conversation. The response has no read cursor.",
+        count_unread_my_messages: "Count your unread conversations across message centers. Uses the same " \
+                                  "conversations as list_my_messages. Returns unread_count."
+      }.freeze
+
       PRESS_CENTER_ID = "Pass the press center id. "
       START_ARGS = "Pass the press center id and title. "
       BODY_WHEN = "when you add people in recipients"
 
       module_function
 
-      def copy_for(action, names)
+      def copy_for(action, names, preset: Api::Presets::PRESS_CENTER)
+        return my_messages_copy(action) if preset.equal?(Api::Presets::MY_MESSAGES)
+
         key = action.to_sym
         {
           title: Api::Presets::PRESS_CENTER.titles.fetch(key),
           description: format(FORMATS.fetch(key), **fill(names))
+        }
+      end
+
+      def my_messages_copy(action)
+        key = action.to_sym
+        {
+          title: Api::Presets::MY_MESSAGES.titles.fetch(key),
+          description: MY_MESSAGES.fetch(key)
         }
       end
 

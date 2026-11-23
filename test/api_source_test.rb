@@ -16,7 +16,6 @@ class ApiSourceTest < Minitest::Test
     engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
     refute_includes engine, "Api.register!"
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
-    refute RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
 
   def test_place_registers_message_types_as_show_only
@@ -247,6 +246,56 @@ class ApiSourceTest < Minitest::Test
     assert_raises(ArgumentError) do
       RecordingStudioMessages::Api::Errors.wrap { Integer("nope") }
     end
+  end
+
+  def test_my_messages_preset_uses_fixed_names_and_rejects_a_mount
+    RecordingStudioMessages::Api.place(api: :public, at: :my_messages, preset: :my_messages)
+    RecordingStudioMessages::Api.place(api: :public, at: :my_messages, preset: :my_messages)
+
+    listed = RecordingStudioApi.registered_endpoint(:list_my_messages)
+    read = RecordingStudioApi.registered_endpoint(:read_my_messages)
+    sent = RecordingStudioApi.registered_endpoint(:send_my_message)
+    marked = RecordingStudioApi.registered_endpoint(:mark_my_message_read)
+    counted = RecordingStudioApi.registered_endpoint(:count_unread_my_messages)
+
+    assert_equal "my_messages/conversations", listed.path
+    assert_equal :get, listed.http_verb
+    assert_equal :view, listed.required_role
+    assert_nil listed.recordable_type
+    assert_equal ["My Messages"], listed.openapi_tags
+    assert_equal({ group: "My Messages" }, listed.openapi[:tag])
+    assert_equal "List my messages", listed.openapi.fetch(:title)
+    assert_includes listed.openapi.fetch(:description), "Needs view access"
+
+    assert_equal "my_messages/conversations/:id/messages", read.path
+    assert_equal RecordingStudioMessages::MESSAGE_GROUP_TYPE, read.recordable_type
+    assert_equal :view, read.required_role
+    assert_equal "my_messages/conversations/:id/send_message", sent.path
+    assert_equal :edit, sent.required_role
+    assert_equal "my_messages/conversations/:id/mark_read", marked.path
+    assert_equal :view, marked.required_role
+    assert_equal "my_messages/unread_count", counted.path
+    assert_nil counted.recordable_type
+    assert_equal :view, counted.required_role
+
+    mount = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(
+        api: :public, at: :my_messages, mount: :support, preset: :my_messages
+      )
+    end
+    assert_includes mount.message, "does not take a mount"
+
+    missing = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(api: :public, at: unique_at, preset: :support)
+    end
+    assert_includes missing.message, "mount is required"
+
+    foreign = assert_raises(RecordingStudioApi::ConfigurationError) do
+      RecordingStudioMessages::Api.place(
+        api: :public, at: unique_at, preset: :my_messages, actions: %i[list_conversations]
+      )
+    end
+    assert_includes foreign.message, "list_conversations"
   end
 
   private

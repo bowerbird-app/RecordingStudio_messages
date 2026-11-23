@@ -13,3 +13,10 @@ end
 #   mount: -> { support_mount_recording },
 #   preset: :support
 # )
+#
+# My Messages is the personal inbox. It takes no mount. Tool names stay fixed.
+# RecordingStudioMessages::Api.place(
+#   api: :public,
+#   at: :my_messages,
+#   preset: :my_messages
+# )

@@ -8,6 +8,39 @@ require_relative "types"
 
 module RecordingStudioMessages
   module Api
+    module InboxSurface
+      module_function
+
+      def bind_mount(preset, mount)
+        if Presets.my_messages?(preset)
+          raise error("My Messages does not take a mount") unless mount.nil?
+
+          return MountBinding::None.new
+        end
+        raise error("mount is required") if mount.nil?
+
+        MountBinding.wrap(mount)
+      end
+
+      def reject_foreign!(preset, chosen)
+        return unless Presets.my_messages?(preset)
+
+        foreign = chosen - preset.actions
+        return if foreign.empty?
+
+        known = preset.actions.join(", ")
+        raise error("My Messages actions are #{known}. Got #{foreign.join(', ')}")
+      end
+
+      def exact_names?(preset)
+        preset.respond_to?(:exact_names) && preset.exact_names
+      end
+
+      def error(message)
+        ::RecordingStudioApi::ConfigurationError.new(message)
+      end
+    end
+
     class Placement
       attr_reader :api, :at, :mount_binding, :actions, :endpoints, :names, :descriptions, :tags, :tag_group, :preset
 
@@ -21,8 +54,9 @@ module RecordingStudioMessages
         require_api!
         @api = api
         @at = normalize_at(at)
-        @mount_binding = MountBinding.wrap(mount)
-        prepare(preset, actions, names, descriptions, tags)
+        @preset = preset.nil? ? nil : Presets.fetch(preset)
+        @mount_binding = InboxSurface.bind_mount(@preset, mount)
+        prepare(actions, names, descriptions, tags)
       end
 
       def parent?
@@ -44,8 +78,7 @@ module RecordingStudioMessages
         raise RecordingStudioMessages::Error, "Recording Studio API is not loaded"
       end
 
-      def prepare(preset, actions, names, descriptions, tags)
-        @preset = preset.nil? ? nil : Presets.fetch(preset)
+      def prepare(actions, names, descriptions, tags)
         @actions = normalize_actions(actions)
         @names = symbolize(names)
         @descriptions = symbolize(descriptions)
@@ -71,6 +104,7 @@ module RecordingStudioMessages
         raise configuration_error("Unknown messages API actions: #{unknown.join(', ')}") if unknown.any?
         raise configuration_error("Choose at least one messages API action") if chosen.empty?
 
+        InboxSurface.reject_foreign!(@preset, chosen)
         chosen.uniq
       end
 
@@ -211,6 +245,8 @@ module RecordingStudioMessages
 
       def default_name
         suffix = @placement.preset&.names&.fetch(@action, @action) || @action
+        return suffix.to_s if InboxSurface.exact_names?(@placement.preset)
+
         "#{@placement.at}_#{suffix}"
       end
 
@@ -255,7 +291,7 @@ module RecordingStudioMessages
       end
 
       def conversation_id_description
-        "The conversation id from a list or create response on this message center."
+        @spec[:id_description] || "The conversation id from a list or create response on this message center."
       end
 
       def error(message)

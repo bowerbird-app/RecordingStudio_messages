@@ -13,10 +13,21 @@ module RecordingStudioMessages
         unread_count: "unread_count for this press center."
       }.freeze
 
+      MY_MESSAGES = {
+        list_my_messages: "Conversation records in My Messages, plus after_id when another page exists.",
+        read_my_messages: "Message records in that conversation.",
+        send_my_message: "The new message record.",
+        mark_my_message_read: "The conversation record after it is marked read.",
+        count_unread_my_messages: "unread_count for My Messages."
+      }.freeze
+
       module_function
 
       def for(action)
-        PRESS_CENTER.fetch(action.to_sym)
+        key = action.to_sym
+        return MY_MESSAGES.fetch(key) if MY_MESSAGES.key?(key)
+
+        PRESS_CENTER.fetch(key)
       end
     end
   end
