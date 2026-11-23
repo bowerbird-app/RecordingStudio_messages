@@ -15,29 +15,50 @@ module RecordingStudioMessages
         unread_count: Api::ToolDescriptions::UNREAD_COUNT_FORMAT
       }.freeze
 
+      PRESS_CENTER_ID = "Pass the press center id. "
+      START_ARGS = "Pass the press center id and title. "
+      BODY_WHEN = "when you add people in recipients"
+
       module_function
 
       def copy_for(action, names)
         key = action.to_sym
-        template = FORMATS.fetch(key)
-        fillers = fill(names, template)
         {
           title: Api::Presets::PRESS_CENTER.titles.fetch(key),
-          description: fillers.empty? ? template : format(template, **fillers)
+          description: format(FORMATS.fetch(key), **fill(names))
         }
       end
 
-      def fill(names, template)
-        refs = {
-          list: names[:list_conversations] || Api::ToolDescriptions::LIST_REF,
-          start: names[:create_group] || Api::ToolDescriptions::START_REF,
+      def fill(names)
+        list = names[:list_conversations] || Api::ToolDescriptions::LIST_REF
+        start = names[:create_group] || Api::ToolDescriptions::START_REF
+        blanks.merge(ids(list, start)).merge(verbs(list, start)).merge(
           read: names[:read_thread] || Api::ToolDescriptions::READ_REF
-        }
-        refs.slice(*placeholders(template))
+        )
       end
 
-      def placeholders(template)
-        template.scan(/%<(\w+)>s/).flatten.map(&:to_sym)
+      def blanks
+        { view_access: "", edit_access: "", inherited: "" }
+      end
+
+      def ids(list, start)
+        {
+          id: PRESS_CENTER_ID,
+          missing_mount: Api::ToolDescriptions::MISSING_MOUNT,
+          list:,
+          start:,
+          conversation: "conversation_id from #{list}",
+          start_args: START_ARGS
+        }
+      end
+
+      def verbs(list, start)
+        {
+          body_when: BODY_WHEN,
+          send_pass: "conversation_id from #{list}. Pass body, or references to attach a recording",
+          no_start: "This does not start a new conversation. Use #{start} to start one. ",
+          rename_pass: "conversation_id from #{list} and title"
+        }
       end
     end
   end

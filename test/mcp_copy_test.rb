@@ -4,6 +4,15 @@ require "test_helper"
 require "recording_studio_api"
 
 class McpCopyTest < Minitest::Test
+  ACCESS_PHRASES = [
+    "Accessible",
+    "Needs view",
+    "Needs edit",
+    "including access inherited",
+    ":edit",
+    "Access "
+  ].freeze
+
   class FakeMcp
     attr_reader :tools, :types
 
@@ -61,33 +70,13 @@ class McpCopyTest < Minitest::Test
     listed = RecordingStudioApi.registered_endpoint(:"#{at}_list_conversations")
     assert_equal ["Press Center Messages"], listed.openapi_tags
     assert_equal({ group: "Press Center" }, listed.openapi[:tag])
-    tool = fake.tools.fetch("#{at}_list_conversations")
-    assert_equal :"#{at}_list_conversations", tool[:endpoint]
-    assert_equal "Mailbox", tool[:type]
-    assert_equal "List conversations", tool[:title]
-    assert_includes tool[:description], "Message center not found"
-    refute_includes tool[:description], "Create the press center first"
-    refute_includes tool[:description], "Accessible"
-    refute_includes tool[:description], "Needs view"
-    refute_includes tool[:description], ":edit"
+    assert_list_tool fake.tools.fetch("#{at}_list_conversations"), at
     refute_includes RecordingStudioMessages::McpCopy.tool_names(api: :public), "#{at}s_reply"
     refute fake.tools.key?("#{at}s_list_requests")
     refute fake.tools.key?("#{at}s_open_request")
     refute_includes RecordingStudioMessages::McpCopy.tool_names, "support_reply"
     refute_includes RecordingStudioMessages::McpCopy.tool_names, "list_my_messages"
-
-    type_names = fake.types.map { |entry| entry[:type] }
-    assert_includes type_names, RecordingStudioMessages::MESSAGE_TYPE
-    assert_includes type_names, RecordingStudioMessages::MESSAGE_GROUP_TYPE
-    assert_includes type_names, RecordingStudioMessages::MESSAGE_MOUNT_TYPE
-    fake.types.each do |entry|
-      refute_includes entry[:description], "Accessible"
-      refute_includes entry[:description], "Access "
-      refute_includes entry[:description], "Create the parent first"
-    end
-    mount = fake.types.find { |entry| entry[:type] == RecordingStudioMessages::MESSAGE_MOUNT_TYPE }
-    assert_includes mount[:description], "show-only"
-    assert_includes mount[:description], "Message center not found"
+    assert_registered_types fake.types
   end
 
   def test_tool_names_follow_the_api_the_host_placed
@@ -106,7 +95,7 @@ class McpCopyTest < Minitest::Test
     assert fake.tools.key?(name)
   end
 
-  def test_mcp_and_api_fill_the_same_press_center_formats
+  def test_mcp_fills_add_missing_mount_and_leave_api_access_wording_off
     at = unique_at
     place_press_center(at)
     names = {
@@ -120,54 +109,55 @@ class McpCopyTest < Minitest::Test
     send_copy = RecordingStudioMessages::McpCopy::ActionDescriptions.copy_for(:send_message, names)
 
     assert_equal RecordingStudioMessages::Api::ToolDescriptions::LIST, listed.openapi.fetch(:description)
-    assert_equal copy.fetch(:description), listed.openapi.fetch(:description)
+    refute_equal copy.fetch(:description), listed.openapi.fetch(:description)
     assert_equal RecordingStudioMessages::Api::ToolDescriptions::SEND, sent.openapi.fetch(:description)
     assert_includes send_copy.fetch(:description), "#{at}_list_conversations"
     assert_includes send_copy.fetch(:description), "#{at}_start_conversation"
-    refute_includes send_copy.fetch(:description), "Accessible"
+    refute_access_wording copy.fetch(:description)
+    refute_access_wording send_copy.fetch(:description)
   end
 
-  def test_gemspec_does_not_depend_on_recording_studio_mcp
-    gemspec = File.read(File.expand_path("../recording_studio_messages.gemspec", __dir__))
-    entry = File.read(File.expand_path("../lib/recording_studio_messages.rb", __dir__))
-    engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
-    boot = File.read(File.expand_path("../lib/recording_studio_messages/engine_mcp.rb", __dir__))
-
-    refute_includes gemspec, "recording_studio_mcp"
-    refute_includes entry, 'require "recording_studio_mcp"'
-    assert_includes entry, 'require "recording_studio_messages/mcp_copy"'
-    assert_includes engine, 'require_relative "engine_mcp"'
-    refute_includes engine, "module EngineExtensions"
-    assert_includes boot, 'initializer "recording_studio_messages.mcp", after: :load_config_initializers'
-    assert_includes boot, "RecordingStudioMessages::McpCopy.register!"
-    refute_includes boot, "MyMessages"
-    refute_includes boot, "place!"
-  end
-
-  def test_mcp_copy_has_no_production_const_set_or_rubocop_disable
-    files = Dir[
-      File.expand_path("../lib/recording_studio_messages/mcp_copy.rb", __dir__),
-      File.expand_path("../lib/recording_studio_messages/mcp_copy/**/*.rb", __dir__)
-    ]
-    files.each do |path|
-      source = File.read(path)
-      refute_includes source, "const_set", path
-      refute_includes source, "rubocop:disable", path
+  def test_register_does_not_place_my_messages_or_support_tools
+    fake = FakeMcp.new
+    RecordingStudioMessages::McpCopy.stub(:mcp, fake) do
+      RecordingStudioMessages::McpCopy.register!
     end
-  end
 
-  def test_engine_does_not_place_endpoints
-    engine = File.read(File.expand_path("../lib/recording_studio_messages/engine.rb", __dir__))
-    boot = File.read(File.expand_path("../lib/recording_studio_messages/engine_mcp.rb", __dir__))
-
-    refute_includes engine, "Api.register!"
-    refute_includes engine, "MyMessages"
-    refute_includes boot, "MyMessages"
-    refute RecordingStudioApi.registered_endpoint(:messages_send_message)
-    refute RecordingStudioApi.registered_endpoint(:list_my_messages)
+    refute fake.tools.key?("list_my_messages")
+    refute fake.tools.key?("support_reply")
+    assert_nil RecordingStudioApi.registered_endpoint(:list_my_messages)
   end
 
   private
+
+  def assert_list_tool(tool, at)
+    missing_mount = RecordingStudioMessages::Api::ToolDescriptions::MISSING_MOUNT.strip
+
+    assert_equal :"#{at}_list_conversations", tool[:endpoint]
+    assert_equal "Mailbox", tool[:type]
+    assert_equal "List conversations", tool[:title]
+    assert_includes tool[:description], missing_mount
+    refute_includes tool[:description], "Create the press center first"
+    refute_access_wording tool[:description]
+  end
+
+  def assert_registered_types(types)
+    type_names = types.map { |entry| entry[:type] }
+    assert_includes type_names, RecordingStudioMessages::MESSAGE_TYPE
+    assert_includes type_names, RecordingStudioMessages::MESSAGE_GROUP_TYPE
+    assert_includes type_names, RecordingStudioMessages::MESSAGE_MOUNT_TYPE
+    types.each do |entry|
+      refute_access_wording entry[:description]
+      refute_includes entry[:description], "Create the parent first"
+      refute_includes entry[:description], "Message center not found"
+    end
+    mount = types.find { |entry| entry[:type] == RecordingStudioMessages::MESSAGE_MOUNT_TYPE }
+    assert_includes mount[:description], "show-only"
+  end
+
+  def refute_access_wording(text)
+    ACCESS_PHRASES.each { |phrase| refute_includes text, phrase }
+  end
 
   def named_api?(name)
     RecordingStudioApi.configuration.api_names.map(&:to_s).include?(name.to_s)

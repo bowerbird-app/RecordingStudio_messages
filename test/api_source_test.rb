@@ -136,6 +136,7 @@ class ApiSourceTest < Minitest::Test
 
     assert_equal ["Desk"], listed.openapi_tags
     assert_equal ["Desk"], marked.openapi_tags
+    assert_nil listed.openapi[:tag]
     assert_equal "Mark conversation read", marked.openapi.fetch(:title)
   end
 

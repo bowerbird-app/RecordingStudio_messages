@@ -3,46 +3,39 @@
 module RecordingStudioMessages
   module Api
     module ToolDescriptions
-      MISSING_MOUNT =
-        "If this press center has no message center yet, this returns Message center not found."
-
       LIST_FORMAT =
-        "List conversations on this press center's message center. Pass the press center id. " \
-        "#{MISSING_MOUNT} Pass unread to keep unread conversations, after_id to continue from a " \
-        "previous page, and limit for the page size (1 through 50). Returns records and after_id.".freeze
+        "List conversations on this press center's message center. %<id>sPass unread, " \
+        "after_id, or limit. %<missing_mount>s%<view_access>sReturns records and after_id."
 
       CREATE_FORMAT =
-        "Start a conversation on this press center's message center. Pass the press center id and title. " \
-        "Pass body when you add people in recipients. #{MISSING_MOUNT} Returns the new conversation.".freeze
+        "Start a conversation on this press center's message center. %<start_args>sPass body " \
+        "%<body_when>s. %<missing_mount>s%<edit_access>sReturns the new conversation."
 
       READ_FORMAT =
-        "Read the messages in one conversation on this press center. Pass the press center id. " \
-        "Pass conversation_id from %<list>s. #{MISSING_MOUNT} A conversation from another message " \
-        "center is not found. Returns records.".freeze
+        "Read the messages in one conversation on this press center. %<id>sPass %<conversation>s. " \
+        "%<missing_mount>s%<view_access>sReturns records."
 
       SEND_FORMAT =
-        "Send a message in a conversation on this press center. Pass the press center id. " \
-        "Pass conversation_id from %<list>s. Pass body, or references to attach a recording. " \
-        "This does not start a new conversation. Use %<start>s to start one. #{MISSING_MOUNT} " \
-        "Returns the new message.".freeze
+        "Send a message in a conversation on this press center. %<id>sPass %<send_pass>s. " \
+        "%<no_start>s%<missing_mount>s%<edit_access>sReturns the new message."
 
       RENAME_FORMAT =
-        "Rename one conversation on this press center. Pass the press center id. " \
-        "Pass conversation_id from %<list>s and title. Title is required and must be 120 characters " \
-        "or fewer. #{MISSING_MOUNT} Returns the conversation.".freeze
+        "Rename one conversation on this press center. %<id>sPass %<rename_pass>s. " \
+        "Title is required and must be 120 characters or fewer. " \
+        "%<missing_mount>s%<edit_access>sReturns the conversation."
 
       MARK_READ_FORMAT =
-        "Mark one conversation read on this press center. Pass the press center id. " \
-        "Pass conversation_id from %<list>s. #{MISSING_MOUNT} Returns the conversation.".freeze
+        "Mark one conversation read on this press center. %<id>sPass %<conversation>s. " \
+        "%<missing_mount>s%<view_access>sReturns the conversation."
 
       UNREAD_COUNT_FORMAT =
-        "Count unread conversations on this press center's message center. Pass the press center id. " \
-        "Uses the same conversations as %<list>s. #{MISSING_MOUNT} Returns unread_count.".freeze
+        "Count unread conversations on this press center's message center. %<id>sUses the same " \
+        "conversations as %<list>s%<inherited>s. %<missing_mount>s%<view_access>sReturns unread_count."
 
       MESSAGE_MOUNT_FORMAT =
         "A MessageMount is one message center hanging off a parent recording. " \
         "The key names that inbox, for example support or inbox. Conversations sit under the mount. " \
-        "MessageMount is show-only. #{MISSING_MOUNT}".freeze
+        "MessageMount is show-only."
 
       MESSAGE_GROUP_FORMAT =
         "A MessageGroup is one conversation. People and agents join it as members. " \

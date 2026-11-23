@@ -39,7 +39,6 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     @editor_token, @editor_client = token_for(@editor_access)
     @viewer_token, = token_for(@viewer_access)
     @admin_token, @admin_client = token_for(owner_access, role: :admin)
-    @owner_token, = token_for(owner_access)
   end
 
   teardown { Current.actor = @previous_actor }

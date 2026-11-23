@@ -49,11 +49,16 @@ module RecordingStudioMessages
         @actions = normalize_actions(actions)
         @names = symbolize(names)
         @descriptions = symbolize(descriptions)
-        @tags = tags.nil? ? @preset&.tags || [Presets::MESSAGE_CENTER] : Array(tags)
-        @tag_group = @preset&.tag_group
+        @tags, @tag_group = tag_plan(tags)
         assert_override_keys!
         @endpoints = @actions.map { |action| Draft.build(self, action) }
         assert_plan_unique!
+      end
+
+      def tag_plan(tags)
+        return [@preset&.tags || [Presets::MESSAGE_CENTER], @preset&.tag_group] if tags.nil?
+
+        [Array(tags), nil]
       end
 
       def normalize_at(at)
