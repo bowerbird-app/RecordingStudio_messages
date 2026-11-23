@@ -328,3 +328,5 @@ module RecordingStudioMessages
     end
   end
 end
+
+require "recording_studio_messages/mcp_copy"

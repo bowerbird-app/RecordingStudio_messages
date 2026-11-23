@@ -39,6 +39,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     @editor_token, @editor_client = token_for(@editor_access)
     @viewer_token, = token_for(@viewer_access)
     @admin_token, @admin_client = token_for(owner_access, role: :admin)
+    @owner_token, @owner_client = token_for(owner_access)
   end
 
   teardown { Current.actor = @previous_actor }
@@ -247,6 +248,41 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_includes shared.fetch("error").fetch("message"), "Mount key support matches"
   end
 
+  test "my messages list read send mark and count use the actor inbox" do
+    grant!(@group, @owner_client, :edit)
+    grant!(@inbox_group, @owner_client, :edit)
+
+    listed = call(:get, "/my_messages/conversations", @owner_token)
+    assert_response :success, response.body
+    ids = listed.fetch("records").map { |row| row.fetch("id") }
+    assert_includes ids, @group.id
+    assert_includes ids, @inbox_group.id
+    refute_includes ids, @other_group.id
+
+    thread = call(:get, "/my_messages/conversations/#{@group.id}/messages", @owner_token)
+    assert_response :success, response.body
+    assert_includes thread.fetch("records").map { |row| row["body"] }, "Hello from the message center."
+
+    sent = call(
+      :post, "/my_messages/conversations/#{@group.id}/send_message", @owner_token, body: "A personal reply."
+    )
+    assert_response :success, response.body
+    assert_equal "A personal reply.", sent.fetch("body")
+
+    marked = call(:post, "/my_messages/conversations/#{@group.id}/mark_read", @owner_token)
+    assert_response :success, response.body
+    assert_equal @group.id, marked.fetch("id")
+
+    counted = call(:get, "/my_messages/unread_count", @owner_token)
+    assert_response :success, response.body
+    assert_equal RecordingStudioMessages.unread_count(actor: @owner_client), counted.fetch("unread_count")
+
+    call(:post, "/my_messages/conversations", @owner_token, title: "Brand new")
+    assert_response :method_not_allowed, response.body
+    call(:get, "/my_messages/conversations/#{@other_group.id}/messages", @owner_token)
+    assert_response :not_found, response.body
+  end
+
   test "placed endpoints replace the blanket registration" do
     refute RecordingStudioApi.registered_endpoint(:messages_send_message)
     refute RecordingStudioApi.registered_endpoint(:messages_unread_count)
@@ -274,7 +310,8 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "support/conversations/:id/send_message", reply.path
     marked = RecordingStudioApi.registered_endpoint(:press_centers_mark_read)
     counted = RecordingStudioApi.registered_endpoint(:press_centers_unread_count)
-    assert_equal ["Message Center"], listed.openapi_tags
+    assert_equal ["Press Center Messages"], listed.openapi_tags
+    assert_equal({ group: "Press Center" }, listed.openapi[:tag])
     assert_equal "Mark conversation read", marked.openapi.fetch(:title)
     assert_equal "Count unread conversations", counted.openapi.fetch(:title)
     assert_equal "press_centers/:id/conversations", listed.path

@@ -109,6 +109,15 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.38.2
+
+Messages `0.38.2` registers named Recording Studio MCP tools for press-center message endpoints and My Messages.
+
+1. Install Messages `0.38.2`. There is no Messages migration.
+2. Pin Recording Studio MCP `0.45.2` or newer when the host exposes MCP. Messages does not add an MCP gemspec dependency.
+3. Keep placing `:press_center` on the same API as today (`:public` or `:operations`). Tool names stay the endpoint names. The doc group is **Press Center Messages** under **Press Center**.
+4. My Messages lands on `:public` from the engine: `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, `count_unread_my_messages`. Reply only. The Support gem still owns `:support`. Those endpoints are not MCP tools here.
+
 ### Upgrading to 0.38.1
 
 Messages `0.38.1` keeps an open My Messages conversation on the sidebar when that conversation is older than the first page.
@@ -184,9 +193,11 @@ RecordingStudioMessages::Api.place(
 )
 ```
 
-`place` takes `api:`, `at:`, `mount:`, `preset:`, `actions:`, `names:`, `descriptions:`, and `tags:`. A preset picks the actions, names, descriptions, and tags. Pass `actions:` to keep a subset. Pass `names:`, `descriptions:`, or `tags:` to override those. Names and verb plus path must be unique on that API. `list`, `show`, `create`, `update`, `delete`, `capability_action`, and `describe` are reserved. `at` cannot be a recordable resource name, because the API dispatches that first segment as a resource and will not reach the placed endpoint. An unknown action, a reserved name, a resource-name segment, or a collision raises `RecordingStudioApi::ConfigurationError` before the endpoint is registered.
+`place` takes `api:`, `at:`, `mount:`, `preset:`, `actions:`, `names:`, `descriptions:`, `titles:`, `tags:`, and `tag_group:`. A preset picks the actions, names, descriptions, titles, tags, and tag group. Pass `actions:` to keep a subset. Pass `names:`, `descriptions:`, `titles:`, `tags:`, or `tag_group:` to override those. Names and verb plus path must be unique on that API. `list`, `show`, `create`, `update`, `delete`, `capability_action`, and `describe` are reserved. `at` cannot be a recordable resource name, because the API dispatches that first segment as a resource and will not reach the placed endpoint. An unknown action, a reserved name, a resource-name segment, or a collision raises `RecordingStudioApi::ConfigurationError` before the endpoint is registered.
 
-`:support` is open request, list my requests, read messages, reply, mark read, and unread count. `:press_center` adds rename and uses list, start, read, send, rename, mark read, and unread count. `:support` tools use the Support group. `:press_center` tools use the Message Center group. A placement with no preset and no `tags:` uses Message Center too. On `:press_center`, mark read is titled Mark conversation read, and unread count is titled Count unread conversations. A singleton path looks like `support/conversations` and `support/conversations/:id/messages`. A parent path looks like `press_centers/:id/conversations`, and the conversation id is the `conversation_id` input because a path can carry only one `:id`.
+`:support` is open request, list my requests, read messages, reply, mark read, and unread count. `:press_center` adds rename and uses list, start, read, send, rename, mark read, and unread count. `:support` tools use the Support group. `:press_center` tools use the Press Center Messages group under Press Center. A placement with no preset and no `tags:` uses Message Center. On `:press_center`, mark read is titled Mark conversation read, and unread count is titled Count unread conversations. A singleton path looks like `support/conversations` and `support/conversations/:id/messages`. A parent path looks like `press_centers/:id/conversations`, and the conversation id is the `conversation_id` input because a path can carry only one `:id`.
+
+The engine also places My Messages on `:public` (`mount: :actor_inbox`) after host initializers. Those five endpoints wrap the same catalog actions as a press-center list/read/send/mark/count, against conversations the actor was added to. `send_my_message` does not start a conversation. When Recording Studio MCP is loaded, `McpCopy.register!` turns press-center and My Messages endpoints into named tools. `:support` stays off that list.
 
 A conversation from another message center is not found. Unread count uses the same conversations as the list for that message center, including access inherited on it.
 

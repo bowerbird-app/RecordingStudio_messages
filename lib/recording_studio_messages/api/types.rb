@@ -42,7 +42,8 @@ module RecordingStudioMessages
           auto_capability_actions: false,
           capability_actions: [],
           output_keys: spec.fetch(:output_keys),
-          serializer: spec.fetch(:serializer)
+          serializer: spec.fetch(:serializer),
+          public_name: type.to_s.split("::").last
         )
       end
 

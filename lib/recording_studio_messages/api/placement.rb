@@ -8,25 +8,48 @@ require_relative "types"
 
 module RecordingStudioMessages
   module Api
-    class Placement
-      attr_reader :api, :at, :mount_binding, :actions, :endpoints, :names, :descriptions, :tags, :preset
+    module PlacementHelpers
+      private
 
-      def self.place(api:, at:, mount:, preset: nil, actions: nil, names: {}, descriptions: {}, tags: nil)
-        placement = new(api:, at:, mount:, preset:, actions:, names:, descriptions:, tags:)
+      def registry
+        ::RecordingStudioApi.configuration.api(api).registered_endpoint_registry
+      end
+
+      def symbolize(values)
+        values.to_h { |key, value| [key.to_sym, value] }
+      end
+
+      def configuration_error(message)
+        ::RecordingStudioApi::ConfigurationError.new(message)
+      end
+    end
+
+    class Placement
+      include PlacementHelpers
+
+      attr_reader :api, :at, :mount_binding, :actions, :endpoints, :names, :descriptions,
+                  :titles, :tags, :tag_group, :preset
+
+      def self.place(**)
+        placement = new(**)
         placement.register!
         placement
       end
 
-      def initialize(api:, at:, mount:, preset:, actions:, names:, descriptions:, tags:)
+      def initialize(api:, at:, mount:, **copy)
         require_api!
         @api = api
         @at = normalize_at(at)
         @mount_binding = MountBinding.wrap(mount)
-        prepare(preset, actions, names, descriptions, tags)
+        prepare(copy)
       end
 
       def parent?
         mount_binding.parent?
+      end
+
+      def actor_inbox?
+        mount_binding.actor_inbox?
       end
 
       def register!
@@ -44,15 +67,25 @@ module RecordingStudioMessages
         raise RecordingStudioMessages::Error, "Recording Studio API is not loaded"
       end
 
-      def prepare(preset, actions, names, descriptions, tags)
-        @preset = preset.nil? ? nil : Presets.fetch(preset)
-        @actions = normalize_actions(actions)
-        @names = symbolize(names)
-        @descriptions = symbolize(descriptions)
-        @tags = tags.nil? ? @preset&.tags || [Presets::MESSAGE_CENTER] : Array(tags)
-        assert_override_keys!
+      def prepare(copy)
+        @preset = copy[:preset].nil? ? nil : Presets.fetch(copy[:preset])
+        @actions = normalize_actions(copy[:actions])
+        assign_copy(copy)
         @endpoints = @actions.map { |action| Draft.build(self, action) }
         assert_plan_unique!
+      end
+
+      def assign_copy(copy)
+        @names = symbolize(copy.fetch(:names, {}))
+        @descriptions = symbolize(copy.fetch(:descriptions, {}))
+        @titles = symbolize(copy.fetch(:titles, {}))
+        assign_tags(copy)
+        assert_override_keys!
+      end
+
+      def assign_tags(copy)
+        @tags = copy[:tags].nil? ? @preset&.tags || [Presets::MESSAGE_CENTER] : Array(copy[:tags])
+        @tag_group = copy[:tag_group].nil? ? @preset&.tag_group : copy[:tag_group]
       end
 
       def normalize_at(at)
@@ -73,7 +106,7 @@ module RecordingStudioMessages
       end
 
       def assert_override_keys!
-        extra = (@names.keys + @descriptions.keys).uniq - actions
+        extra = (@names.keys + @descriptions.keys + @titles.keys).uniq - actions
         return if extra.empty?
 
         raise configuration_error("Unknown messages API actions: #{extra.join(', ')}")
@@ -120,18 +153,6 @@ module RecordingStudioMessages
       def write_all(pending)
         pending.each { |endpoint| Draft.write(self, endpoint) }
       end
-
-      def registry
-        ::RecordingStudioApi.configuration.api(api).registered_endpoint_registry
-      end
-
-      def symbolize(values)
-        values.to_h { |key, value| [key.to_sym, value] }
-      end
-
-      def configuration_error(message)
-        ::RecordingStudioApi::ConfigurationError.new(message)
-      end
     end
 
     class Draft
@@ -141,7 +162,7 @@ module RecordingStudioMessages
       SERIALIZER = ->(result) { result }
       Endpoint = Data.define(
         :name, :verb, :path, :handler, :role, :recordable_type,
-        :fields, :title, :description, :tags, :id_description
+        :fields, :title, :description, :tags, :tag_group, :id_description
       )
 
       def self.build(placement, action)
@@ -164,6 +185,7 @@ module RecordingStudioMessages
           title: endpoint.title, summary: endpoint.title,
           description: endpoint.description, tags: endpoint.tags
         }
+        document[:tag] = { group: endpoint.tag_group } if endpoint.tag_group.present?
         parameters = path_parameters(endpoint)
         document[:parameters] = parameters if parameters
         document
@@ -187,11 +209,11 @@ module RecordingStudioMessages
       def endpoint
         Endpoint.new(
           name: endpoint_name, verb: @spec.fetch(:verb), path: full_path,
-          handler: BoundAction.new(@spec.fetch(:handler), @placement),
+          handler: BoundAction.new(@spec.fetch(:handler), @placement, @action),
           role: @spec.fetch(:role), recordable_type: recordable_type,
           fields: Catalog.conversation_fields(@action, parent: @placement.parent?),
           title: title, description: description,
-          tags: @placement.tags, id_description: id_description
+          tags: @placement.tags, tag_group: @placement.tag_group, id_description: id_description
         )
       end
 
@@ -230,7 +252,7 @@ module RecordingStudioMessages
       end
 
       def title
-        @placement.preset&.titles&.fetch(@action, nil) || @spec.fetch(:title)
+        @placement.titles[@action] || @placement.preset&.titles&.fetch(@action, nil) || @spec.fetch(:title)
       end
 
       def description
@@ -248,6 +270,8 @@ module RecordingStudioMessages
       end
 
       def conversation_id_description
+        return "The conversation id from list_my_messages." if @placement.actor_inbox?
+
         "The conversation id from a list or create response on this message center."
       end
 

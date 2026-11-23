@@ -14,10 +14,27 @@ module RecordingStudioMessages
       end
 
       def conversation!(context, placement, role)
+        group = placement.parent? ? load_group(context) : context.recording
+        return actor_conversation!(context, group, role) if placement.actor_inbox?
+
         mount = message_center!(context, placement)
-        group = group_on_mount(context, placement, mount)
+        raise ::RecordingStudioApi::NotFoundError, "Conversation not found" unless on_mount?(group, mount)
+
         Target.authorize!(context, group, role) if placement.parent?
         group
+      end
+
+      def actor_conversation!(context, group, role)
+        raise ::RecordingStudioApi::NotFoundError, "Conversation not found" unless mine?(context, group)
+
+        Target.authorize!(context, group, role)
+        group
+      end
+
+      def mine?(context, group)
+        return false unless group&.recordable_type == MESSAGE_GROUP_TYPE
+
+        RecordingStudioMessages.my_group_recordings(actor: context.access_grant.actor).exists?(id: group.id)
       end
 
       def message_center!(context, placement)
@@ -25,13 +42,6 @@ module RecordingStudioMessages
         return mount if mount&.recordable_type == MESSAGE_MOUNT_TYPE
 
         raise ::RecordingStudioApi::NotFoundError, "Message center not found"
-      end
-
-      def group_on_mount(context, placement, mount)
-        group = placement.parent? ? load_group(context) : context.recording
-        return group if on_mount?(group, mount)
-
-        raise ::RecordingStudioApi::NotFoundError, "Conversation not found"
       end
 
       def load_group(context)

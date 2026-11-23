@@ -5,21 +5,54 @@ module RecordingStudioMessages
     module MountBinding
       module_function
 
+      ACTOR_INBOX = :actor_inbox
+
       def wrap(mount)
+        return ActorInbox.instance if actor_inbox_mount?(mount)
+
+        wrap_center(mount)
+      end
+
+      def actor_inbox_mount?(mount)
+        mount == ACTOR_INBOX || mount.to_s == ACTOR_INBOX.to_s
+      end
+
+      def wrap_center(mount)
         case mount
-        when Proc
-          Singleton.new(resolver: mount)
-        when Symbol, String
-          Singleton.new(key: mount.to_s)
-        when Hash
-          Parent.new(mount)
+        when Proc then Singleton.new(resolver: mount)
+        when Symbol, String then Singleton.new(key: mount.to_s)
+        when Hash then Parent.new(mount)
         else
-          raise configuration_error("mount must be a proc, a message center key, or a parent recordable type and key")
+          raise configuration_error(
+            "mount must be :actor_inbox, a proc, a message center key, or a parent recordable type and key"
+          )
         end
       end
 
       def configuration_error(message)
         ::RecordingStudioApi::ConfigurationError.new(message)
+      end
+
+      class ActorInbox
+        def self.instance
+          @instance ||= new
+        end
+
+        def parent?
+          false
+        end
+
+        def actor_inbox?
+          true
+        end
+
+        def recordable_type
+          nil
+        end
+
+        def resolve(_context = nil)
+          nil
+        end
       end
 
       class Singleton
@@ -30,6 +63,10 @@ module RecordingStudioMessages
         end
 
         def parent?
+          false
+        end
+
+        def actor_inbox?
           false
         end
 
@@ -74,6 +111,10 @@ module RecordingStudioMessages
 
         def parent?
           true
+        end
+
+        def actor_inbox?
+          false
         end
 
         def resolve(context)
