@@ -165,10 +165,56 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal @mount.id, created.fetch("parent_id")
 
     press = call(
-      :post, "/press_centers/#{@mailbox_recording.id}/conversations", @editor_token, title: "New press conversation"
+      :post, "/press_centers/#{@mailbox_recording.id}/conversations", @editor_token,
+      title: "New press conversation",
+      body: "Opening line.",
+      recipients: [ { type: "User", id: @viewer.id.to_s } ]
     )
     assert_response :success, response.body
     assert_equal @inbox.id, press.fetch("parent_id")
+    assert_equal "Opening line.", first_message_body(press.fetch("id"))
+  end
+
+  test "press center start rejects a missing list, an empty list, and a missing body" do
+    path = "/press_centers/#{@mailbox_recording.id}/conversations"
+    person = { type: "User", id: @viewer.id.to_s }
+
+    started = call(:post, path, @editor_token, body: "The first line.", recipients: [person])
+    assert_response :success, response.body
+    assert_equal @inbox.id, started.fetch("parent_id")
+    assert_equal "The first line.", first_message_body(started.fetch("id"))
+
+    assert_no_difference -> { groups_under(@inbox) } do
+      missing = call(:post, path, @editor_token, title: "Dropped", body: "Do not save this.")
+      assert_response :unprocessable_entity, missing.to_s
+      assert_includes response.body, "Pick who this goes to."
+
+      empty = call(:post, path, @editor_token, body: "Do not save this.", recipients: [])
+      assert_response :unprocessable_entity, empty.to_s
+      assert_includes response.body, "Pick who this goes to."
+
+      no_body = call(:post, path, @editor_token, title: "No opening line", recipients: [person])
+      assert_response :unprocessable_entity, no_body.to_s
+      assert_includes response.body, "Write a message."
+
+      denied = call(:post, path, @viewer_token, body: "Nope.", recipients: [person])
+      assert_response :forbidden, denied.to_s
+    end
+  end
+
+  test "support still opens a title-only request and rejects a body with no recipients" do
+    opened = call(:post, "/support/conversations", @admin_token, title: "Title only request")
+    assert_response :success, response.body
+    assert_equal "Title only request", opened.fetch("title")
+    assert_empty RecordingStudioMessages.message_recordings(RecordingStudio::Recording.find(opened.fetch("id")))
+
+    assert_no_difference -> { groups_under(@mount) } do
+      dropped = call(
+        :post, "/support/conversations", @admin_token, title: "Needs people", body: "The request text."
+      )
+      assert_response :unprocessable_entity, dropped.to_s
+      assert_includes response.body, "Pick who this goes to."
+    end
   end
 
   test "unread count follows the conversation list for that message center" do
@@ -392,6 +438,18 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def groups_under(mount)
+    RecordingStudio::Recording.where(
+      parent_recording_id: mount.id,
+      recordable_type: RecordingStudioMessages::MESSAGE_GROUP_TYPE
+    ).count
+  end
+
+  def first_message_body(id)
+    group = RecordingStudio::Recording.find(id)
+    RecordingStudioMessages.message_recordings(group).last.recordable.body
+  end
 
   def granted_conversation(title, actor, role)
     group = RecordingStudioMessages.create_group(@mount, title: title, actor: @owner)
