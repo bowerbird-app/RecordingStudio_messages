@@ -24,13 +24,16 @@ module RecordingStudioMessages
           count_unread_my_messages: "Count unread messages"
         },
         descriptions: {
-          list_my_messages: "List your conversations across message centers. Pass unread to keep unread " \
-                            "conversations, after_id to continue, and limit for the page size. " \
-                            "Needs view access. Returns records and after_id.",
+          list_my_messages: "List your conversations across every message center. This is not one press center. " \
+                            "Use that press center's `<at>_list_conversations` tool for one press center. " \
+                            "Pass unread to keep unread conversations, after_id to continue, " \
+                            "and limit for the page size. Needs view access. Returns records and after_id.",
           read_my_messages: "Read the messages in one of your conversations. Pass the conversation id from " \
-                            "list_my_messages. Needs view access. Returns records.",
+                            "list_my_messages, not from a press center `<at>_list_conversations` tool. " \
+                            "Needs view access. Returns records.",
           send_my_message: "Send a message in one of your conversations. Pass the conversation id from " \
-                           "list_my_messages. Pass body, or references to attach a recording. " \
+                           "list_my_messages, not from a press center `<at>_list_conversations` tool. " \
+                           "Pass body, or references to attach a recording. " \
                            "Needs edit access. Returns the new message.",
           mark_my_message_read: "Mark one of your conversations read. Pass the conversation id from " \
                                 "list_my_messages. Needs view access. Returns the conversation. " \

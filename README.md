@@ -109,6 +109,17 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.41.0
+
+Messages `0.41.0` makes start conversation require the people and the first message, the same as the web form.
+
+1. Install Messages `0.41.0`. There is no Messages migration.
+2. Send `recipients` and `body` on `<at>_start_conversation`. A missing or empty `recipients` list returns 422 `Pick who this goes to.` A missing `body` returns 422 `Write a message.` Nothing is created.
+3. `:support` open request still accepts a title alone. Send `recipients` and `body` together when that request adds people. A body with no recipients returns 422.
+4. `list_my_messages` lists the actor's conversations across every message center. `<at>_list_conversations` lists one press center. Each description names the other.
+
+Public contact and `create_group` without `recipients:` still open a title-only group. Hosts that already place `:press_center` or `:my_messages` keep those tool names.
+
 ### Upgrading to 0.40.0
 
 Messages `0.40.0` adds My Messages tools for the personal inbox. The inbox is one list of every conversation the current actor was added to, across message centers. It is not a new message type.
@@ -220,7 +231,7 @@ RecordingStudioMessages::Api.place(
 
 `place` takes `api:`, `at:`, `mount:`, `preset:`, `actions:`, `names:`, `descriptions:`, and `tags:`. A preset picks the actions, names, descriptions, titles, tags, and tag group. Pass `actions:` to keep a subset. Pass `names:`, `descriptions:`, or `tags:` to override those. Names and verb plus path must be unique on that API. `list`, `show`, `create`, `update`, `delete`, `capability_action`, and `describe` are reserved. `at` cannot be a recordable resource name, because the API dispatches that first segment as a resource and will not reach the placed endpoint. An unknown action, a reserved name, a resource-name segment, or a collision raises `RecordingStudioApi::ConfigurationError` before the endpoint is registered.
 
-`:support` is open request, list my requests, read messages, reply, mark read, and unread count. `:press_center` adds rename and uses list, start, read, send, rename, mark read, and unread count. `:support` tools use the Support group. `:press_center` tools use the Press Center Messages tag. Endpoints set `tag.group` Press Center, used by MCP tool docs. A placement with no preset and no `tags:` uses Message Center. On `:press_center`, mark read is titled Mark conversation read, and unread count is titled Count unread conversations. A singleton path looks like `support/conversations` and `support/conversations/:id/messages`. A parent path looks like `press_centers/:id/conversations`, and the conversation id is the `conversation_id` input because a path can carry only one `:id`.
+`:support` is open request, list my requests, read messages, reply, mark read, and unread count. `:press_center` adds rename and uses list, start, read, send, rename, mark read, and unread count. `:support` tools use the Support group. `:press_center` tools use the Press Center Messages tag. Endpoints set `tag.group` Press Center, used by MCP tool docs. A placement with no preset and no `tags:` uses Message Center. On `:press_center`, mark read is titled Mark conversation read, and unread count is titled Count unread conversations. A singleton path looks like `support/conversations` and `support/conversations/:id/messages`. A parent path looks like `press_centers/:id/conversations`, and the conversation id is the `conversation_id` input because a path can carry only one `:id`. Start conversation requires `recipients` and `body`. A missing or empty recipient list returns 422 `Pick who this goes to.` A missing body returns 422 `Write a message.` `:support` open request still accepts a title alone.
 
 When Recording Studio MCP is loaded, `McpCopy.register!` turns `:press_center` and `:my_messages` endpoints into named tools. `:support` stays off that list. `McpCopy.tool_names` returns the live names. Nothing is placed on a host by default.
 
@@ -236,7 +247,7 @@ include_tools: [
 ]
 ```
 
-`:my_messages` omits `mount`. The names are `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. `at` only chooses the path, such as `my_messages/conversations`.
+`:my_messages` omits `mount`. The names are `list_my_messages`, `read_my_messages`, `send_my_message`, `mark_my_message_read`, and `count_unread_my_messages`. `at` only chooses the path, such as `my_messages/conversations`. `list_my_messages` lists that actor's conversations across every message center. A press center's `<at>_list_conversations` lists that one press center. Each description names the other.
 
 A conversation from another message center is not found. Unread count uses the same conversations as the list for that message center, including access inherited on it.
 

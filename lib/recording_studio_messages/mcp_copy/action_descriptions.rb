@@ -16,14 +16,15 @@ module RecordingStudioMessages
       }.freeze
 
       MY_MESSAGES = {
-        list_my_messages: "List your conversations across message centers. Pass unread to keep unread " \
-                          "conversations, after_id to continue, and limit for the page size. " \
-                          "Returns records and after_id.",
+        list_my_messages: "List your conversations across every message center. This is not one press center. " \
+                          "Use that press center's `<at>_list_conversations` tool for one press center. " \
+                          "Pass unread to keep unread conversations, after_id to continue, " \
+                          "and limit for the page size. Returns records and after_id.",
         read_my_messages: "Read the messages in one of your conversations. Pass the conversation id from " \
-                          "list_my_messages. Returns records.",
+                          "list_my_messages, not from a press center `<at>_list_conversations` tool. Returns records.",
         send_my_message: "Send a message in one of your conversations. Pass the conversation id from " \
-                         "list_my_messages. Pass body, or references to attach a recording. " \
-                         "Returns the new message.",
+                         "list_my_messages, not from a press center `<at>_list_conversations` tool. " \
+                         "Pass body, or references to attach a recording. Returns the new message.",
         mark_my_message_read: "Mark one of your conversations read. Pass the conversation id from " \
                               "list_my_messages. Returns the conversation. The response has no read cursor.",
         count_unread_my_messages: "Count your unread conversations across message centers. Uses the same " \
@@ -31,8 +32,7 @@ module RecordingStudioMessages
       }.freeze
 
       PRESS_CENTER_ID = "Pass the press center id. "
-      START_ARGS = "Pass the press center id and title. "
-      BODY_WHEN = "when you add people in recipients"
+      START_ARGS = "Pass the press center id. "
 
       module_function
 
@@ -78,7 +78,6 @@ module RecordingStudioMessages
 
       def verbs(list, start)
         {
-          body_when: BODY_WHEN,
           send_pass: "conversation_id from #{list}. Pass body, or references to attach a recording",
           no_start: "This does not start a new conversation. Use #{start} to start one. ",
           rename_pass: "conversation_id from #{list} and title"

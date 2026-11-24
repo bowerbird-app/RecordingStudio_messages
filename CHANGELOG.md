@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-11-24
+
+Start conversation matches the web form, and the two list tools say which conversations they cover.
+
+### Fixed
+
+- API start (`<at>_start_conversation`, and any placement of the start action other than `:support`) rejects a missing or empty `recipients` list and a missing `body`. The response is 422. The messages match the web form: `Pick who this goes to.` and `Write a message.` Nothing is created, and the opening body is not dropped.
+- A `:support` request that sends a `body` and omits `recipients` returns that same 422 instead of opening a conversation and dropping the body.
+
+### Changed
+
+- Press-center list, read, and send descriptions say they cover that one press center and point at `list_my_messages`.
+- `list_my_messages`, read, and send descriptions say they cover every message center and point at `<at>_list_conversations`.
+
+### Upgrade notes
+
+Bump to **0.41.0**. There is no Messages migration.
+
+Send `recipients` and `body` on start conversation. A missing or empty list returns 422 `Pick who this goes to.` A missing body returns 422 `Write a message.` A title alone no longer opens a press-center conversation.
+
+`:support` open request still accepts a title when `recipients` and `body` are both omitted. Send `recipients` and `body` together when that request adds people.
+
+`create_group` without `recipients:` is unchanged. Public contact still opens a group that way, then grants and sends on its own.
+
+`list_my_messages` is the actor's conversations across every message center. `<at>_list_conversations` is one press center. Hosts that already place `:press_center` or `:my_messages` keep those tool names.
+
 ## [0.40.0] - 2026-11-23
 
 My Messages MCP tools for the personal inbox.
