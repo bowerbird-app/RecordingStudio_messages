@@ -32,8 +32,9 @@ module RecordingStudioMessages
           unread_count: "Unread count"
         },
         descriptions: {
-          create_group: "Open a request on this support message center. Pass title. Pass body when you add " \
-                        "people in recipients. Needs edit access. Returns the new conversation.",
+          create_group: "Open a request on this support message center. Pass title. Pass recipients and body " \
+                        "together when you add people. A body with no recipients is rejected. " \
+                        "Needs edit access. Returns the new conversation.",
           list_conversations: "List your requests on this support message center. Pass unread to keep unread " \
                               "requests, after_id to continue, and limit for the page size. Needs view access. " \
                               "Returns records and after_id.",

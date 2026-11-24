@@ -22,16 +22,18 @@ module RecordingStudioMessages
       CREATE_FIELDS = {
         title: {
           type: :string, required: false, allow_blank: true,
-          description: "Conversation name, at most 120 characters. Required when recipients are omitted."
+          description: "Conversation name, at most 120 characters. Optional when recipients are present. " \
+                       "Required on a support request that omits recipients."
         },
         body: {
           type: :string, required: false, allow_blank: true,
-          description: "First message text. Required when recipients are present."
+          description: "First message text. Required to start a conversation, and when recipients are present."
         },
         recipients: {
           type: :array, required: false,
-          description: "People to add. Each item is an object with type and id, or a type and id " \
-                       "joined by a colon, from that message center's contact allowlist."
+          description: "People to add. Required to start a conversation. A support request may omit them and " \
+                       "pass a title. Each item is an object with type and id, or a type and id joined by a colon, " \
+                       "from that message center's contact allowlist. An empty list is rejected."
         }
       }.freeze
 

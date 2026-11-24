@@ -19,8 +19,8 @@ class MetricsDependencyTest < Minitest::Test
     assert_includes dummy_lock, "remote: https://github.com/bowerbird-app/RecordingStudio_metrics.git"
     assert_includes dummy_lock, "tag: v0.10.0"
     assert_includes dummy_lock, "recording_studio_metrics (0.10.0)"
-    assert_includes root_lock, "recording_studio_messages (0.40.0)"
-    assert_includes dummy_lock, "recording_studio_messages (0.40.0)"
+    assert_includes root_lock, "recording_studio_messages (0.41.0)"
+    assert_includes dummy_lock, "recording_studio_messages (0.41.0)"
     refute_includes gemspec, "recording_studio_dashboard"
   end
 

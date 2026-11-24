@@ -123,23 +123,39 @@ module RecordingStudioMessages
 
         def create(placement)
           mount = Scope.mount!(@context, placement, :edit)
-          require_title!
-          Target.serialize(RecordingStudioMessages.create_group(mount, **attrs))
+          require_title! if keep_nil_recipients?(placement)
+          Target.serialize(RecordingStudioMessages.create_group(mount, **attrs(placement)))
         end
 
         def require_title!
-          return if @context.params[:title].present? || !@context.params[:recipients].nil?
+          return if @context.params[:title].present?
 
           raise ::RecordingStudioApi::InvalidActionInputError, "title is required"
         end
 
-        def attrs
+        def attrs(placement)
           {
             actor: @context.access_grant.actor,
             title: @context.params[:title],
-            recipients: @context.params[:recipients],
+            recipients: recipients_for(placement),
             body: @context.params[:body]
           }
+        end
+
+        def recipients_for(placement)
+          raw = @context.params[:recipients]
+          return raw unless raw.nil?
+          return nil if keep_nil_recipients?(placement)
+
+          []
+        end
+
+        def keep_nil_recipients?(placement)
+          support_request?(placement) && @context.params[:recipients].nil? && @context.params[:body].blank?
+        end
+
+        def support_request?(placement)
+          placement.preset.equal?(Presets::SUPPORT)
         end
       end
 

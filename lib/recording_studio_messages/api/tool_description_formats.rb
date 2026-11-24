@@ -4,19 +4,23 @@ module RecordingStudioMessages
   module Api
     module ToolDescriptions
       LIST_FORMAT =
-        "List conversations on this press center's message center. %<id>sPass unread, " \
-        "after_id, or limit. %<missing_mount>s%<view_access>sReturns records and after_id."
+        "List conversations in this one press center. %<id>sNot every message center. " \
+        "Use list_my_messages for this actor's conversations across message centers. " \
+        "Pass unread, after_id, or limit. %<missing_mount>s%<view_access>sReturns records and after_id."
 
       CREATE_FORMAT =
-        "Start a conversation on this press center's message center. %<start_args>sPass body " \
-        "%<body_when>s. %<missing_mount>s%<edit_access>sReturns the new conversation."
+        "Start a conversation on this press center's message center. %<start_args>s" \
+        "Pass recipients and body. Both are required. " \
+        "%<missing_mount>s%<edit_access>sReturns the new conversation."
 
       READ_FORMAT =
         "Read the messages in one conversation on this press center. %<id>sPass %<conversation>s. " \
+        "Use this press center's list, not list_my_messages. " \
         "%<missing_mount>s%<view_access>sReturns records."
 
       SEND_FORMAT =
         "Send a message in a conversation on this press center. %<id>sPass %<send_pass>s. " \
+        "The id comes from this press center's list, not from list_my_messages. " \
         "%<no_start>s%<missing_mount>s%<edit_access>sReturns the new message."
 
       RENAME_FORMAT =
