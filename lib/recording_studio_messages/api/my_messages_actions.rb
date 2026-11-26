@@ -10,12 +10,16 @@ module RecordingStudioMessages
 
         def conversation!(role)
           group = @context.recording
-          unless group&.recordable_type == MESSAGE_GROUP_TYPE
-            raise ::RecordingStudioApi::NotFoundError, "Conversation not found"
-          end
+          raise ::RecordingStudioApi::NotFoundError, "Conversation not found" unless inbox_member?(group)
 
           Target.authorize!(@context, group, role)
           group
+        end
+
+        def inbox_member?(recording)
+          return false unless recording&.recordable_type == MESSAGE_GROUP_TYPE
+
+          RecordingStudioMessages.my_group_recordings(actor: actor).exists?(id: recording.id)
         end
 
         def unread_only?
@@ -70,12 +74,6 @@ module RecordingStudioMessages
           return recording if inbox_member?(recording)
 
           raise ::RecordingStudioApi::InvalidActionInputError, "after_id is not a conversation in My Messages"
-        end
-
-        def inbox_member?(recording)
-          return false unless recording&.recordable_type == MESSAGE_GROUP_TYPE
-
-          RecordingStudioMessages.my_group_recordings(actor: actor).exists?(id: recording.id)
         end
       end
 

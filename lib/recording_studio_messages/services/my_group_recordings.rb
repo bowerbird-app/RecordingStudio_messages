@@ -30,6 +30,7 @@ module RecordingStudioMessages
         return RecordingStudio::Recording.none unless defined?(RecordingStudio::Access)
 
         scope = ordered_groups.where(id: granted_group_ids)
+        scope = exclude_locked_mounts(scope)
         scope = apply_unread(scope)
         scope = apply_keyset(scope)
         scope = scope.limit(@limit) if @limit.present?
@@ -50,6 +51,41 @@ module RecordingStudioMessages
       end
 
       private
+
+      def exclude_locked_mounts(scope)
+        scope.where.not(parent_recording_id: locked_mount_ids)
+      end
+
+      def locked_mount_ids
+        clauses = locked_parent_clauses
+        return RecordingStudio::Recording.none if clauses.empty?
+
+        RecordingStudio::Recording.unscoped
+                                  .where(recordable_type: MESSAGE_MOUNT_TYPE)
+                                  .where(RecordingStudio.kept_sql("recording_studio_recordings"))
+                                  .joins(locked_mount_joins)
+                                  .where(clauses.join(" OR "))
+                                  .select("recording_studio_recordings.id")
+      end
+
+      def locked_mount_joins
+        <<~SQL.squish
+          INNER JOIN recording_studio_message_mounts
+            ON recording_studio_message_mounts.id = recording_studio_recordings.recordable_id
+          INNER JOIN recording_studio_recordings parents
+            ON parents.id = recording_studio_recordings.parent_recording_id
+        SQL
+      end
+
+      def locked_parent_clauses
+        Array(RecordingStudio.configuration.recordable_types).map(&:to_s).uniq.filter_map do |type|
+          keys = MembershipLock.locked_keys_for(type)
+          next if keys.empty?
+
+          quoted_keys = keys.map { |key| quoted(key) }.join(", ")
+          "(parents.recordable_type = #{quoted(type)} AND recording_studio_message_mounts.key IN (#{quoted_keys}))"
+        end
+      end
 
       def granted_group_ids
         RecordingStudio::Recording.unscoped

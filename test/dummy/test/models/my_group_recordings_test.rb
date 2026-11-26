@@ -206,7 +206,7 @@ class MyGroupRecordingsTest < ActiveSupport::TestCase
     RecordingStudioMessages.send_message(
       group_recording: press, body: "Need stills.", actor: @owner, notify: false
     )
-    original = RecordingStudio.capability_options(:messages, for: Workspace)
+    original = RecordingStudio.capability_options(:messages, for: Workspace)&.dup
     RecordingStudio.set_capability_options(
       :messages,
       on: Workspace,

@@ -109,6 +109,14 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.41.1
+
+Messages `0.41.1` keeps support-center threads off My Messages, and lets press-center start work when the mount has no contacts list.
+
+1. Install Messages `0.41.1`. There is no Messages migration.
+2. My Messages list and unread count omit conversations on a `membership_locked` mount. RS Support still lists those threads.
+3. If press-center Messages has no `contacts:`, send `body` on start conversation. Recipients stay required on mounts that declare `contacts:`.
+
 ### Upgrading to 0.41.0
 
 Messages `0.41.0` makes start conversation require the people and the first message, the same as the web form.

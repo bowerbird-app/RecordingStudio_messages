@@ -335,7 +335,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   test "my messages omits membership-locked support-center threads from the list and unread count" do
     mine = granted_conversation("Desk line", @editor_client, :edit, mount: @inbox)
     ticket = granted_conversation("Support ticket", @editor_client, :view)
-    original = RecordingStudio.capability_options(:messages, for: Workspace)
+    original = RecordingStudio.capability_options(:messages, for: Workspace)&.dup
     RecordingStudio.set_capability_options(
       :messages,
       on: Workspace,
@@ -368,7 +368,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
   end
 
   test "press_center_messages start works for a press contact when the parent has no contacts list" do
-    original = RecordingStudio.capability_options(:messages, for: Mailbox)
+    original = RecordingStudio.capability_options(:messages, for: Mailbox)&.dup
     RecordingStudio.set_capability_options(
       :messages,
       on: Mailbox,
@@ -382,8 +382,8 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
       preset: :press_center
     )
     press = user("press")
-    press_access = grant!(@mailbox_recording, press, :edit)
-    press_token, = token_for(press_access, role: :edit)
+    press_access = grant!(@workspace, press, :edit)
+    press_token, press_client = token_for(press_access, role: :edit)
 
     started = call(
       :post, "/press_center_messages/#{@mailbox_recording.id}/conversations", press_token,
@@ -394,7 +394,7 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal @inbox.id, started.fetch("parent_id")
     assert_equal "Can we use the stills next week?", first_message_body(started.fetch("id"))
     assert_includes(
-      RecordingStudioMessages.my_group_recordings(actor: press).map(&:id),
+      RecordingStudioMessages.my_group_recordings(actor: press_client).map(&:id),
       started.fetch("id")
     )
   ensure
