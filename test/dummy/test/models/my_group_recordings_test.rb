@@ -186,6 +186,55 @@ class MyGroupRecordingsTest < ActiveSupport::TestCase
     assert relation.is_a?(ActiveRecord::Relation)
   end
 
+  test "membership-locked support-center threads stay out of the inbox and unread count" do
+    mailbox = Mailbox.create!(name: "Desk #{SecureRandom.hex(4)}")
+    mailbox_recording = RecordingStudio.record!(
+      action: "created",
+      recordable: mailbox,
+      root_recording: @mount.root_recording,
+      parent_recording: @mount.root_recording,
+      actor: @owner
+    ).recording
+    desk = mailbox_recording.ensure_message_mount("inbox", actor: @owner)
+    support = RecordingStudioMessages.create_group(@mount, title: "Ticket", actor: @owner)
+    press = RecordingStudioMessages.create_group(desk, title: "Desk thread", actor: @owner)
+    grant!(support, @viewer)
+    grant!(press, @viewer)
+    RecordingStudioMessages.send_message(
+      group_recording: support, body: "Need help.", actor: @owner, notify: false
+    )
+    RecordingStudioMessages.send_message(
+      group_recording: press, body: "Need stills.", actor: @owner, notify: false
+    )
+    original = RecordingStudio.capability_options(:messages, for: Workspace)&.dup
+    RecordingStudio.set_capability_options(
+      :messages,
+      on: Workspace,
+      keys: [:support],
+      membership_locked: [:support],
+      contacts: DummyCatalog::CONTACTS
+    )
+
+    titles = listed(actor: @viewer).map { |recording| recording.recordable.title }
+    unread_ids = RecordingStudioMessages.my_group_recordings(actor: @viewer, unread: true).map(&:id)
+
+    assert_equal [ "Desk thread" ], titles
+    assert_includes unread_ids, press.id
+    refute_includes unread_ids, support.id
+    assert_equal 1, RecordingStudioMessages.unread_count(actor: @viewer)
+  ensure
+    if original
+      RecordingStudio.set_capability_options(:messages, on: Workspace, **original)
+    else
+      RecordingStudio.set_capability_options(
+        :messages,
+        on: Workspace,
+        keys: [:support],
+        contacts: DummyCatalog::CONTACTS
+      )
+    end
+  end
+
   private
 
   def support_mount(prefix)

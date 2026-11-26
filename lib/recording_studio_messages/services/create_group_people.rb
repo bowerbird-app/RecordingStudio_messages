@@ -23,7 +23,12 @@ module RecordingStudioMessages
         return unless defined?(RecordingStudioAccessible)
         return if MountAccess.inherited?(@mount)
 
-        result = grant_role!(group_recording, owner, :admin)
+        result = grant_role!(
+          group_recording,
+          owner,
+          :admin,
+          manager: manager_for(group_recording) || owner
+        )
         return if result.success?
 
         raise RecordingStudioMessages::Error, result.error

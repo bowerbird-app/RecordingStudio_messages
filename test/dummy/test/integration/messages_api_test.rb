@@ -332,6 +332,87 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_nil RecordingStudioApi.registered_endpoint(:support_rename_conversation)
   end
 
+  test "my messages omits membership-locked support-center threads from the list and unread count" do
+    mine = granted_conversation("Desk line", @editor_client, :edit, mount: @inbox)
+    ticket = granted_conversation("Support ticket", @editor_client, :view)
+    original = RecordingStudio.capability_options(:messages, for: Workspace)&.dup
+    RecordingStudio.set_capability_options(
+      :messages,
+      on: Workspace,
+      keys: [:support],
+      membership_locked: [:support],
+      contacts: DummyCatalog::CONTACTS
+    )
+
+    listed = call(:get, "/my_messages/conversations", @editor_token)
+    ids = listed.fetch("records").map { |row| row.fetch("id") }
+    counted = call(:get, "/my_messages/unread_count", @editor_token)
+
+    assert_response :success, response.body
+    assert_includes ids, mine.id
+    refute_includes ids, ticket.id
+    assert_equal(
+      RecordingStudioMessages.unread_count(actor: @editor_client),
+      counted.fetch("unread_count")
+    )
+    call(:get, "/my_messages/conversations/#{ticket.id}/messages", @editor_token)
+    assert_response :not_found, response.body
+  ensure
+    if original
+      RecordingStudio.set_capability_options(:messages, on: Workspace, **original)
+    else
+      RecordingStudio.set_capability_options(
+        :messages, on: Workspace, keys: [:support], contacts: DummyCatalog::CONTACTS
+      )
+    end
+  end
+
+  test "press_center_messages start works for a press contact when the parent has no contacts list" do
+    original = RecordingStudio.capability_options(:messages, for: Mailbox)&.dup
+    RecordingStudio.set_capability_options(
+      :messages,
+      on: Mailbox,
+      keys: [:inbox],
+      public_contact: [:inbox]
+    )
+    RecordingStudioMessages::Api.place(
+      api: :public,
+      at: :press_center_messages,
+      mount: { recordable_type: "Mailbox", key: :inbox },
+      preset: :press_center
+    )
+    press = user("press")
+    press_access = grant!(@workspace, press, :edit)
+    press_token, press_client = token_for(press_access, role: :edit)
+
+    started = call(
+      :post, "/press_center_messages/#{@mailbox_recording.id}/conversations", press_token,
+      body: "Can we use the stills next week?",
+      recipients: [{ type: "User", id: @viewer.id.to_s }]
+    )
+
+    assert_response :success, started.to_s
+    assert_equal @inbox.id, started.fetch("parent_id")
+    assert_equal "Can we use the stills next week?", first_message_body(started.fetch("id"))
+    assert_includes(
+      RecordingStudioMessages.my_group_recordings(actor: press_client).map(&:id),
+      started.fetch("id")
+    )
+  ensure
+    if original
+      RecordingStudio.set_capability_options(:messages, on: Mailbox, **original)
+    else
+      RecordingStudio.set_capability_options(
+        :messages,
+        on: Mailbox,
+        keys: [:inbox],
+        public_contact: [:inbox],
+        access: :inherited,
+        contacts: DummyCatalog::CONTACTS
+      )
+    end
+  end
+
   test "my messages list pages direct grants and skips other roots" do
     mine = granted_conversation("Mine", @editor_client, :edit)
     second = granted_conversation("Second", @editor_client, :view)
@@ -451,8 +532,8 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     RecordingStudioMessages.message_recordings(group).last.recordable.body
   end
 
-  def granted_conversation(title, actor, role)
-    group = RecordingStudioMessages.create_group(@mount, title: title, actor: @owner)
+  def granted_conversation(title, actor, role, mount: @mount)
+    group = RecordingStudioMessages.create_group(mount, title: title, actor: @owner)
     RecordingStudioMessages.send_message(
       group_recording: group, body: "Hello #{title}", actor: @owner, notify: false
     )

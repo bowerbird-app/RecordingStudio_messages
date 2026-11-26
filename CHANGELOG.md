@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-11-26
+
+My Messages drops membership-locked support threads, and press-center start works without a contacts list.
+
+### Fixed
+
+- `my_group_recordings` and `unread_count` omit conversations whose message center is `membership_locked` (RS Support mounts). My Messages list, unread, read, reply, and mark read use that same relation, so a support ticket cannot stick unread in the inbox. Support tools still list those threads.
+- API start on a mount with no `contacts:` callable omits `recipients` (even if the caller sent a list) and sends the opening `body`. The owner grant uses the same ancestor admin as recipient grants, so a press contact with `:edit` can open the thread. Mounts that still declare `contacts:` keep the 0.41.0 rule: a missing or empty list returns 422 `Pick who this goes to.`
+
+### Upgrade notes
+
+Bump to **0.41.1**. There is no Messages migration.
+
+My Messages no longer lists or counts membership-locked support-center threads. Open those on Support.
+
+If a press-center message mount has no `contacts:`, start conversation with `body`. Recipients are not required there.
+
 ## [0.41.0] - 2026-11-24
 
 Start conversation matches the web form, and the two list tools say which conversations they cover.

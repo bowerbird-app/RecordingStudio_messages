@@ -27,7 +27,7 @@ module RecordingStudioMessages
       def persist!
         checked = MessageGroupTags.normalize_tags(@tags)
         members = resolved_members
-        @title = default_title(members) if @title.blank? && members
+        @title = default_title(members) if @title.blank?
         RecordingStudio::Recording.transaction { write!(checked, members) }
       end
 
@@ -36,15 +36,9 @@ module RecordingStudioMessages
         CreateGroupPeople.new(
           mount: @mount_recording, actor: @actor, admin: @admin, members: members
         ).grant!(group_recording)
-        write_tags(group_recording, checked)
-        send_first_message!(group_recording) if members
+        checked.each { |key, recording| MessageGroupTags.tag(group_recording, key: key, recording: recording) }
+        send_first_message!(group_recording) if members || (@recipients.nil? && @body.strip.present?)
         group_recording
-      end
-
-      def write_tags(group_recording, checked)
-        checked.each do |key, recording|
-          MessageGroupTags.tag(group_recording, key: key, recording: recording)
-        end
       end
 
       def record_group
@@ -63,12 +57,16 @@ module RecordingStudioMessages
       def validate!
         raise ArgumentError, "mount recording is required" if @mount_recording.blank?
         raise ArgumentError, "actor is required" if @actor.blank?
-        raise ArgumentError, "title is required" if @title.blank? && @recipients.nil?
+        raise ArgumentError, "title is required" if title_missing?
 
         validate_start! if @recipients
         return if mount_recordable?
 
         raise RecordingStudioMessages::Error, "Groups must be created under a message mount"
+      end
+
+      def title_missing?
+        @title.blank? && @recipients.nil? && @body.strip.blank?
       end
 
       def validate_start!
