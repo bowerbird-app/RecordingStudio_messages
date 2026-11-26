@@ -111,16 +111,17 @@ class StartConversationTest < ActiveSupport::TestCase
   end
 
   test "create_group with recipients rejects a person outside the resolver" do
+    missing = "missing-#{SecureRandom.hex(4)}"
     error = assert_raises(RecordingStudioMessages::Error) do
       RecordingStudioMessages.create_group(
         @members_mount,
         actor: @owner,
-        recipients: [ { type: "User", id: "missing-#{SecureRandom.hex(4)}" } ],
+        recipients: [ { type: "User", id: missing } ],
         body: "Hello?"
       )
     end
 
-    assert_equal RecordingStudioMessages::Copy.t("errors.unknown_recipient"), error.message
+    assert_equal RecordingStudioMessages::Copy.t("errors.unknown_recipient", names: "User:#{missing}"), error.message
     assert_equal 0, groups_under(@members_mount)
   end
 

@@ -83,7 +83,7 @@ module RecordingStudioMessages
       end
 
       def default_title(members)
-        names = title_people(members).map { |person| actor_name(person) }.compact_blank
+        names = title_people(members).map { |person| Contacts.display_name(person) }.compact_blank
         names.presence&.join(", ")&.truncate(MessageGroup::TITLE_MAX) || Copy.t("inbox.new_untitled")
       end
 
@@ -98,13 +98,6 @@ module RecordingStudioMessages
           seen[key] = true
           person
         end
-      end
-
-      def actor_name(actor)
-        return actor.name if actor.respond_to?(:name) && actor.name.present?
-        return actor.email if actor.respond_to?(:email) && actor.email.present?
-
-        actor.class.name.demodulize
       end
 
       def mount_recordable?

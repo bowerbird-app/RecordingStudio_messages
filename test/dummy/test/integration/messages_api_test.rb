@@ -175,6 +175,50 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
     assert_equal "Opening line.", first_message_body(press.fetch("id"))
   end
 
+  test "press center start refuses unknown recipients by name and does not create a group" do
+    path = "/press_centers/#{@mailbox_recording.id}/conversations"
+    missing = "missing-#{SecureRandom.hex(4)}"
+    person = { type: "User", id: @viewer.id.to_s }
+    unknown = { type: "User", id: missing }
+
+    assert_no_difference -> { groups_under(@inbox) } do
+      refused = call(
+        :post, path, @editor_token,
+        body: "Do not save this.",
+        recipients: [person, unknown, { email: "not-a-contact@example.com" }]
+      )
+      assert_response :unprocessable_entity, refused.to_s
+      assert_equal "invalid_input", refused.dig("error", "code")
+      assert_includes refused.dig("error", "message"), "User:#{missing}"
+      assert_includes refused.dig("error", "message"), "isn't on this list."
+      refute_includes refused.dig("error", "message"), @viewer.id.to_s
+    end
+  end
+
+  test "press center start names the conversation from subject or from recipients" do
+    path = "/press_centers/#{@mailbox_recording.id}/conversations"
+    person = { type: "User", id: @viewer.id.to_s }
+
+    named = call(
+      :post, path, @editor_token,
+      subject: "Still list for Friday",
+      body: "The first line.",
+      recipients: [person]
+    )
+    assert_response :success, named.to_s
+    assert_equal "Still list for Friday", named.fetch("title")
+    refute_equal @editor_client.name, named.fetch("title")
+
+    from_people = call(
+      :post, path, @editor_token,
+      body: "No subject this time.",
+      recipients: [person]
+    )
+    assert_response :success, from_people.to_s
+    assert_equal @viewer.name, from_people.fetch("title")
+    refute_equal @editor_client.name, from_people.fetch("title")
+  end
+
   test "press center start rejects a missing list, an empty list, and a missing body" do
     path = "/press_centers/#{@mailbox_recording.id}/conversations"
     person = { type: "User", id: @viewer.id.to_s }

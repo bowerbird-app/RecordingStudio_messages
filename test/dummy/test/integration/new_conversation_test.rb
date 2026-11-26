@@ -122,17 +122,18 @@ class NewConversationTest < ActionDispatch::IntegrationTest
   end
 
   test "create rejects a recipient outside the resolver" do
+    missing = "missing-#{SecureRandom.hex(4)}"
     sign_in @staff
     assert_no_difference -> { groups_under(@members_mount) } do
       post recording_studio_messages.message_groups_path, params: {
         mount_id: @members_mount.id,
         body: "Hello?",
-        recipients: [ { type: "User", id: "missing-#{SecureRandom.hex(4)}" } ]
+        recipients: [ { type: "User", id: missing } ]
       }
     end
 
     assert_redirected_to recording_studio_messages.message_groups_path(mount_id: @members_mount.id)
-    assert_equal RecordingStudioMessages::Copy.t("errors.unknown_recipient"), flash[:alert]
+    assert_equal RecordingStudioMessages::Copy.t("errors.unknown_recipient", names: "User:#{missing}"), flash[:alert]
   end
 
   test "create rejects a blank first message" do
