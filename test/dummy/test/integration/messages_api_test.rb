@@ -387,7 +387,8 @@ class MessagesApiTest < ActionDispatch::IntegrationTest
 
     started = call(
       :post, "/press_center_messages/#{@mailbox_recording.id}/conversations", press_token,
-      body: "Can we use the stills next week?"
+      body: "Can we use the stills next week?",
+      recipients: [{ type: "User", id: @viewer.id.to_s }]
     )
 
     assert_response :success, started.to_s

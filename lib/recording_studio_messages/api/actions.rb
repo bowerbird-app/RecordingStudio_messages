@@ -143,9 +143,10 @@ module RecordingStudioMessages
         end
 
         def recipients_for(placement, mount)
+          return if omit_recipients?(placement, mount)
+
           raw = @context.params[:recipients]
           return raw unless raw.nil?
-          return nil if omit_recipients?(placement, mount)
 
           []
         end
