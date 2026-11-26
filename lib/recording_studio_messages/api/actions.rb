@@ -128,18 +128,37 @@ module RecordingStudioMessages
         end
 
         def require_title!
-          return if @context.params[:title].present?
+          return if given_title.present?
 
           raise ::RecordingStudioApi::InvalidActionInputError, "title is required"
         end
 
         def attrs(placement, mount)
+          recipients = recipients_for(placement, mount)
           {
             actor: @context.access_grant.actor,
-            title: @context.params[:title],
-            recipients: recipients_for(placement, mount),
+            title: conversation_title(mount, recipients),
+            recipients: recipients,
             body: @context.params[:body]
           }
+        end
+
+        def given_title
+          [@context.params[:subject], @context.params[:title]].find { |value| value.to_s.strip.present? }&.to_s&.strip
+        end
+
+        def conversation_title(mount, recipients)
+          explicit = given_title
+          return explicit if explicit.present?
+          return Copy.t("inbox.new_untitled") if recipients.nil?
+          return if recipients.blank?
+
+          names = Contacts.resolve!(
+            mount: mount,
+            actor: @context.access_grant.actor,
+            recipients: recipients
+          ).map { |person| Contacts.display_name(person) }.compact_blank
+          names.join(", ").truncate(MessageGroup::TITLE_MAX)
         end
 
         def recipients_for(placement, mount)

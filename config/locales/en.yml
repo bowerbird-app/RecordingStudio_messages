@@ -81,4 +81,4 @@ en:
         contacts_off: You can't start a message here.
         cannot_start: You can't start a message here.
         pick_recipient: Pick who this goes to.
-        unknown_recipient: That person isn't on this list.
+        unknown_recipient: "%{names} isn't on this list."

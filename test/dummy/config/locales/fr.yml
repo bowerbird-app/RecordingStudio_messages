@@ -117,7 +117,7 @@ fr:
         contacts_off: Vous ne pouvez pas commencer un message ici.
         cannot_start: Vous ne pouvez pas commencer un message ici.
         pick_recipient: Choisissez à qui l’envoyer.
-        unknown_recipient: Cette personne n’est pas sur la liste.
+        unknown_recipient: "%{names} n’est pas sur la liste."
   dummy:
     home:
       title: Hôte dummy

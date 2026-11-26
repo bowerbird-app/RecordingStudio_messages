@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.2] - 2026-11-26
+
+API start names conversations from `subject` or `title`, or from the people on the thread, and refuses unknown recipients.
+
+### Fixed
+
+- `create_group` / start conversation (`Api::Actions::CreateGroup`) returns 422 `invalid_action_input` when any recipient is unknown, invalid, or off the contacts list. The message names those recipients. Nothing is created. A start with no recipients, or with recipients ignored because the mount has no `contacts:`, is still not an error.
+- Untitled API starts no longer take the OAuth client name. They use `subject` or `title` when present, otherwise the recipients' display names (`Contacts.display_name`). A start that omits recipients (no contacts list) uses `New conversation`.
+
+### Upgrade notes
+
+Bump to **0.41.2**. There is no Messages migration.
+
+Send `subject` or `title` on start conversation when you want a chosen name. Otherwise the conversation is named after the people you added.
+
+Unknown recipients return 422 and name the bad entries. Fix the list and retry. Mounts with no `contacts:` still ignore a recipients list.
+
 ## [0.41.1] - 2026-11-26
 
 My Messages drops membership-locked support threads, and press-center start works without a contacts list.

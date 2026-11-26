@@ -36,11 +36,13 @@ module RecordingStudioMessages
 
     def resolve!(mount:, actor:, recipients:)
       require_start!(mount, actor)
-      selected = Array(recipients).compact
+      selected = Array(recipients)
       raise RecordingStudioMessages::Error, Copy.t("errors.pick_recipient") if selected.empty?
 
-      allowed = index_by_identity(allowlist(mount: mount, actor: actor))
-      selected.map { |item| allowed[identity(item)] || unknown_recipient! }
+      people, unknown = match_recipients(selected, allowlist(mount: mount, actor: actor))
+      unknown_recipient!(unknown) if unknown.any?
+
+      people
     end
 
     def require_start!(mount, actor)
@@ -61,17 +63,39 @@ module RecordingStudioMessages
       identity(actor).join(":")
     end
 
+    def display_name(actor)
+      return actor.name if actor.respond_to?(:name) && actor.name.present?
+      return actor.email if actor.respond_to?(:email) && actor.email.present?
+
+      actor.class.name.demodulize
+    end
+
     def identity(item)
-      if item.is_a?(String)
-        type, id = item.split(":", 2)
-        [type.to_s, id.to_s]
-      elsif item.is_a?(Hash)
-        type = item[:type] || item["type"]
-        id = item[:id] || item["id"]
-        [type.to_s, id.to_s]
-      else
-        [item.class.name, item.id.to_s]
+      return string_identity(item) if item.is_a?(String)
+      return hash_identity(item) if item.is_a?(Hash)
+      return [item.class.name, item.id.to_s] if item.respond_to?(:id)
+
+      [item.class.name, item.to_s]
+    end
+
+    def string_identity(item)
+      type, id = item.split(":", 2)
+      [type.to_s, id.to_s]
+    end
+
+    def hash_identity(item)
+      [(item[:type] || item["type"]).to_s, (item[:id] || item["id"]).to_s]
+    end
+
+    def match_recipients(selected, allowed)
+      index = index_by_identity(allowed)
+      unknown = []
+      people = selected.map do |item|
+        person = index[identity(item)] if present_identity?(item)
+        unknown << token(item) if person.blank?
+        person
       end
+      [people, unknown]
     end
 
     def index_by_identity(actors)
@@ -82,8 +106,15 @@ module RecordingStudioMessages
       end
     end
 
-    def unknown_recipient!
-      raise RecordingStudioMessages::Error, Copy.t("errors.unknown_recipient")
+    def present_identity?(item)
+      return false if item.blank?
+
+      type, id = identity(item)
+      type.present? && id.present?
+    end
+
+    def unknown_recipient!(names)
+      raise RecordingStudioMessages::Error, Copy.t("errors.unknown_recipient", names: names.uniq.join(", "))
     end
   end
 end

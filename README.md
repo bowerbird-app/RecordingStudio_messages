@@ -109,6 +109,14 @@ Pin `recording_studio_messages/controllers` in the host importmap so `recording-
 
 The dummy staff message center proves the + item, a lazy picker with **Find a page**, a pending composer chip, Brand notes LinkCards (outgoing and incoming), and the Unavailable card. Screenshots live in `docs/screenshots/composer-pending-reference-desktop.png`, `docs/screenshots/message-link-card-outgoing-desktop.png`, `docs/screenshots/message-link-card-incoming-desktop.png`, `docs/screenshots/message-link-card-unavailable-desktop.png`, and the matching `*-mobile.png` files.
 
+### Upgrading to 0.41.2
+
+Messages `0.41.2` names API conversations from `subject` or `title`, or from the people you add, and refuses unknown recipients by name.
+
+1. Install Messages `0.41.2`. There is no Messages migration.
+2. Pass `subject` or `title` on start conversation for a chosen name. With neither, the name is the recipients' display names.
+3. An unknown, invalid, or unauthorized recipient returns 422 and names that person. The conversation is not created. A start with no recipients, or recipients ignored because the mount has no `contacts:`, is unchanged.
+
 ### Upgrading to 0.41.1
 
 Messages `0.41.1` keeps support-center threads off My Messages, and lets press-center start work when the mount has no contacts list.
